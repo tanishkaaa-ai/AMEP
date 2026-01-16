@@ -91,35 +91,39 @@ def submit_soft_skill_assessment():
     try:
         data = request.json
         
+        def calculate_average(values):
+            valid = [v for v in values if v > 0]
+            return sum(valid) / len(valid) if valid else 0
+        
         # Calculate dimension averages
         ratings = data['ratings']
-        td_avg = sum([
+        td_avg = calculate_average([
             ratings.get('td_communication', 0),
             ratings.get('td_mutual_support', 0),
             ratings.get('td_trust', 0),
             ratings.get('td_active_listening', 0)
-        ]) / 4.0
+        ])
         
-        ts_avg = sum([
+        ts_avg = calculate_average([
             ratings.get('ts_clear_roles', 0),
             ratings.get('ts_task_scheduling', 0),
             ratings.get('ts_decision_making', 0),
             ratings.get('ts_conflict_resolution', 0)
-        ]) / 4.0
+        ])
         
-        tm_avg = sum([
+        tm_avg = calculate_average([
             ratings.get('tm_clear_purpose', 0),
             ratings.get('tm_smart_goals', 0),
             ratings.get('tm_passion', 0),
             ratings.get('tm_synergy', 0)
-        ]) / 4.0
+        ])
         
-        te_avg = sum([
+        te_avg = calculate_average([
             ratings.get('te_growth_mindset', 0),
             ratings.get('te_quality_work', 0),
             ratings.get('te_self_monitoring', 0),
             ratings.get('te_reflective_practice', 0)
-        ]) / 4.0
+        ])
         
         assessment = {
             'assessment_id': str(uuid.uuid4()),
