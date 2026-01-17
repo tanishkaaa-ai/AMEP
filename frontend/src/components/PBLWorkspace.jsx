@@ -386,16 +386,21 @@ const PBLWorkspace = () => {
     return <div className="min-h-screen bg-gray-50 p-6 text-gray-600">Loading project...</div>;
   }
 
-  if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 text-red-600">
-        Error loading project: {error}
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="font-medium text-red-800">Error loading project</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <p className="text-xs text-red-600 mt-2">Displaying mock project data.</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">📋 PBL Workspace</h1>
