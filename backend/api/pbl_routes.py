@@ -89,19 +89,26 @@ def submit_soft_skill_assessment():
     }
     """
     try:
-        data = request.json
-        
-        # Soft-skill ratings follow a 1–5 Likert scale.
-        # Missing or skipped ratings are represented as None and must be excluded from averages.
-        def average_valid(values):
-            valid = [v for v in values if v is not None]
-            return round(sum(valid) / len(valid), 2) if valid else None
-        
-        required_fields = ['team_id', 'assessed_student_id', 'ratings']
+        # Guarding against request.json being None or not a dict
+        data = request.get_json(silent=True)
+        if not data or not isinstance(payload, dict):
+            return jsonify({'error': 'Invalid or missing JSON body'}), 400
+        required_fields = ['team_id', 'assessed_student_id', 'ratings']        
         missing = [f for f in required_fields if f not in data]
         if missing:
             return jsonify({'error': f'Missing required fields: {missing}'}), 400
-        ratings = data['ratings']
+        # Validating payload['ratings'] type/structure
+        ratings = data.get('ratings')
+        if not isinstance(ratings, dict):
+            return jsonify({'error': 'Invalid ratings structure: ratings must be a dictionary'}), 400
+        # Soft-skill ratings follow a 1–5 Likert scale.
+        # Missing or skipped ratings are represented as None and must be excluded from averages.
+        def average_valid(values):
+            valid = [v for v in values if isinstance(v, (int, float)) and 1 <= v <= 5]
+            return round(sum(valid) / len(valid), 2) if valid else None
+        
+        
+        
 
         td_avg = average_valid([
             ratings.get('td_communication'),
