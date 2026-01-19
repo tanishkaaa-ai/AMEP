@@ -19,35 +19,93 @@ class MockCollection:
     def __init__(self, name):
         self.name = name
         self._data = {}
-
-    def insert_one(self, doc):
+        self._next_id_counter = 0
+        
+    def insert_one(self, doc,session=None):
         doc_id = doc.get('_id', str(ObjectId()))
         doc['_id'] = doc_id
         self._data[doc_id] = doc
         return type('Result', (), {'inserted_id': doc_id})()
 
+    def insert_many(self, docs, session=None):
+        inserted_ids = []
+        for doc in docs:
+            result = self.insert_one(doc, session=session)
+            inserted_ids.append(result.inserted_id)
+        return type('Result', (), {'inserted_ids': inserted_ids})()
+        
     def find_one(self, query, projection=None):
         for doc in self._data.values():
             if all(doc.get(k) == v for k, v in query.items()):
                 if projection:
-                    return {k: doc.get(k) for k in projection if k in doc} if projection else doc
+                    return {k: doc.get(k) for k in projection if k in doc}
                 return doc
         return None
 
-    def update_one(self, query, update, upsert=False):
+    def find(self, query=None, projection=None):
+        if query is None:
+            query = {}
+        results = []
+        for doc in self._data.values():
+            if all(doc.get(k) == v for k, v in query.items()):
+                if projection:
+                    results.append({k: doc.get(k) for k in projection if k in doc})
+                else:
+                    results.append(doc)
+        return iter(results)
+        
+    def update_one(self, query, update, upsert=False,session=None):
         for doc_id, doc in self._data.items():
             if all(doc.get(k) == v for k, v in query.items()):
                 if '$set' in update:
                     doc.update(update['$set'])
                 return type('Result', (), {'modified_count': 1})()
+         
+        # Handle upsert: create new document if no match found
+        if upsert:
+            new_doc = dict(query)
+            if '$set' in update:
+                new_doc.update(update['$set'])
+            new_doc['_id'] = str(ObjectId())
+            self._data[new_doc['_id']] = new_doc
+            return type('Result', (), {'modified_count': 1})()
         return type('Result', (), {'modified_count': 0})()
 
-    def delete_one(self, query):
+    def update_many(self, query, update, session=None):
+        count = 0
+        for doc_id, doc in self._data.items():
+            if all(doc.get(k) == v for k, v in query.items()):
+                if '$set' in update:
+                    doc.update(update['$set'])
+                count += 1
+        return type('Result', (), {'modified_count': count})()
+
+    def delete_one(self, query,session=None):
         for doc_id, doc in list(self._data.items()):
             if all(doc.get(k) == v for k, v in query.items()):
                 del self._data[doc_id]
                 return type('Result', (), {'deleted_count': 1})()
         return type('Result', (), {'deleted_count': 0})()
+
+    def delete_many(self, query, session=None):
+        count = 0
+        for doc_id, doc in list(self._data.items()):
+            if all(doc.get(k) == v for k, v in query.items()):
+                del self._data[doc_id]
+                count += 1
+        return type('Result', (), {'deleted_count': count})()
+
+    def count_documents(self, query):
+        count = 0
+        for doc in self._data.values():
+            if all(doc.get(k) == v for k, v in query.items()):
+                count += 1
+        return count
+
+    def aggregate(self, pipeline):
+        # Minimal stub: return iterator over data
+        # In a real implementation, this would apply pipeline stages
+        return iter(list(self._data.values()))
 
     def create_index(self, *args, **kwargs):
         pass
@@ -100,9 +158,9 @@ class MongoDB:
             print(f"✓ Connected to MongoDB: {db_name}")
         except ConnectionFailure as e:
             print(f"⚠ MongoDB unavailable, using mock database: {e}")
+            self._client = None
             self._db = MockDB()
             self._mock_mode = True
-
     @property
     def db(self):
         if self._db is None:
