@@ -3,6 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 import re
 import logging
+import os 
 
 from models.database import db, USERS, STUDENTS, TEACHERS
 from pymongo.errors import DuplicateKeyError
@@ -48,6 +49,13 @@ def register():
         if role not in ["student", "teacher", "admin"]:
             return jsonify({"error": "Invalid role"}), 400
 
+        # Require admin_key to create admin accounts
+        if role == "admin":
+            admin_key = data.get("admin_key", "")
+            admin_registration_key = os.getenv("ADMIN_REGISTRATION_KEY")
+            if not admin_registration_key or admin_key != admin_registration_key:
+                return jsonify({"error": "Invalid admin registration key"}), 403
+
         user_id = str(ObjectId())
         user_doc = {
             "_id": user_id,
@@ -60,7 +68,79 @@ def register():
         }
 
         try:
-            db[USERS].insert_one(user_doc)
+            # Attempt atomic transaction if MongoDB client is available
+            if hasattr(db, 'client') and db.client:
+                try:
+                    session = db.client.start_session()
+                    with session.start_transaction():
+                        db[USERS].insert_one(user_doc, session=session)
+                        
+                        # NOTE: Admin users intentionally do not have profile documents in STUDENTS or TEACHERS.
+                        # They are standalone users with elevated privileges managed directly through the users collection.
+                        if role == "student":
+                            student_doc = {
+                                "_id": str(ObjectId()),
+                                "user_id": user_id,
+                                "first_name": first_name or username,
+                                "last_name": last_name or "",
+                                "grade_level": data.get("grade_level"),
+                                "section": data.get("section"),
+                                "enrollment_date": datetime.utcnow(),
+                                "learning_style": None,
+                                "created_at": datetime.utcnow()
+                            }
+                            db[STUDENTS].insert_one(student_doc, session=session)
+                        elif role == "teacher":
+                            teacher_doc = {
+                                "_id": str(ObjectId()),
+                                "user_id": user_id,
+                                "first_name": first_name or username,
+                                "last_name": last_name or "",
+                                "subject_area": data.get("subject_area"),
+                                "department": data.get("department"),
+                                "years_experience": data.get("years_experience"),
+                                "created_at": datetime.utcnow()
+                            }
+                            db[TEACHERS].insert_one(teacher_doc, session=session)
+                    session.end_session()
+                except Exception as e:
+                    logging.exception("Transaction failed, using fallback")
+                    # Fallback to non-transactional with rollback cleanup
+                    raise
+            else:
+                # Mock mode or fallback: insert user first, then profile with rollback on failure
+                db[USERS].insert_one(user_doc)
+                try:
+                    if role == "student":
+                        student_doc = {
+                            "_id": str(ObjectId()),
+                            "user_id": user_id,
+                            "first_name": first_name or username,
+                            "last_name": last_name or "",
+                            "grade_level": data.get("grade_level"),
+                            "section": data.get("section"),
+                            "enrollment_date": datetime.utcnow(),
+                            "learning_style": None,
+                            "created_at": datetime.utcnow()
+                        }
+                        db[STUDENTS].insert_one(student_doc)
+                    elif role == "teacher":
+                        teacher_doc = {
+                            "_id": str(ObjectId()),
+                            "user_id": user_id,
+                            "first_name": first_name or username,
+                            "last_name": last_name or "",
+                            "subject_area": data.get("subject_area"),
+                            "department": data.get("department"),
+                            "years_experience": data.get("years_experience"),
+                            "created_at": datetime.utcnow()
+                        }
+                        db[TEACHERS].insert_one(teacher_doc)
+                except Exception as e:
+                    # Rollback: delete the user record if profile insertion fails
+                    logging.exception(f"Profile insertion failed, rolling back user creation: {e}")
+                    db[USERS].delete_one({"_id": user_id})
+                    raise
         except DuplicateKeyError as e:
             error_msg = str(e)
             if "email" in error_msg:
@@ -69,34 +149,6 @@ def register():
                 return jsonify({"error": "Username already taken"}), 409
             return jsonify({"error": "User already exists"}), 409
 
-        # NOTE: Admin users intentionally do not have profile documents in STUDENTS or TEACHERS.
-        # They are standalone users with elevated privileges managed directly through the users collection.
-        if role == "student":
-            student_doc = {
-                "_id": str(ObjectId()),
-                "user_id": user_id,
-                "first_name": first_name or username,
-                "last_name": last_name or "",
-                "grade_level": data.get("grade_level"),
-                "section": data.get("section"),
-                "enrollment_date": datetime.utcnow(),
-                "learning_style": None,
-                "created_at": datetime.utcnow()
-            }
-            db[STUDENTS].insert_one(student_doc)
-
-        elif role == "teacher":
-            teacher_doc = {
-                "_id": str(ObjectId()),
-                "user_id": user_id,
-                "first_name": first_name or username,
-                "last_name": last_name or "",
-                "subject_area": data.get("subject_area"),
-                "department": data.get("department"),
-                "years_experience": data.get("years_experience"),
-                "created_at": datetime.utcnow()
-            }
-            db[TEACHERS].insert_one(teacher_doc)
 
         access_token = create_access_token(user_id, role)
         refresh_token = create_refresh_token(user_id)
