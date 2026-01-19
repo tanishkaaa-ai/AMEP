@@ -64,6 +64,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
         isRefreshing = false;
+        onRefreshError(error);
         return Promise.reject(error);
       }
 
