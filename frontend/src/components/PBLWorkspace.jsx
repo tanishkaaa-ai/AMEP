@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle } from 'lucide-react';
 
 // Mock project data
@@ -39,7 +39,30 @@ const mockProject = {
 };
 
 const PBLWorkspace = () => {
-  const [project, setProject] = useState(mockProject);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await fetch('/api/projects/current');
+        if (!response.ok) {
+          throw new Error('Failed to fetch project data');
+        }
+        const data = await response.json();
+        setProject(data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+        setProject(mockProject); // fallback to mock data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, []);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -359,8 +382,25 @@ const PBLWorkspace = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
+  if (loading) {
+    return <div className="min-h-screen bg-gray-50 p-6 text-gray-600">Loading project...</div>;
+  }
+
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="font-medium text-red-800">Error loading project</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <p className="text-xs text-red-600 mt-2">Displaying mock project data.</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">📋 PBL Workspace</h1>
