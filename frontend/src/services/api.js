@@ -64,6 +64,9 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
         isRefreshing = false;
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
         onRefreshError(error);
         return Promise.reject(error);
       }
