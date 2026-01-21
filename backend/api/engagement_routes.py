@@ -34,9 +34,16 @@ from ai_engine.engagement_detection import (
     ExplicitSignals
 )
 
+# Import logging
+from utils.logger import get_logger
+
 engagement_bp = Blueprint('engagement', __name__)
 
+# Initialize logger
+logger = get_logger(__name__)
+
 # Initialize engine
+logger.info("Initializing Engagement Detection Engine")
 engagement_engine = EngagementDetectionEngine()
 
 # ============================================================================
@@ -50,8 +57,9 @@ def analyze_engagement():
     """
     try:
         data = request.json
-        
+
         student_id = data['student_id']
+        logger.info(f"Engagement analysis request | student_id: {student_id}")
         
         # Get recent responses from MongoDB
         week_ago = datetime.utcnow() - timedelta(days=7)
@@ -85,13 +93,20 @@ def analyze_engagement():
             implicit
         )
         
+        # Convert Enum types to strings for JSON serialization
+        for b in behaviors:
+            if hasattr(b['type'], 'value'):
+                b['type'] = b['type'].value
+        
         # Calculate engagement score
+        logger.info(f"Calculating engagement score | student_id: {student_id}")
         result = engagement_engine.calculate_engagement_score(
             implicit,
             explicit,
             behaviors
         )
-        
+        logger.info(f"Engagement calculated | student_id: {student_id} | score: {result['engagement_score']} | level: {result['engagement_level']}")
+
         # Save engagement session
         session_doc = {
             '_id': str(ObjectId()),

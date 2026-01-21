@@ -56,27 +56,33 @@ def register():
     """
     try:
         data = request.json
+        logger.info(f"Registration attempt | email: {data.get('email')} | role: {data.get('role')}")
 
         # Validate required fields
         required = ['email', 'username', 'password', 'role', 'first_name', 'last_name']
         missing = [field for field in required if field not in data]
         if missing:
+            logger.info(f"Registration failed | email: {data.get('email')} | error: Missing fields {missing}")
             return jsonify({'error': f'Missing required fields: {missing}'}), 400
 
         # Validate role
         if data['role'] not in ['student', 'teacher', 'admin']:
+            logger.info(f"Registration failed | email: {data.get('email')} | error: Invalid role {data['role']}")
             return jsonify({'error': 'Invalid role. Must be student, teacher, or admin'}), 400
 
         # Check if user already exists
         existing_email = find_one(USERS, {'email': data['email']})
         if existing_email:
+            logger.info(f"Registration failed | email: {data.get('email')} | error: Email already registered")
             return jsonify({'error': 'Email already registered'}), 409
 
         existing_username = find_one(USERS, {'username': data['username']})
         if existing_username:
+            logger.info(f"Registration failed | username: {data.get('username')} | error: Username already taken")
             return jsonify({'error': 'Username already taken'}), 409
 
         # Hash password
+        logger.info(f"Hashing password | email: {data.get('email')}")
         password_hash = bcrypt.hashpw(
             data['password'].encode('utf-8'),
             bcrypt.gensalt()
@@ -93,6 +99,7 @@ def register():
             'created_at': datetime.utcnow()
         }
 
+        logger.info(f"Creating user document | user_id: {user_id} | email: {data['email']} | role: {data['role']}")
         insert_one(USERS, user_doc)
 
         # Create role-specific profile
@@ -107,6 +114,7 @@ def register():
                 'enrollment_date': datetime.utcnow(),
                 'created_at': datetime.utcnow()
             }
+            logger.info(f"Creating student profile | user_id: {user_id} | grade_level: {student_doc['grade_level']}")
             insert_one(STUDENTS, student_doc)
 
         elif data['role'] == 'teacher':
@@ -119,11 +127,14 @@ def register():
                 'department': data.get('department', 'Education'),
                 'created_at': datetime.utcnow()
             }
+            logger.info(f"Creating teacher profile | user_id: {user_id} | subject: {teacher_doc['subject_area']}")
             insert_one(TEACHERS, teacher_doc)
 
         # Generate JWT token
+        logger.info(f"Generating JWT token | user_id: {user_id}")
         token = generate_jwt_token(user_id, data['role'])
 
+        logger.info(f"Registration successful | user_id: {user_id} | email: {data['email']} | role: {data['role']}")
         return jsonify({
             'message': 'Registration successful',
             'token': token,
@@ -136,6 +147,7 @@ def register():
         }), 201
 
     except Exception as e:
+        logger.info(f"Registration exception | email: {data.get('email') if data else 'unknown'} | error: {str(e)}")
         return jsonify({
             'error': 'Registration failed',
             'detail': str(e)
@@ -155,26 +167,32 @@ def login():
     """
     try:
         data = request.json
+        logger.info(f"Login attempt | email: {data.get('email') if data else 'none'}")
 
         # Validate required fields
         if not data or 'email' not in data or 'password' not in data:
+            logger.info(f"Login failed | error: Missing credentials")
             return jsonify({'error': 'Email and password required'}), 400
 
         # Find user by email
         user = find_one(USERS, {'email': data['email']})
         if not user:
+            logger.info(f"Login failed | email: {data['email']} | error: User not found")
             return jsonify({'error': 'Invalid email or password'}), 401
 
         # Verify password
+        logger.info(f"Verifying password | email: {data['email']}")
         password_valid = bcrypt.checkpw(
             data['password'].encode('utf-8'),
             user['password_hash'].encode('utf-8')
         )
 
         if not password_valid:
+            logger.info(f"Login failed | email: {data['email']} | error: Invalid password")
             return jsonify({'error': 'Invalid email or password'}), 401
 
         # Update last login
+        logger.info(f"Updating last login | user_id: {user['_id']}")
         update_one(
             USERS,
             {'_id': user['_id']},
@@ -182,15 +200,19 @@ def login():
         )
 
         # Generate JWT token
+        logger.info(f"Generating JWT token | user_id: {user['_id']} | role: {user['role']}")
         token = generate_jwt_token(user['_id'], user['role'])
 
         # Get user profile
         profile = None
         if user['role'] == 'student':
+            logger.info(f"Fetching student profile | user_id: {user['_id']}")
             profile = find_one(STUDENTS, {'user_id': user['_id']})
         elif user['role'] == 'teacher':
+            logger.info(f"Fetching teacher profile | user_id: {user['_id']}")
             profile = find_one(TEACHERS, {'user_id': user['_id']})
 
+        logger.info(f"Login successful | user_id: {user['_id']} | email: {data['email']} | role: {user['role']}")
         return jsonify({
             'message': 'Login successful',
             'token': token,
@@ -207,6 +229,7 @@ def login():
         }), 200
 
     except Exception as e:
+        logger.info(f"Login exception | email: {data.get('email') if data else 'unknown'} | error: {str(e)}")
         return jsonify({
             'error': 'Login failed',
             'detail': str(e)
@@ -222,19 +245,26 @@ def verify_token():
         Authorization: Bearer <token>
     """
     try:
+        logger.info("Token verification attempt")
         token = extract_token_from_header()
         if not token:
+            logger.info("Token verification failed | error: No token provided")
             return jsonify({'error': 'No token provided'}), 401
 
+        logger.info("Decoding JWT token")
         payload = decode_jwt_token(token)
         if not payload:
+            logger.info("Token verification failed | error: Invalid or expired token")
             return jsonify({'error': 'Invalid or expired token'}), 401
 
         # Check if user still exists
+        logger.info(f"Verifying user existence | user_id: {payload['user_id']}")
         user = find_one(USERS, {'_id': payload['user_id']})
         if not user:
+            logger.info(f"Token verification failed | user_id: {payload['user_id']} | error: User not found")
             return jsonify({'error': 'User not found'}), 404
 
+        logger.info(f"Token verification successful | user_id: {payload['user_id']} | role: {payload['role']}")
         return jsonify({
             'valid': True,
             'user': {
@@ -244,6 +274,7 @@ def verify_token():
         }), 200
 
     except Exception as e:
+        logger.info(f"Token verification exception | error: {str(e)}")
         return jsonify({
             'error': 'Token verification failed',
             'detail': str(e)
@@ -265,52 +296,66 @@ def change_password():
         Authorization: Bearer <token>
     """
     try:
+        logger.info("Password change attempt")
         token = extract_token_from_header()
         if not token:
+            logger.info("Password change failed | error: No authentication token")
             return jsonify({'error': 'Authentication required'}), 401
 
         payload = decode_jwt_token(token)
         if not payload:
+            logger.info("Password change failed | error: Invalid token")
             return jsonify({'error': 'Invalid token'}), 401
 
+        logger.info(f"Password change request | user_id: {payload['user_id']}")
         data = request.json
         if not data or 'old_password' not in data or 'new_password' not in data:
+            logger.info(f"Password change failed | user_id: {payload['user_id']} | error: Missing passwords")
             return jsonify({'error': 'Old password and new password required'}), 400
 
         # Validate new password length
         if len(data['new_password']) < 6:
+            logger.info(f"Password change failed | user_id: {payload['user_id']} | error: Password too short")
             return jsonify({'error': 'New password must be at least 6 characters'}), 400
 
         # Get user
+        logger.info(f"Fetching user | user_id: {payload['user_id']}")
         user = find_one(USERS, {'_id': payload['user_id']})
         if not user:
+            logger.info(f"Password change failed | user_id: {payload['user_id']} | error: User not found")
             return jsonify({'error': 'User not found'}), 404
 
         # Verify old password
+        logger.info(f"Verifying old password | user_id: {payload['user_id']}")
         password_valid = bcrypt.checkpw(
             data['old_password'].encode('utf-8'),
             user['password_hash'].encode('utf-8')
         )
 
         if not password_valid:
+            logger.info(f"Password change failed | user_id: {payload['user_id']} | error: Incorrect old password")
             return jsonify({'error': 'Current password is incorrect'}), 401
 
         # Hash new password
+        logger.info(f"Hashing new password | user_id: {payload['user_id']}")
         new_password_hash = bcrypt.hashpw(
             data['new_password'].encode('utf-8'),
             bcrypt.gensalt()
         ).decode('utf-8')
 
         # Update password
+        logger.info(f"Updating password in database | user_id: {payload['user_id']}")
         update_one(
             USERS,
             {'_id': payload['user_id']},
             {'$set': {'password_hash': new_password_hash, 'password_changed_at': datetime.utcnow()}}
         )
 
+        logger.info(f"Password changed successfully | user_id: {payload['user_id']}")
         return jsonify({'message': 'Password changed successfully'}), 200
 
     except Exception as e:
+        logger.info(f"Password change exception | user_id: {payload.get('user_id') if 'payload' in locals() else 'unknown'} | error: {str(e)}")
         return jsonify({
             'error': 'Password change failed',
             'detail': str(e)

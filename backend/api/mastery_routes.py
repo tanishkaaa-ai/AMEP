@@ -35,10 +35,17 @@ from models.schemas import (
 from ai_engine.knowledge_tracing import HybridKnowledgeTracing
 from ai_engine.adaptive_practice import AdaptivePracticeEngine
 
+# Import logging
+from utils.logger import get_logger
+
 # Create blueprint
 mastery_bp = Blueprint('mastery', __name__)
 
+# Initialize logger
+logger = get_logger(__name__)
+
 # Initialize engines
+logger.info("Initializing Mastery Engines: HybridKnowledgeTracing and AdaptivePracticeEngine")
 kt_engine = HybridKnowledgeTracing()
 adaptive_engine = AdaptivePracticeEngine()
 
@@ -50,14 +57,16 @@ adaptive_engine = AdaptivePracticeEngine()
 def calculate_mastery():
     """
     BR1: Calculate student mastery score for a concept
-    
+
     POST /api/mastery/calculate
     """
     try:
+        logger.info(f"Mastery calculation request | student_id: {request.json.get('student_id')} | concept_id: {request.json.get('concept_id')}")
         # Validate request data using Pydantic
         data = MasteryCalculationRequest(**request.json)
         
         # Call the knowledge tracing engine
+        logger.info(f"Calling KT engine | student_id: {data.student_id} | concept_id: {data.concept_id} | is_correct: {data.is_correct}")
         result = kt_engine.calculate_mastery(
             student_id=data.student_id,
             concept_id=data.concept_id,
@@ -67,6 +76,7 @@ def calculate_mastery():
             response_history=data.response_history,
             related_concepts=data.related_concepts
         )
+        logger.info(f"Mastery calculated | student_id: {data.student_id} | concept_id: {data.concept_id} | score: {result['mastery_score']}")
         
         # Add timestamp
         result['timestamp'] = datetime.utcnow()
@@ -82,8 +92,7 @@ def calculate_mastery():
             'dkvmn_component': result['dkvmn_component'],
             'confidence': result['confidence'],
             'learning_velocity': result['learning_velocity'],
-            'last_assessed': datetime.utcnow(),
-            'times_assessed': 1
+            'last_assessed': datetime.utcnow()
         }
         
         # Update or insert

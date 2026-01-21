@@ -5,6 +5,9 @@ Entry point for the backend server
 Location: backend/app.py
 """
 
+# Graceful degradation - Library now installed
+import sklearn
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
@@ -92,12 +95,19 @@ def register_blueprints(app):
     from api.engagement_routes import engagement_bp
     from api.pbl_routes import pbl_bp
     from api.analytics_routes import analytics_bp
+    from api.classroom_routes import classroom_bp
+    from api.live_polling_routes import live_polling_bp
+    from api.template_routes import template_bp
+    from api.dashboard_routes import dashboard_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     logger.info("Registered: /api/auth (Authentication)")
 
     app.register_blueprint(mastery_bp, url_prefix="/api/mastery")
     logger.info("Registered: /api/mastery (Knowledge Tracing)")
+
+    app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
+    logger.info("Registered: /api/classroom (Classroom Management)")
 
     app.register_blueprint(engagement_bp, url_prefix="/api/engagement")
     logger.info("Registered: /api/engagement (Engagement Detection)")
@@ -106,7 +116,16 @@ def register_blueprints(app):
     logger.info("Registered: /api/pbl (Project-Based Learning)")
 
     app.register_blueprint(analytics_bp, url_prefix="/api/analytics")
-    logger.info("Registered: /api/analytics (Analytics & Templates)")
+    logger.info("Registered: /api/analytics (Analytics & Reporting)")
+
+    app.register_blueprint(live_polling_bp, url_prefix="/api/polling")
+    logger.info("Registered: /api/polling (Live Polling System)")
+
+    app.register_blueprint(template_bp, url_prefix="/api/templates")
+    logger.info("Registered: /api/templates (Curriculum Templates)")
+
+    app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
+    logger.info("Registered: /api/dashboard (Real-Time Teacher Dashboards)")
 
     logger.info("All blueprints registered successfully")
 
@@ -224,6 +243,10 @@ def register_error_handlers(app):
                 "engagement": "/api/engagement",
                 "pbl": "/api/pbl",
                 "analytics": "/api/analytics",
+                "classroom": "/api/classroom",
+                "polling": "/api/polling",
+                "templates": "/api/templates",
+                "dashboard": "/api/dashboard",
                 "health": "/api/health"
             }
         })
@@ -251,7 +274,7 @@ if __name__ == "__main__":
     app, socketio = create_app()
 
     print("\n" + "=" * 60)
-    print("🚀 AMEP Backend Server Starting...")
+    print("[STARTED] AMEP Backend Server Starting...")
     print("="*60)
     print(f"Environment: {app.config['ENV']}")
     print(f"Debug Mode: {app.config['DEBUG']}")

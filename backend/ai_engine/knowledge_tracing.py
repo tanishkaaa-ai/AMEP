@@ -7,12 +7,25 @@ Research Sources:
 - Paper 2105_15106v4.pdf: Knowledge Tracing Survey
 - Paper 4.pdf: AI-Powered Personalized Learning
 - Paper 6.pdf: Adaptive Learning Pathways
+
+PRODUCTION VERSION - Enhanced with full LSTM and Memory Network support
 """
 
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
+
+# Import enhanced model implementations
+try:
+    from ai_engine.dkt_model import SimplifiedDKTEngine, DKTEngine
+    from ai_engine.dkvmn_model import SimplifiedDKVMNEngine, DKVMNEngine
+    DKT_AVAILABLE = True
+    DKVMN_AVAILABLE = True
+except ImportError:
+    # Fallback if imports fail
+    DKT_AVAILABLE = False
+    DKVMN_AVAILABLE = False
 
 # ============================================================================
 # LAYER 1: BAYESIAN KNOWLEDGE TRACING (BKT) - For Interpretability

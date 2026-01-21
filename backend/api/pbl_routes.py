@@ -34,9 +34,16 @@ from ai_engine.soft_skills_assessment import (
     AssessmentMetadata
 )
 
+# Import logging
+from utils.logger import get_logger
+
 pbl_bp = Blueprint('pbl', __name__)
 
+# Initialize logger
+logger = get_logger(__name__)
+
 # Initialize Soft Skills AI Engine
+logger.info("Initializing Soft Skills Assessment Engine")
 soft_skills_engine = SoftSkillsEngine()
 
 # ============================================================================
@@ -101,7 +108,8 @@ def create_project():
     """
     try:
         data = request.json
-        
+        logger.info(f"Project creation request | teacher_id: {data.get('teacher_id')} | title: {data.get('title')}")
+
         project_doc = {
             '_id': str(ObjectId()),
             'teacher_id': data['teacher_id'],
@@ -115,7 +123,8 @@ def create_project():
         }
         
         project_id = insert_one(PROJECTS, project_doc)
-        
+        logger.info(f"Project created | project_id: {project_id} | title: {data['title']}")
+
         return jsonify({
             'project_id': project_id,
             'message': 'Project created successfully'
@@ -423,7 +432,7 @@ def _convert_to_soft_skill_ratings(ratings_dict: dict) -> SoftSkillRatings:
 def submit_soft_skill_assessment():
     """
     BR5: Submit peer review or self-assessment with AI validation
-    
+
     ENHANCED: Now uses SoftSkillsEngine for:
     - Validation of ratings
     - Bias detection
@@ -431,6 +440,7 @@ def submit_soft_skill_assessment():
     """
     try:
         data = request.get_json(silent=True)
+        logger.info(f"Soft skills assessment request | team_id: {data.get('team_id') if data else 'none'} | assessed_student: {data.get('assessed_student_id') if data else 'none'}")
         
         if not data or not isinstance(data, dict):
             return jsonify({'error': 'Invalid or missing JSON body'}), 400
@@ -464,8 +474,10 @@ def submit_soft_skill_assessment():
         )
         
         # AI Engine: Calculate dimension scores
+        logger.info(f"Calculating dimension scores | team_id: {data['team_id']} | assessed_student: {data['assessed_student_id']}")
         dimension_scores = soft_skills_engine.calculate_dimension_scores(ratings)
-        
+        logger.info(f"Soft skills assessed | team_id: {data['team_id']} | assessed_student: {data['assessed_student_id']} | overall_score: {dimension_scores['overall']}")
+
         # Create assessment document with AI-enhanced data
         assessment_doc = {
             '_id': str(ObjectId()),

@@ -1,0 +1,1002 @@
+"""
+AMEP PBL Workflow Routes - Enhanced Version
+Complete 5-stage PBL workflow with team management, milestone tracking,
+peer review, and 4D soft skills assessment
+
+Location: backend/api/pbl_workflow_routes.py
+
+Research Validation:
+- Paper 11.pdf: 5-stage PBL process + 4D framework (Cronbach α > 0.97)
+- Paper 17.pdf: PBL workflow challenges and solutions
+- Paper 10.pdf: Team performance prediction using soft skills
+
+BR5: Objective Soft-Skill Assessment
+BR9: Centralized PBL Workspace
+"""
+
+from flask import Blueprint, request, jsonify
+from datetime import datetime, timedelta
+from bson import ObjectId
+import logging
+import statistics
+
+# Import MongoDB helper functions
+from models.database import (
+    db,
+    PROJECTS,
+    PROJECT_TEAMS,
+    PROJECT_TASKS,
+    PROJECT_MILESTONES,
+    PEER_REVIEWS,
+    SOFT_SKILL_ASSESSMENTS,
+    STUDENTS,
+    TEACHERS,
+    CLASSROOMS,
+    find_one,
+    find_many,
+    insert_one,
+    update_one,
+    delete_one,
+    aggregate
+)
+
+# Import logging
+from utils.logger import get_logger
+
+# Create blueprint
+pbl_workflow_bp = Blueprint('pbl_workflow', __name__)
+
+# Initialize logger
+logger = get_logger(__name__)
+
+# ============================================================================
+# 5-STAGE PBL WORKFLOW CONSTANTS
+# ============================================================================
+
+PBL_STAGES = {
+    'QUESTIONING': {
+        'order': 1,
+        'description': 'Brainstorm and identify problems to solve',
+        'tools': ['SWOT analysis', 'Brainstorming templates'],
+        'soft_skills': ['Creativity', 'Critical Thinking']
+    },
+    'DEFINE': {
+        'order': 2,
+        'description': 'Define project scope, roles, and goals',
+        'tools': ['SMART goal wizard', 'Role assignment matrix', 'Project charter'],
+        'soft_skills': ['Planning', 'Leadership']
+    },
+    'RESEARCH': {
+        'order': 3,
+        'description': 'Gather information and resources',
+        'tools': ['Resource library', 'Citation manager', 'Knowledge sharing'],
+        'soft_skills': ['Information literacy', 'Collaboration']
+    },
+    'CREATE_IMPROVE': {
+        'order': 4,
+        'description': 'Build solution iteratively',
+        'tools': ['Milestone tracking', 'Gantt chart', 'Version control'],
+        'soft_skills': ['Execution', 'Adaptability', 'Communication']
+    },
+    'PRESENT_EVALUATE': {
+        'order': 5,
+        'description': 'Present and receive evaluation',
+        'tools': ['Presentation upload', 'Multi-stakeholder rubrics', 'Reflection journal'],
+        'soft_skills': ['Communication', 'Professionalism']
+    }
+}
+
+# 4D Soft Skills Framework (Paper 11.pdf)
+SOFT_SKILL_DIMENSIONS = {
+    'TEAM_DYNAMICS': {
+        'name': 'Team Dynamics (TD)',
+        'description': 'Quality of interpersonal interactions',
+        'criteria': [
+            'Open and clear communication',
+            'Mutual support and encouragement',
+            'Climate of trust',
+            'Active listening'
+        ]
+    },
+    'TEAM_STRUCTURE': {
+        'name': 'Team Structure (TS)',
+        'description': 'Organization and coordination effectiveness',
+        'criteria': [
+            'Clear roles and responsibilities',
+            'Efficient task scheduling',
+            'Effective decision-making',
+            'Constructive conflict resolution'
+        ]
+    },
+    'TEAM_MOTIVATION': {
+        'name': 'Team Motivation (TM)',
+        'description': 'Drive and commitment to goals',
+        'criteria': [
+            'Clear sense of purpose',
+            'SMART goals established',
+            'Passion and dedication',
+            'Team synergy'
+        ]
+    },
+    'TEAM_EXCELLENCE': {
+        'name': 'Team Excellence (TE)',
+        'description': 'Quality of output and continuous improvement',
+        'criteria': [
+            'Growth mindset',
+            'Commitment to high-quality work',
+            'Self-monitoring',
+            'Reflective practice'
+        ]
+    }
+}
+
+
+# ============================================================================
+# PROJECT MANAGEMENT
+# ============================================================================
+
+@pbl_workflow_bp.route('/projects', methods=['POST'])
+def create_project():
+    """
+    BR9: Create new PBL project
+
+    POST /api/pbl-workflow/projects
+    """
+    try:
+        data = request.json
+
+        # Validate required fields
+        required = ['title', 'classroom_id', 'teacher_id', 'stage', 'deadline']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        # Validate stage
+        if data['stage'] not in PBL_STAGES:
+            return jsonify({'error': f'Invalid stage. Must be one of: {list(PBL_STAGES.keys())}'}), 400
+
+        project_doc = {
+            '_id': str(ObjectId()),
+            'title': data['title'],
+            'description': data.get('description', ''),
+            'classroom_id': data['classroom_id'],
+            'teacher_id': data['teacher_id'],
+            'stage': data['stage'],
+            'stage_order': PBL_STAGES[data['stage']]['order'],
+            'deadline': datetime.fromisoformat(data['deadline']),
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+            'status': 'active',  # active, completed, archived
+            'project_type': data.get('project_type', 'team'),  # team, individual
+            'learning_objectives': data.get('learning_objectives', []),
+            'resources': data.get('resources', []),
+            'rubric': data.get('rubric', {}),
+            'deliverables': data.get('deliverables', []),
+            'settings': {
+                'enable_peer_review': data.get('enable_peer_review', True),
+                'peer_review_schedule': data.get('peer_review_schedule', ['mid-project', 'final']),
+                'team_size_min': data.get('team_size_min', 3),
+                'team_size_max': data.get('team_size_max', 5),
+                'allow_self_team_formation': data.get('allow_self_team_formation', True)
+            }
+        }
+
+        project_id = insert_one(PROJECTS, project_doc)
+
+        logger.info(f"Project created | project_id: {project_id} | title: {data['title']} | stage: {data['stage']}")
+
+        return jsonify({
+            'project_id': project_id,
+            'message': 'Project created successfully',
+            'stage': data['stage'],
+            'stage_info': PBL_STAGES[data['stage']]
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Error creating project | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/projects/<project_id>', methods=['GET'])
+def get_project(project_id):
+    """
+    Get project details
+
+    GET /api/pbl-workflow/projects/{project_id}
+    """
+    try:
+        project = find_one(PROJECTS, {'_id': project_id})
+
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+
+        # Get teams for this project
+        teams = find_many(PROJECT_TEAMS, {'project_id': project_id})
+
+        # Get milestones
+        milestones = find_many(PROJECT_MILESTONES, {'project_id': project_id}, sort=[('due_date', 1)])
+
+        # Format response
+        project_data = {
+            'project_id': project['_id'],
+            'title': project.get('title'),
+            'description': project.get('description'),
+            'classroom_id': project.get('classroom_id'),
+            'teacher_id': project.get('teacher_id'),
+            'stage': project.get('stage'),
+            'stage_info': PBL_STAGES.get(project.get('stage'), {}),
+            'deadline': project.get('deadline').isoformat() if project.get('deadline') else None,
+            'status': project.get('status'),
+            'learning_objectives': project.get('learning_objectives', []),
+            'teams': [
+                {
+                    'team_id': team['_id'],
+                    'team_name': team.get('team_name'),
+                    'member_count': len(team.get('members', []))
+                }
+                for team in teams
+            ],
+            'milestones': [
+                {
+                    'milestone_id': m['_id'],
+                    'title': m.get('title'),
+                    'due_date': m.get('due_date').isoformat() if m.get('due_date') else None,
+                    'completed': m.get('completed', False)
+                }
+                for m in milestones
+            ],
+            'settings': project.get('settings', {})
+        }
+
+        return jsonify(project_data), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching project | project_id: {project_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/projects/<project_id>/stage', methods=['PUT'])
+def update_project_stage(project_id):
+    """
+    BR9: Move project to next stage
+
+    PUT /api/pbl-workflow/projects/{project_id}/stage
+    """
+    try:
+        data = request.json
+
+        if 'new_stage' not in data:
+            return jsonify({'error': 'Missing required field: new_stage'}), 400
+
+        if data['new_stage'] not in PBL_STAGES:
+            return jsonify({'error': f'Invalid stage. Must be one of: {list(PBL_STAGES.keys())}'}), 400
+
+        update_data = {
+            'stage': data['new_stage'],
+            'stage_order': PBL_STAGES[data['new_stage']]['order'],
+            'updated_at': datetime.utcnow()
+        }
+
+        result = update_one(PROJECTS, {'_id': project_id}, {'$set': update_data})
+
+        if result == 0:
+            return jsonify({'error': 'Project not found'}), 404
+
+        logger.info(f"Project stage updated | project_id: {project_id} | new_stage: {data['new_stage']}")
+
+        return jsonify({
+            'message': 'Project stage updated successfully',
+            'new_stage': data['new_stage'],
+            'stage_info': PBL_STAGES[data['new_stage']]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error updating project stage | project_id: {project_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/projects/classroom/<classroom_id>', methods=['GET'])
+def get_classroom_projects(classroom_id):
+    """
+    Get all projects for a classroom
+
+    GET /api/pbl-workflow/projects/classroom/{classroom_id}
+    """
+    try:
+        projects = find_many(
+            PROJECTS,
+            {'classroom_id': classroom_id},
+            sort=[('created_at', -1)]
+        )
+
+        projects_list = []
+        for project in projects:
+            projects_list.append({
+                'project_id': project['_id'],
+                'title': project.get('title'),
+                'stage': project.get('stage'),
+                'stage_order': project.get('stage_order'),
+                'deadline': project.get('deadline').isoformat() if project.get('deadline') else None,
+                'status': project.get('status'),
+                'created_at': project.get('created_at').isoformat() if project.get('created_at') else None
+            })
+
+        return jsonify({
+            'classroom_id': classroom_id,
+            'projects': projects_list,
+            'total_projects': len(projects_list)
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching classroom projects | classroom_id: {classroom_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+# ============================================================================
+# TEAM MANAGEMENT
+# ============================================================================
+
+@pbl_workflow_bp.route('/projects/<project_id>/teams', methods=['POST'])
+def create_team(project_id):
+    """
+    BR9: Create team for project
+
+    POST /api/pbl-workflow/projects/{project_id}/teams
+    """
+    try:
+        data = request.json
+
+        # Validate project exists
+        project = find_one(PROJECTS, {'_id': project_id})
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+
+        # Validate team size
+        team_size = len(data.get('members', []))
+        min_size = project.get('settings', {}).get('team_size_min', 3)
+        max_size = project.get('settings', {}).get('team_size_max', 5)
+
+        if team_size < min_size or team_size > max_size:
+            return jsonify({'error': f'Team size must be between {min_size} and {max_size}'}), 400
+
+        team_doc = {
+            '_id': str(ObjectId()),
+            'project_id': project_id,
+            'team_name': data.get('team_name', f'Team {ObjectId()}'),
+            'members': data.get('members', []),  # List of student_ids
+            'roles': data.get('roles', {}),  # {student_id: role}
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+            'status': 'active'
+        }
+
+        team_id = insert_one(PROJECT_TEAMS, team_doc)
+
+        logger.info(f"Team created | team_id: {team_id} | project_id: {project_id} | members: {team_size}")
+
+        return jsonify({
+            'team_id': team_id,
+            'message': 'Team created successfully',
+            'team_name': team_doc['team_name']
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Error creating team | project_id: {project_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/teams/<team_id>/members', methods=['POST'])
+def add_team_member(team_id):
+    """
+    Add member to team
+
+    POST /api/pbl-workflow/teams/{team_id}/members
+    """
+    try:
+        data = request.json
+
+        if 'student_id' not in data:
+            return jsonify({'error': 'Missing required field: student_id'}), 400
+
+        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        if not team:
+            return jsonify({'error': 'Team not found'}), 404
+
+        # Check team size limit
+        project = find_one(PROJECTS, {'_id': team['project_id']})
+        max_size = project.get('settings', {}).get('team_size_max', 5)
+
+        if len(team.get('members', [])) >= max_size:
+            return jsonify({'error': f'Team is full (max {max_size} members)'}), 400
+
+        # Add member
+        result = update_one(
+            PROJECT_TEAMS,
+            {'_id': team_id},
+            {
+                '$addToSet': {'members': data['student_id']},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+
+        # Optionally set role
+        if 'role' in data:
+            update_one(
+                PROJECT_TEAMS,
+                {'_id': team_id},
+                {'$set': {f'roles.{data["student_id"]}': data['role']}}
+            )
+
+        logger.info(f"Member added to team | team_id: {team_id} | student_id: {data['student_id']}")
+
+        return jsonify({'message': 'Member added successfully'}), 200
+
+    except Exception as e:
+        logger.error(f"Error adding team member | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/teams/<team_id>', methods=['GET'])
+def get_team(team_id):
+    """
+    Get team details with member information
+
+    GET /api/pbl-workflow/teams/{team_id}
+    """
+    try:
+        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+
+        if not team:
+            return jsonify({'error': 'Team not found'}), 404
+
+        # Get member details
+        members_data = []
+        for student_id in team.get('members', []):
+            student = find_one(STUDENTS, {'_id': student_id})
+            if student:
+                members_data.append({
+                    'student_id': student_id,
+                    'student_name': student.get('name', 'Unknown'),
+                    'email': student.get('email'),
+                    'role': team.get('roles', {}).get(student_id, 'Member')
+                })
+
+        team_data = {
+            'team_id': team['_id'],
+            'project_id': team.get('project_id'),
+            'team_name': team.get('team_name'),
+            'members': members_data,
+            'member_count': len(members_data),
+            'status': team.get('status'),
+            'created_at': team.get('created_at').isoformat() if team.get('created_at') else None
+        }
+
+        return jsonify(team_data), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching team | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+# ============================================================================
+# TASK & MILESTONE MANAGEMENT
+# ============================================================================
+
+@pbl_workflow_bp.route('/projects/<project_id>/milestones', methods=['POST'])
+def create_milestone(project_id):
+    """
+    BR9: Create project milestone
+
+    POST /api/pbl-workflow/projects/{project_id}/milestones
+    """
+    try:
+        data = request.json
+
+        required = ['title', 'due_date']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        milestone_doc = {
+            '_id': str(ObjectId()),
+            'project_id': project_id,
+            'title': data['title'],
+            'description': data.get('description', ''),
+            'due_date': datetime.fromisoformat(data['due_date']),
+            'created_at': datetime.utcnow(),
+            'completed': False,
+            'completed_at': None,
+            'deliverables': data.get('deliverables', [])
+        }
+
+        milestone_id = insert_one(PROJECT_MILESTONES, milestone_doc)
+
+        logger.info(f"Milestone created | milestone_id: {milestone_id} | project_id: {project_id}")
+
+        return jsonify({
+            'milestone_id': milestone_id,
+            'message': 'Milestone created successfully'
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Error creating milestone | project_id: {project_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/milestones/<milestone_id>/complete', methods=['PUT'])
+def complete_milestone(milestone_id):
+    """
+    Mark milestone as completed
+
+    PUT /api/pbl-workflow/milestones/{milestone_id}/complete
+    """
+    try:
+        update_data = {
+            'completed': True,
+            'completed_at': datetime.utcnow()
+        }
+
+        result = update_one(PROJECT_MILESTONES, {'_id': milestone_id}, {'$set': update_data})
+
+        if result == 0:
+            return jsonify({'error': 'Milestone not found'}), 404
+
+        logger.info(f"Milestone completed | milestone_id: {milestone_id}")
+
+        return jsonify({'message': 'Milestone marked as completed'}), 200
+
+    except Exception as e:
+        logger.error(f"Error completing milestone | milestone_id: {milestone_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/teams/<team_id>/tasks', methods=['POST'])
+def create_task(team_id):
+    """
+    BR9: Create task for team
+
+    POST /api/pbl-workflow/teams/{team_id}/tasks
+    """
+    try:
+        data = request.json
+
+        required = ['title', 'assigned_to']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        task_doc = {
+            '_id': str(ObjectId()),
+            'team_id': team_id,
+            'title': data['title'],
+            'description': data.get('description', ''),
+            'assigned_to': data['assigned_to'],  # student_id
+            'due_date': datetime.fromisoformat(data['due_date']) if 'due_date' in data else None,
+            'priority': data.get('priority', 'medium'),  # low, medium, high
+            'status': 'todo',  # todo, in_progress, completed
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+            'completed_at': None
+        }
+
+        task_id = insert_one(PROJECT_TASKS, task_doc)
+
+        logger.info(f"Task created | task_id: {task_id} | team_id: {team_id} | assigned_to: {data['assigned_to']}")
+
+        return jsonify({
+            'task_id': task_id,
+            'message': 'Task created successfully'
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Error creating task | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/tasks/<task_id>/status', methods=['PUT'])
+def update_task_status(task_id):
+    """
+    Update task status
+
+    PUT /api/pbl-workflow/tasks/{task_id}/status
+    """
+    try:
+        data = request.json
+
+        if 'status' not in data:
+            return jsonify({'error': 'Missing required field: status'}), 400
+
+        valid_statuses = ['todo', 'in_progress', 'completed']
+        if data['status'] not in valid_statuses:
+            return jsonify({'error': f'Invalid status. Must be one of: {valid_statuses}'}), 400
+
+        update_data = {
+            'status': data['status'],
+            'updated_at': datetime.utcnow()
+        }
+
+        if data['status'] == 'completed':
+            update_data['completed_at'] = datetime.utcnow()
+
+        result = update_one(PROJECT_TASKS, {'_id': task_id}, {'$set': update_data})
+
+        if result == 0:
+            return jsonify({'error': 'Task not found'}), 404
+
+        logger.info(f"Task status updated | task_id: {task_id} | new_status: {data['status']}")
+
+        return jsonify({'message': 'Task status updated successfully'}), 200
+
+    except Exception as e:
+        logger.error(f"Error updating task status | task_id: {task_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/teams/<team_id>/tasks', methods=['GET'])
+def get_team_tasks(team_id):
+    """
+    Get all tasks for a team
+
+    GET /api/pbl-workflow/teams/{team_id}/tasks
+    """
+    try:
+        tasks = find_many(PROJECT_TASKS, {'team_id': team_id}, sort=[('due_date', 1)])
+
+        tasks_list = []
+        for task in tasks:
+            # Get assigned student name
+            student = find_one(STUDENTS, {'_id': task.get('assigned_to')})
+
+            tasks_list.append({
+                'task_id': task['_id'],
+                'title': task.get('title'),
+                'description': task.get('description'),
+                'assigned_to': task.get('assigned_to'),
+                'assigned_to_name': student.get('name', 'Unknown') if student else 'Unknown',
+                'due_date': task.get('due_date').isoformat() if task.get('due_date') else None,
+                'priority': task.get('priority'),
+                'status': task.get('status'),
+                'created_at': task.get('created_at').isoformat() if task.get('created_at') else None
+            })
+
+        return jsonify({
+            'team_id': team_id,
+            'tasks': tasks_list,
+            'total_tasks': len(tasks_list),
+            'completed_tasks': len([t for t in tasks_list if t['status'] == 'completed'])
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching team tasks | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+# ============================================================================
+# PEER REVIEW & 4D SOFT SKILLS ASSESSMENT (BR5)
+# ============================================================================
+
+@pbl_workflow_bp.route('/teams/<team_id>/peer-reviews', methods=['POST'])
+def submit_peer_review(team_id):
+    """
+    BR5: Submit peer review using 4D framework
+
+    POST /api/pbl-workflow/teams/{team_id}/peer-reviews
+    """
+    try:
+        data = request.json
+
+        required = ['reviewer_id', 'reviewee_id', 'review_type', 'ratings']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        # Validate review type
+        valid_types = ['mid-project', 'final']
+        if data['review_type'] not in valid_types:
+            return jsonify({'error': f'Invalid review_type. Must be one of: {valid_types}'}), 400
+
+        # Validate ratings include all 4 dimensions
+        ratings = data['ratings']
+        for dimension in SOFT_SKILL_DIMENSIONS.keys():
+            if dimension not in ratings:
+                return jsonify({'error': f'Missing rating for dimension: {dimension}'}), 400
+
+            # Validate rating is 1-5 (5-point Likert scale)
+            if not (1 <= ratings[dimension] <= 5):
+                return jsonify({'error': f'Rating for {dimension} must be between 1 and 5'}), 400
+
+        review_doc = {
+            '_id': str(ObjectId()),
+            'team_id': team_id,
+            'reviewer_id': data['reviewer_id'],
+            'reviewee_id': data['reviewee_id'],
+            'review_type': data['review_type'],
+            'ratings': ratings,  # {TEAM_DYNAMICS: 4, TEAM_STRUCTURE: 5, ...}
+            'comments': data.get('comments', {}),  # {dimension: comment}
+            'submitted_at': datetime.utcnow(),
+            'is_self_review': data['reviewer_id'] == data['reviewee_id']
+        }
+
+        review_id = insert_one(PEER_REVIEWS, review_doc)
+
+        logger.info(f"Peer review submitted | review_id: {review_id} | team_id: {team_id} | reviewer: {data['reviewer_id']} | reviewee: {data['reviewee_id']}")
+
+        return jsonify({
+            'review_id': review_id,
+            'message': 'Peer review submitted successfully'
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Error submitting peer review | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/students/<student_id>/soft-skills', methods=['GET'])
+def get_student_soft_skills(student_id):
+    """
+    BR5: Get aggregated soft skills assessment for student
+
+    GET /api/pbl-workflow/students/{student_id}/soft-skills?team_id={team_id}
+    """
+    try:
+        team_id = request.args.get('team_id')
+
+        if not team_id:
+            return jsonify({'error': 'Missing required parameter: team_id'}), 400
+
+        # Get all peer reviews for this student (as reviewee)
+        reviews = find_many(
+            PEER_REVIEWS,
+            {
+                'team_id': team_id,
+                'reviewee_id': student_id
+            }
+        )
+
+        if not reviews:
+            return jsonify({
+                'student_id': student_id,
+                'team_id': team_id,
+                'message': 'No peer reviews found for this student',
+                'soft_skills': {}
+            }), 200
+
+        # Aggregate ratings by dimension (outlier-resistant)
+        dimension_scores = {}
+
+        for dimension in SOFT_SKILL_DIMENSIONS.keys():
+            ratings = [review['ratings'].get(dimension, 0) for review in reviews if dimension in review.get('ratings', {})]
+
+            if ratings:
+                # Remove outliers (Paper 11.pdf: "outlier-resistant aggregation")
+                ratings_sorted = sorted(ratings)
+                # Remove top and bottom 10% if enough data
+                if len(ratings) >= 5:
+                    trim_count = max(1, len(ratings) // 10)
+                    ratings_trimmed = ratings_sorted[trim_count:-trim_count]
+                else:
+                    ratings_trimmed = ratings_sorted
+
+                avg_rating = statistics.mean(ratings_trimmed)
+                std_dev = statistics.stdev(ratings_trimmed) if len(ratings_trimmed) > 1 else 0
+
+                dimension_scores[dimension] = {
+                    'average_rating': round(avg_rating, 2),
+                    'std_deviation': round(std_dev, 2),
+                    'review_count': len(ratings),
+                    'rating_out_of_100': round((avg_rating / 5) * 100, 1),
+                    'level': 'HIGH' if avg_rating >= 4 else 'MODERATE' if avg_rating >= 3 else 'LOW',
+                    'dimension_name': SOFT_SKILL_DIMENSIONS[dimension]['name']
+                }
+
+        # Calculate overall soft skills score (average across dimensions)
+        overall_score = sum(d['rating_out_of_100'] for d in dimension_scores.values()) / len(dimension_scores) if dimension_scores else 0
+
+        # Get self-review for comparison
+        self_review = find_one(
+            PEER_REVIEWS,
+            {
+                'team_id': team_id,
+                'reviewer_id': student_id,
+                'reviewee_id': student_id
+            }
+        )
+
+        response = {
+            'student_id': student_id,
+            'team_id': team_id,
+            'overall_soft_skills_score': round(overall_score, 1),
+            'dimension_scores': dimension_scores,
+            'total_reviews_received': len(reviews),
+            'has_self_review': self_review is not None,
+            'self_vs_peer_discrepancy': None
+        }
+
+        # Calculate self vs peer discrepancy
+        if self_review:
+            discrepancies = {}
+            for dimension in SOFT_SKILL_DIMENSIONS.keys():
+                self_rating = self_review['ratings'].get(dimension, 0)
+                peer_avg = dimension_scores.get(dimension, {}).get('average_rating', 0)
+                discrepancies[dimension] = round(self_rating - peer_avg, 2)
+
+            response['self_vs_peer_discrepancy'] = discrepancies
+
+        logger.info(f"Soft skills retrieved | student_id: {student_id} | team_id: {team_id} | overall_score: {overall_score}")
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching soft skills | student_id: {student_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/teams/<team_id>/soft-skills-summary', methods=['GET'])
+def get_team_soft_skills_summary(team_id):
+    """
+    BR5: Get soft skills summary for entire team
+
+    GET /api/pbl-workflow/teams/{team_id}/soft-skills-summary
+    """
+    try:
+        # Get team members
+        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+
+        if not team:
+            return jsonify({'error': 'Team not found'}), 404
+
+        members = team.get('members', [])
+
+        team_summary = []
+
+        for student_id in members:
+            student = find_one(STUDENTS, {'_id': student_id})
+
+            # Get peer reviews for this student
+            reviews = find_many(
+                PEER_REVIEWS,
+                {
+                    'team_id': team_id,
+                    'reviewee_id': student_id
+                }
+            )
+
+            # Calculate aggregate scores
+            dimension_scores = {}
+            for dimension in SOFT_SKILL_DIMENSIONS.keys():
+                ratings = [review['ratings'].get(dimension, 0) for review in reviews if dimension in review.get('ratings', {})]
+
+                if ratings:
+                    avg_rating = statistics.mean(ratings)
+                    dimension_scores[dimension] = round((avg_rating / 5) * 100, 1)
+                else:
+                    dimension_scores[dimension] = 0
+
+            overall_score = sum(dimension_scores.values()) / len(dimension_scores) if dimension_scores else 0
+
+            team_summary.append({
+                'student_id': student_id,
+                'student_name': student.get('name', 'Unknown') if student else 'Unknown',
+                'overall_soft_skills_score': round(overall_score, 1),
+                'dimension_scores': dimension_scores,
+                'review_count': len(reviews)
+            })
+
+        # Sort by overall score (lowest first for intervention prioritization)
+        team_summary.sort(key=lambda x: x['overall_soft_skills_score'])
+
+        response = {
+            'team_id': team_id,
+            'team_name': team.get('team_name'),
+            'member_count': len(members),
+            'team_summary': team_summary,
+            'team_average_score': round(
+                sum(m['overall_soft_skills_score'] for m in team_summary) / len(team_summary), 1
+            ) if team_summary else 0
+        }
+
+        logger.info(f"Team soft skills summary generated | team_id: {team_id} | members: {len(members)}")
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching team soft skills summary | team_id: {team_id} | error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+# ============================================================================
+# PBL STAGE INFORMATION
+# ============================================================================
+
+@pbl_workflow_bp.route('/stages', methods=['GET'])
+def get_pbl_stages():
+    """
+    Get information about 5-stage PBL workflow
+
+    GET /api/pbl-workflow/stages
+    """
+    try:
+        return jsonify({
+            'stages': PBL_STAGES,
+            'total_stages': len(PBL_STAGES),
+            'research_source': 'Paper 11.pdf: Five-stage PBL process'
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+@pbl_workflow_bp.route('/dimensions', methods=['GET'])
+def get_soft_skill_dimensions():
+    """
+    Get information about 4D soft skills framework
+
+    GET /api/pbl-workflow/dimensions
+    """
+    try:
+        return jsonify({
+            'dimensions': SOFT_SKILL_DIMENSIONS,
+            'total_dimensions': len(SOFT_SKILL_DIMENSIONS),
+            'validation': {
+                'cronbach_alpha': '0.972 - 0.980',
+                'inter_dimension_correlation': '>0.82',
+                'research_source': 'Paper 11.pdf: Team Effectiveness Diagnostic'
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'detail': str(e)
+        }), 500
+
+
+logger.info("PBL Workflow routes initialized successfully")

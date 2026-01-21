@@ -37,9 +37,16 @@ from ai_engine.engagement_detection import EngagementDetectionEngine
 from ai_engine.soft_skills_assessment import SoftSkillsEngine
 from ai_engine.adaptive_practice import AdaptivePracticeEngine
 
+# Import logging
+from utils.logger import get_logger
+
 analytics_bp = Blueprint('analytics', __name__)
 
+# Initialize logger
+logger = get_logger(__name__)
+
 # Initialize AI Engines
+logger.info("Initializing Analytics AI Engines: KT, Engagement, SoftSkills, AdaptivePractice")
 kt_engine = HybridKnowledgeTracing()
 engagement_engine = EngagementDetectionEngine()
 soft_skills_engine = SoftSkillsEngine()
@@ -210,7 +217,7 @@ def record_template_usage(template_id):
 def get_unified_analytics():
     """
     BR8: Get unified institutional metrics with AI-powered insights
-    
+
     ENHANCED: Uses AI engines for:
     - Predictive mastery trends
     - Engagement risk forecasting
@@ -218,6 +225,7 @@ def get_unified_analytics():
     """
     try:
         date_param = request.args.get('date')
+        logger.info(f"Unified analytics request | date: {date_param if date_param else 'today'}")
         
         if date_param:
             metric_date = datetime.strptime(date_param, '%Y-%m-%d').date()
@@ -229,8 +237,9 @@ def get_unified_analytics():
             INSTITUTIONAL_METRICS,
             {'metric_date': metric_date}
         )
-        
+
         if existing_metrics:
+            logger.info(f"Returning cached unified metrics | date: {metric_date.isoformat()}")
             return jsonify({
                 'metric_date': existing_metrics['metric_date'].isoformat(),
                 'mastery_rate': existing_metrics.get('mastery_rate'),
@@ -250,9 +259,11 @@ def get_unified_analytics():
             }), 200
         
         # Calculate metrics from real data with AI enhancement
-        
+        logger.info(f"Calculating unified metrics for | date: {metric_date.isoformat()}")
+
         # Total and active students
         total_students = count_documents(STUDENTS, {})
+        logger.info(f"Total students: {total_students}")
         
         # Active students (logged in within last 7 days)
         week_ago = datetime.utcnow() - timedelta(days=7)
@@ -449,7 +460,8 @@ def get_unified_analytics():
         }
         
         insert_one(INSTITUTIONAL_METRICS, metrics_doc)
-        
+        logger.info(f"Unified metrics calculated | date: {metric_date.isoformat()} | mastery_rate: {metrics_doc['mastery_rate']}% | engagement: {metrics_doc['avg_engagement_score']}")
+
         return jsonify({
             'metric_date': metric_date.isoformat(),
             'mastery_rate': metrics_doc['mastery_rate'],
