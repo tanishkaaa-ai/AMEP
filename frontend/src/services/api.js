@@ -17,6 +17,12 @@ export const socket = io(API_BASE_URL, {
 });
 
 // API methods
+export const authAPI = {
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  getProfile: () => api.get('/auth/profile'),
+};
+
 export const masteryAPI = {
   calculateMastery: (data) => api.post('/mastery/calculate', data),
   getStudentMastery: (studentId) => api.get(`/mastery/student/${studentId}`),
