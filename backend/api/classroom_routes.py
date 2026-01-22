@@ -126,6 +126,7 @@ def create_classroom():
             'theme_color': data.get('theme_color', '#4285f4'),
             'grade_level': data.get('grade_level'),
             'max_students': data.get('max_students', 100),
+            'schedule': data.get('schedule', {'days': [], 'time': ''}),
             'settings': {
                 'allow_student_posts': data.get('allow_student_posts', True),
                 'allow_student_comments': data.get('allow_student_comments', True),
@@ -177,6 +178,9 @@ def get_classroom_details(classroom_id):
             'section': classroom.get('section'),
             'subject': classroom.get('subject'),
             'room': classroom.get('room'),
+            'subject': classroom.get('subject'),
+            'room': classroom.get('room'),
+            'schedule': classroom.get('schedule'),
             'description': classroom.get('description'),
             'join_code': classroom.get('join_code') if classroom.get('settings', {}).get('show_class_code', True) else None,
             'is_active': classroom.get('is_active'),
@@ -220,6 +224,8 @@ def update_classroom(classroom_id):
             update_data['theme_color'] = data['theme_color']
         if 'grade_level' in data:
             update_data['grade_level'] = data['grade_level']
+        if 'schedule' in data:
+            update_data['schedule'] = data['schedule']
 
         if update_data:
             update_data['updated_at'] = datetime.utcnow()
@@ -376,6 +382,9 @@ def get_teacher_classrooms(teacher_id):
                 'class_name': classroom.get('class_name'),
                 'section': classroom.get('section'),
                 'subject': classroom.get('subject'),
+                'section': classroom.get('section'),
+                'subject': classroom.get('subject'),
+                'schedule': classroom.get('schedule'),
                 'join_code': classroom.get('join_code'),
                 'student_count': student_count,
                 'is_active': classroom.get('is_active'),
@@ -414,8 +423,10 @@ def get_student_classrooms(student_id):
                     'classroom_id': classroom['_id'],
                     'class_name': classroom.get('class_name'),
                     'section': classroom.get('section'),
+                    'section': classroom.get('section'),
                     'subject': classroom.get('subject'),
                     'room': classroom.get('room'),
+                    'schedule': classroom.get('schedule'),
                     'teacher_name': f"{teacher.get('first_name', '')} {teacher.get('last_name', '')}" if teacher else 'Unknown',
                     'theme_color': classroom.get('theme_color'),
                     'joined_at': membership.get('joined_at').isoformat() if membership.get('joined_at') else None

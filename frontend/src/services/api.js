@@ -85,6 +85,7 @@ export const engagementAPI = {
   dismissAlert: (alertId) => api.delete(`/engagement/alerts/${alertId}`),
   acknowledgeAlert: (alertId) => api.post(`/engagement/alerts/${alertId}/acknowledge`),
   getStudentEngagementHistory: (studentId, days) => api.get(`/engagement/student/${studentId}/history`, { params: { days } }),
+  getGamificationProfile: (studentId) => api.get(`/engagement/student/${studentId}/gamification`),
 };
 
 export const pollsAPI = {

@@ -63,8 +63,7 @@ const StudentClasses = () => {
     }, [selectedClass]);
 
     const handleStartAssignment = (assignmentId) => {
-        // TODO: Navigate to assignment submission page
-        alert(`Starting assignment ${assignmentId}... (Feature coming soon)`);
+        navigate(`/student/assignment/${assignmentId}`);
     };
 
     const handleViewDetails = (postId) => {

@@ -14,6 +14,7 @@ import TemplateLibrary from './pages/TemplateLibrary';
 import StartPage from './pages/StartPage';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentClasses from './pages/StudentClasses';
+import StudentAssignment from './pages/StudentAssignment';
 import StudentPractice from './pages/StudentPractice';
 import StudentProjects from './pages/StudentProjects';
 import StudentPolls from './pages/StudentPolls';
@@ -64,6 +65,7 @@ function MainLayout({ isConnected }) {
         {/* Student Portal Routes */}
         <Route path="/student" element={<ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>} />
         <Route path="/student/classes" element={<ProtectedRoute requiredRole="student"><StudentClasses /></ProtectedRoute>} />
+        <Route path="/student/assignment/:assignmentId" element={<ProtectedRoute requiredRole="student"><StudentAssignment /></ProtectedRoute>} />
         <Route path="/student/practice" element={<ProtectedRoute requiredRole="student"><StudentPractice /></ProtectedRoute>} />
         <Route path="/student/projects" element={<ProtectedRoute requiredRole="student"><StudentProjects /></ProtectedRoute>} />
         <Route path="/student/polls" element={<ProtectedRoute requiredRole="student"><StudentPolls /></ProtectedRoute>} />
