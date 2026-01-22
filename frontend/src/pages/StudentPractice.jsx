@@ -3,15 +3,17 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Target, Lock, CheckCircle, Play, BrainCircuit, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { masteryAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudentPractice = () => {
+    const { getUserId } = useAuth();
     const [selectedNode, setSelectedNode] = useState(null);
     const [masteryNodes, setMasteryNodes] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const STUDENT_ID = 'student_456'; // TODO: Get from Auth Context
+    const STUDENT_ID = getUserId();
 
     // Fixed positions for graph visualization (since backend doesn't store coordinates yet)
     // We'll deterministically map concepts to these slots
@@ -73,8 +75,13 @@ const StudentPractice = () => {
             }
         };
 
-        fetchData();
-    }, []);
+        if (STUDENT_ID) {
+            fetchData();
+        } else {
+            setLoading(false);
+            setError("Please log in to view your practice zone.");
+        }
+    }, [STUDENT_ID]);
 
     const handleStartPractice = () => {
         alert("Generating personalized practice session... (Feature linking to /api/mastery/practice/generate coming soon)");

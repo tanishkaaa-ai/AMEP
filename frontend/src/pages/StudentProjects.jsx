@@ -3,6 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) => {
     const columnTasks = tasks.filter(t => t.status === status);
@@ -60,12 +61,13 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) =>
 };
 
 const StudentProjects = () => {
+    const { getUserId } = useAuth();
     const [activeTeam, setActiveTeam] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const STUDENT_ID = 'student_456'; // TODO: Get from Auth Context
+    const STUDENT_ID = getUserId();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,8 +98,13 @@ const StudentProjects = () => {
             }
         };
 
-        fetchData();
-    }, []);
+        if (STUDENT_ID) {
+            fetchData();
+        } else {
+            setLoading(false);
+            setError("Please log in to view your projects.");
+        }
+    }, [STUDENT_ID]);
 
     const handleAddTask = () => {
         if (!activeTeam) return;

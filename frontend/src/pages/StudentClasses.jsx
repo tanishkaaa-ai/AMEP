@@ -3,8 +3,10 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Book, User, Clock, MessageSquare, FileText, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { classroomAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudentClasses = () => {
+    const { getUserId } = useAuth();
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(null);
     const [stream, setStream] = useState([]);
@@ -12,7 +14,7 @@ const StudentClasses = () => {
     const [streamLoading, setStreamLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const STUDENT_ID = 'student_456'; // TODO: Get from Auth Context
+    const STUDENT_ID = getUserId();
 
     // Fetch classes on mount
     useEffect(() => {
@@ -32,8 +34,13 @@ const StudentClasses = () => {
             }
         };
 
-        fetchClasses();
-    }, []);
+        if (STUDENT_ID) {
+            fetchClasses();
+        } else {
+            setLoading(false);
+            setError("Please log in to view your classes.");
+        }
+    }, [STUDENT_ID]);
 
     // Fetch stream when selected class changes
     useEffect(() => {

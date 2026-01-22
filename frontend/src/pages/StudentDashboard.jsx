@@ -6,12 +6,14 @@ import ProgressBar from '../components/ProgressBar';
 import { BookOpen, Clock, Calendar, ChevronRight, Compass, Flame, ClipboardList, GraduationCap, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { masteryAPI, classroomAPI, engagementAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudentDashboard = () => {
+    const { user, getUserId } = useAuth();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState({
-        name: 'Alex', // Fallback/Mock for now
+        name: user?.profile?.first_name || 'Student',
         level: 1,
         xp: 0,
         nextLevelXp: 1000,
@@ -26,7 +28,7 @@ const StudentDashboard = () => {
         recentActivity: []
     });
 
-    const STUDENT_ID = 'student_456'; // TODO: Get from Auth Context
+    const STUDENT_ID = getUserId();
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -102,6 +104,7 @@ const StudentDashboard = () => {
 
                 setData(prev => ({
                     ...prev,
+                    name: user?.profile?.first_name || prev.name,
                     level: engagementData.level,
                     xp: engagementData.xp,
                     streak: engagementData.streak,
@@ -119,8 +122,13 @@ const StudentDashboard = () => {
             }
         };
 
-        fetchDashboardData();
-    }, []);
+        if (STUDENT_ID) {
+            fetchDashboardData();
+        } else {
+            setLoading(false);
+            setError("Please log in to view your dashboard.");
+        }
+    }, [STUDENT_ID, user]);
 
     if (loading) {
         return (

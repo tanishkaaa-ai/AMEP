@@ -1,0 +1,14 @@
+2026-01-22 15:40:01 | __main__ | INFO | create_app:35 | ============================================================
+2026-01-22 15:40:01 | __main__ | INFO | create_app:36 | AMEP Application Initialization Starting...
+2026-01-22 15:40:01 | __main__ | INFO | create_app:37 | ============================================================
+2026-01-22 15:40:01 | __main__ | INFO | create_app:42 | Environment: development
+2026-01-22 15:40:01 | __main__ | INFO | create_app:43 | Debug Mode: True
+2026-01-22 15:40:01 | __main__ | INFO | create_app:47 | CORS enabled for origins: ['http://localhost:5173', 'http://localhost:3000']
+2026-01-22 15:40:01 | __main__ | INFO | create_app:55 | SocketIO initialized with threading mode
+2026-01-22 15:40:01 | __main__ | INFO | create_app:61 | Initializing database connection...
+2026-01-22 15:40:01 | __main__ | INFO | create_app:63 | Database initialized successfully
+2026-01-22 15:40:01 | __main__ | INFO | create_app:67 | Request logging middleware enabled
+2026-01-22 15:40:01 | __main__ | INFO | register_blueprints:91 | Registering API blueprints...
+2026-01-22 15:40:08 | api.mastery_routes | INFO | <module>:48 | Initializing Mastery Engines: HybridKnowledgeTracing and AdaptivePracticeEngine
+2026-01-22 15:40:08 | api.engagement_routes | INFO | <module>:46 | Initializing Engagement Detection Engine
+2026-01-22 15:40:08 | api.dashboard_routes | INFO | <module>:1053 | Dashboard routes initialized successfully
