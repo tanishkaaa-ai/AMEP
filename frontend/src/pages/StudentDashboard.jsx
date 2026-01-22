@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import GamificationBadge from '../components/GamificationBadge';
 import ProgressBar from '../components/ProgressBar';
@@ -105,9 +106,9 @@ const StudentDashboard = () => {
                             <span className="text-4xl font-extrabold text-gray-800">{data.pendingAssignments}</span>
                             <span className="text-gray-500 font-medium">due this week</span>
                         </div>
-                        <button className="w-full mt-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm">
+                        <Link to="/student/classes" className="w-full mt-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm flex justify-center items-center">
                             View Assignments
-                        </button>
+                        </Link>
                     </motion.div>
 
                     {/* Next Class Card */}
@@ -126,9 +127,9 @@ const StudentDashboard = () => {
                             <p className="text-purple-600 font-medium">{data.nextClass.time}</p>
                             <p className="text-sm text-gray-500 mt-1">{data.nextClass.topic}</p>
                         </div>
-                        <button className="w-full mt-4 py-2 border border-purple-200 text-purple-600 font-bold rounded-lg hover:bg-purple-50 transition-colors text-sm">
+                        <Link to="/student/classes" className="w-full mt-4 py-2 border border-purple-200 text-purple-600 font-bold rounded-lg hover:bg-purple-50 transition-colors text-sm flex justify-center items-center">
                             Join Class
-                        </button>
+                        </Link>
                     </motion.div>
                 </div>
 
@@ -139,7 +140,7 @@ const StudentDashboard = () => {
                     <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
                         <div className="p-6 border-b border-orange-50 flex justify-between items-center">
                             <h3 className="font-bold text-xl text-gray-800">Recent Adventures</h3>
-                            <button className="text-orange-500 font-bold text-sm hover:underline">View All</button>
+                            <Link to="/student/practice" className="text-orange-500 font-bold text-sm hover:underline">View All</Link>
                         </div>
                         <div className="divide-y divide-gray-50">
                             {data.recentActivity.map((activity, idx) => (
@@ -166,9 +167,9 @@ const StudentDashboard = () => {
                                 Next: <br /> Speedster
                             </div>
                         </div>
-                        <button className="w-full mt-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 shadow-sm transition-all">
+                        <Link to="/student/practice" className="w-full mt-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 shadow-sm transition-all flex justify-center items-center">
                             View Trophy Case
-                        </button>
+                        </Link>
                     </div>
 
                 </div>
