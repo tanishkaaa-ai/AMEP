@@ -1152,4 +1152,33 @@ def get_student_dashboard_data(student_id):
         logger.info(f"Student dashboard data exception | student_id: {student_id} | error: {str(e)}")
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
+@dashboard_bp.route('/teacher/<teacher_id>/overview', methods=['GET'])
+def get_teacher_overview(teacher_id):
+    try:
+        classrooms = find_many('classrooms', {'teacher_id': teacher_id, 'is_active': True})
+
+        total_students = 0
+        for classroom in classrooms:
+            members = find_many('classroom_memberships', {'classroom_id': classroom['_id'], 'is_active': True})
+            total_students += len(members)
+
+        projects = find_many('projects', {'teacher_id': teacher_id})
+        active_projects = [p for p in projects if p.get('status') != 'completed']
+
+        polls = find_many('live_polls', {'teacher_id': teacher_id})
+        active_polls = [p for p in polls if p.get('is_active')]
+
+        return jsonify({
+            'teacher_id': teacher_id,
+            'total_classrooms': len(classrooms),
+            'total_students': total_students,
+            'active_projects': len(active_projects),
+            'total_projects': len(projects),
+            'active_polls': len(active_polls),
+            'total_polls': len(polls)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
 logger.info("Dashboard routes initialized successfully")

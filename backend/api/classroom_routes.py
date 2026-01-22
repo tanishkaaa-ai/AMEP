@@ -358,7 +358,7 @@ def join_classroom():
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
-@classroom_bp.route('/classrooms/teacher/<teacher_id>', methods=['GET'])
+@classroom_bp.route('/teacher/<teacher_id>/classrooms', methods=['GET'])
 def get_teacher_classrooms(teacher_id):
     """Get all classrooms for a teacher"""
     try:
@@ -758,6 +758,55 @@ def get_post_comments(post_id):
 # ============================================================================
 # ASSIGNMENT & SUBMISSION ROUTES
 # ============================================================================
+
+@classroom_bp.route('/classrooms/<classroom_id>/assignments', methods=['POST'])
+def create_assignment(classroom_id):
+    try:
+        data = request.json
+
+        if not data.get('title'):
+            return jsonify({'error': 'Title is required'}), 400
+
+        classroom = find_one(CLASSROOMS, {'_id': classroom_id})
+        if not classroom:
+            return jsonify({'error': 'Classroom not found'}), 404
+
+        assignment_post = {
+            '_id': str(ObjectId()),
+            'classroom_id': classroom_id,
+            'author_id': data.get('teacher_id'),
+            'post_type': 'assignment',
+            'title': data['title'],
+            'content': data.get('description', ''),
+            'assignment_details': {
+                'assignment_type': data.get('assignment_type', 'homework'),
+                'due_date': datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
+                'points': data.get('total_points', 100),
+                'attachments': data.get('attachments', [])
+            },
+            'is_pinned': False,
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow()
+        }
+
+        assignment_id = insert_one(CLASSROOM_POSTS, assignment_post)
+
+        members = find_many(CLASSROOM_MEMBERSHIPS, {'classroom_id': classroom_id, 'is_active': True})
+        for member in members:
+            create_notification(
+                member['student_id'],
+                classroom_id,
+                'assignment',
+                f"New Assignment: {data['title']}",
+                f"Due: {data.get('due_date', 'No deadline')}",
+                f"/classroom/{classroom_id}/assignments/{assignment_id}"
+            )
+
+        logger.info(f"Assignment created | classroom_id: {classroom_id} | assignment_id: {assignment_id}")
+        return jsonify({'assignment_id': assignment_id, 'message': 'Assignment created successfully'}), 201
+
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 @classroom_bp.route('/classrooms/<classroom_id>/assignments', methods=['GET'])
 def get_classroom_assignments(classroom_id):
