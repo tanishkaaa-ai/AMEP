@@ -65,14 +65,13 @@ def calculate_mastery():
         # Validate request data using Pydantic
         data = MasteryCalculationRequest(**request.json)
         
-        # Call the knowledge tracing engine
         logger.info(f"Calling KT engine | student_id: {data.student_id} | concept_id: {data.concept_id} | is_correct: {data.is_correct}")
         result = kt_engine.calculate_mastery(
             student_id=data.student_id,
             concept_id=data.concept_id,
             is_correct=data.is_correct,
             response_time=data.response_time,
-            current_mastery=data.current_mastery,
+            current_mastery=data.current_mastery if data.current_mastery is not None else 50.0,
             response_history=data.response_history,
             related_concepts=data.related_concepts
         )

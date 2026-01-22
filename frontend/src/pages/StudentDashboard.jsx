@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import GamificationBadge from '../components/GamificationBadge';
 import ProgressBar from '../components/ProgressBar';
-import { BookOpen, Clock, Calendar, ChevronRight, Sparkles } from 'lucide-react';
+import { BookOpen, Clock, Calendar, ChevronRight, Compass, Flame, ClipboardList, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Mock Data (Simulating API response)
@@ -21,9 +21,9 @@ const mockStudentData = {
         topic: 'Crime Scene Analysis'
     },
     recentActivity: [
-        { type: 'mastery', title: 'Mastered "DNA Profiling"', date: '2 hours ago', icon: 'trophy', color: 'purple' },
-        { type: 'assignment', title: 'Submitted "Case Study #4"', date: 'Yesterday', icon: 'award', color: 'blue' },
-        { type: 'badge', title: 'Earned "Fast Learner"', date: '2 days ago', icon: 'zap', color: 'yellow' }
+        { type: 'mastery', title: 'Mastered "DNA Profiling"', date: '2 hours ago', icon: 'medal', color: 'purple' },
+        { type: 'assignment', title: 'Submitted "Case Study #4"', date: 'Yesterday', icon: 'scroll', color: 'blue' },
+        { type: 'badge', title: 'Earned "Fast Learner"', date: '2 days ago', icon: 'flame', color: 'yellow' }
     ]
 };
 
@@ -44,7 +44,7 @@ const StudentDashboard = () => {
                 >
                     <div className="relative z-10">
                         <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
-                            Start your adventure, {data.name}! 🚀
+                            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}, {data.name}! 🚀
                         </h1>
                         <p className="text-orange-50 font-medium text-lg mb-6 max-w-xl">
                             You're on a <span className="font-bold bg-white/20 px-2 py-1 rounded-lg">{data.streak}-day streak</span>! Keep it up to unlock the "Time Traveler" badge.
@@ -67,7 +67,7 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Background Decorations */}
-                    <Sparkles className="absolute top-4 right-8 text-yellow-200 opacity-50" size={64} />
+                    <Compass className="absolute top-4 right-8 text-yellow-200 opacity-50 rotate-12" size={64} />
                     <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
                 </motion.div>
 
@@ -80,7 +80,7 @@ const StudentDashboard = () => {
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="bg-green-100 p-3 rounded-xl text-green-600">
-                                <BookOpen size={24} />
+                                <GraduationCap size={24} />
                             </div>
                             <h3 className="font-bold text-gray-700">Mastery Score</h3>
                         </div>
@@ -98,7 +98,7 @@ const StudentDashboard = () => {
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
-                                <Clock size={24} />
+                                <ClipboardList size={24} />
                             </div>
                             <h3 className="font-bold text-gray-700">Pending Tasks</h3>
                         </div>
@@ -111,12 +111,13 @@ const StudentDashboard = () => {
                         </Link>
                     </motion.div>
 
-                    {/* Next Class Card */}
+                    {/* Next Class Card - Asymmetric Emphasis */}
                     <motion.div
                         whileHover={{ scale: 1.02 }}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-orange-100"
+                        className="bg-purple-50 p-6 rounded-2xl shadow-sm border-2 border-purple-100 relative overflow-hidden"
                     >
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-purple-100 rounded-bl-full -mr-8 -mt-8 opacity-50" />
+                        <div className="flex items-center gap-3 mb-4 relative z-10">
                             <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
                                 <Calendar size={24} />
                             </div>
@@ -161,7 +162,7 @@ const StudentDashboard = () => {
                         <h3 className="font-bold text-xl text-gray-800 mb-4">Your Badges</h3>
                         <div className="grid grid-cols-2 gap-3">
                             <GamificationBadge icon="star" color="yellow" label="Rising Star" subtext="Top 10%" />
-                            <GamificationBadge icon="zap" color="orange" label="Streaker" subtext="5 Day Active" />
+                            <GamificationBadge icon="flame" color="orange" label="Streaker" subtext="5 Day Active" />
                             <GamificationBadge icon="shield" color="blue" label="Guardian" subtext="Helper" />
                             <div className="border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center p-3 text-gray-400 font-medium text-xs text-center">
                                 Next: <br /> Speedster

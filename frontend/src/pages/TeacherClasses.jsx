@@ -6,7 +6,7 @@ import {
     Search,
     Filter,
     MoreVertical,
-    Users,
+    GraduationCap,
     Calendar,
     ArrowRight,
     BookOpen
@@ -23,8 +23,8 @@ const mockClasses = [
 
 const ClassCard = ({ cls }) => (
     <motion.div
-        whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)" }}
-        className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-full"
+        whileHover={{ y: -5, rotate: 1 }}
+        className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-full transition-shadow hover:shadow-lg"
     >
         <div className={`${cls.color} h-32 relative p-6 text-white`}>
             <div className="absolute top-4 right-4">
@@ -43,7 +43,7 @@ const ClassCard = ({ cls }) => (
         <div className="p-6 flex-1 flex flex-col justify-between">
             <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-500 text-sm">
-                    <Users size={16} className="text-gray-400" />
+                    <GraduationCap size={16} className="text-gray-400" />
                     <span>{cls.students} Students Enrolled</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-500 text-sm">
@@ -107,14 +107,14 @@ const TeacherClasses = () => {
 
                     {/* Add New Placeholder */}
                     <motion.button
-                        whileHover={{ scale: 1.02, backgroundColor: "#f0fdf9" }}
+                        whileHover={{ scale: 1.02, backgroundColor: "#f0fdf9", borderColor: "#2dd4bf" }}
                         whileTap={{ scale: 0.98 }}
-                        className="border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 gap-4 text-gray-400 hover:text-teal-600 hover:border-teal-200 transition-colors min-h-[300px]"
+                        className="border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 gap-4 text-gray-400 transition-all duration-300 min-h-[300px] group"
                     >
-                        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-gray-50 group-hover:bg-teal-100 flex items-center justify-center text-gray-400 group-hover:text-teal-600 transition-colors">
                             <Plus size={32} />
                         </div>
-                        <span className="font-bold">Add Another Class</span>
+                        <span className="font-bold group-hover:text-teal-700">Add Another Class</span>
                     </motion.button>
                 </div>
             </div>

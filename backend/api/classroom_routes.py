@@ -162,16 +162,11 @@ def get_classroom_details(classroom_id):
             logger.info(f"Classroom not found | classroom_id: {classroom_id}")
             return jsonify({'error': 'Classroom not found'}), 404
 
-        # Get teacher info
         teacher = find_one(TEACHERS, {'_id': classroom['teacher_id']})
-
-        # Get student count
         student_count = count_documents(
             CLASSROOM_MEMBERSHIPS,
             {'classroom_id': classroom_id, 'is_active': True, 'role': 'student'}
         )
-
-        # Get recent posts count
         post_count = count_documents(CLASSROOM_POSTS, {'classroom_id': classroom_id})
 
         logger.info(f"Classroom details retrieved | classroom_id: {classroom_id} | students: {student_count}")
@@ -200,6 +195,65 @@ def get_classroom_details(classroom_id):
 
     except Exception as e:
         logger.info(f"Get classroom exception | classroom_id: {classroom_id} | error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/classrooms/<classroom_id>', methods=['PUT'])
+def update_classroom(classroom_id):
+    try:
+        data = request.json
+        classroom = find_one(CLASSROOMS, {'_id': classroom_id})
+        if not classroom:
+            return jsonify({'error': 'Classroom not found'}), 404
+
+        update_data = {}
+        if 'class_name' in data:
+            update_data['class_name'] = data['class_name']
+        if 'section' in data:
+            update_data['section'] = data['section']
+        if 'subject' in data:
+            update_data['subject'] = data['subject']
+        if 'room' in data:
+            update_data['room'] = data['room']
+        if 'description' in data:
+            update_data['description'] = data['description']
+        if 'theme_color' in data:
+            update_data['theme_color'] = data['theme_color']
+        if 'grade_level' in data:
+            update_data['grade_level'] = data['grade_level']
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            update_one(CLASSROOMS, {'_id': classroom_id}, {'$set': update_data})
+            return jsonify({'message': 'Classroom updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/classrooms/<classroom_id>', methods=['DELETE'])
+def delete_classroom(classroom_id):
+    try:
+        classroom = find_one(CLASSROOMS, {'_id': classroom_id})
+        if not classroom:
+            return jsonify({'error': 'Classroom not found'}), 404
+
+        update_one(CLASSROOMS, {'_id': classroom_id}, {'$set': {'is_active': False, 'archived_at': datetime.utcnow()}})
+        return jsonify({'message': 'Classroom archived successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/classrooms/<classroom_id>/students/<student_id>', methods=['DELETE'])
+def remove_student_from_classroom(classroom_id, student_id):
+    try:
+        result = update_one(
+            CLASSROOM_MEMBERSHIPS,
+            {'classroom_id': classroom_id, 'student_id': student_id},
+            {'$set': {'is_active': False, 'left_at': datetime.utcnow()}}
+        )
+        if result:
+            return jsonify({'message': 'Student removed from classroom'}), 200
+        return jsonify({'error': 'Membership not found'}), 404
+    except Exception as e:
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
@@ -694,18 +748,95 @@ def get_post_comments(post_id):
 # ASSIGNMENT & SUBMISSION ROUTES
 # ============================================================================
 
+@classroom_bp.route('/classrooms/<classroom_id>/assignments', methods=['GET'])
+def get_classroom_assignments(classroom_id):
+    try:
+        assignments = find_many(CLASSROOM_POSTS, {'classroom_id': classroom_id, 'post_type': 'assignment'}, sort=[('created_at', -1)])
+        result = []
+        for assignment in assignments:
+            submissions = find_many(CLASSROOM_SUBMISSIONS, {'assignment_id': assignment['_id']})
+            result.append({
+                'assignment_id': assignment['_id'],
+                'title': assignment.get('title'),
+                'due_date': assignment.get('assignment_details', {}).get('due_date').isoformat() if assignment.get('assignment_details', {}).get('due_date') else None,
+                'points': assignment.get('assignment_details', {}).get('points', 100),
+                'submissions_count': len(submissions),
+                'created_at': assignment.get('created_at').isoformat() if assignment.get('created_at') else None
+            })
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/assignments/<assignment_id>', methods=['GET'])
+def get_assignment(assignment_id):
+    try:
+        assignment = find_one(CLASSROOM_POSTS, {'_id': assignment_id, 'post_type': 'assignment'})
+        if not assignment:
+            return jsonify({'error': 'Assignment not found'}), 404
+
+        teacher = find_one(TEACHERS, {'_id': assignment.get('author_id')})
+        classroom = find_one(CLASSROOMS, {'_id': assignment.get('classroom_id')})
+
+        result = {
+            'assignment_id': assignment['_id'],
+            'title': assignment.get('title'),
+            'content': assignment.get('content'),
+            'classroom_id': assignment.get('classroom_id'),
+            'classroom_name': classroom.get('class_name') if classroom else None,
+            'teacher_id': assignment.get('author_id'),
+            'teacher_name': teacher.get('name') if teacher else None,
+            'assignment_details': assignment.get('assignment_details', {}),
+            'attachments': assignment.get('attachments', []),
+            'created_at': assignment.get('created_at').isoformat() if assignment.get('created_at') else None,
+            'due_date': assignment.get('assignment_details', {}).get('due_date').isoformat() if assignment.get('assignment_details', {}).get('due_date') else None,
+            'points': assignment.get('assignment_details', {}).get('points', 100)
+        }
+
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/assignments/<assignment_id>', methods=['PUT'])
+def update_assignment(assignment_id):
+    try:
+        data = request.json
+        assignment = find_one(CLASSROOM_POSTS, {'_id': assignment_id, 'post_type': 'assignment'})
+        if not assignment:
+            return jsonify({'error': 'Assignment not found'}), 404
+
+        update_data = {}
+        if 'title' in data:
+            update_data['title'] = data['title']
+        if 'content' in data:
+            update_data['content'] = data['content']
+        if 'attachments' in data:
+            update_data['attachments'] = data['attachments']
+        if 'assignment_details' in data:
+            update_data['assignment_details'] = data['assignment_details']
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            update_one(CLASSROOM_POSTS, {'_id': assignment_id}, {'$set': update_data})
+            return jsonify({'message': 'Assignment updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/assignments/<assignment_id>', methods=['DELETE'])
+def delete_assignment(assignment_id):
+    try:
+        assignment = find_one(CLASSROOM_POSTS, {'_id': assignment_id, 'post_type': 'assignment'})
+        if not assignment:
+            return jsonify({'error': 'Assignment not found'}), 404
+
+        update_one(CLASSROOM_POSTS, {'_id': assignment_id}, {'$set': {'published': False}})
+        return jsonify({'message': 'Assignment deleted successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
 @classroom_bp.route('/assignments/<assignment_id>/submit', methods=['POST'])
 def submit_assignment():
-    """
-    Student submits assignment
-
-    Request body:
-    {
-        "student_id": "student_user_id",
-        "submission_text": "Text submission",
-        "attachments": [...]
-    }
-    """
     try:
         assignment_id = request.view_args['assignment_id']
         data = request.json
@@ -714,41 +845,92 @@ def submit_assignment():
         if not data.get('student_id'):
             return jsonify({'error': 'student_id is required'}), 400
 
-        # Get assignment details to check due date
         assignment = find_one(CLASSROOM_POSTS, {'_id': assignment_id, 'post_type': 'assignment'})
         if not assignment:
             return jsonify({'error': 'Assignment not found'}), 404
 
-        # Check if late
         is_late = False
         if assignment.get('assignment_details', {}).get('due_date'):
             due_date = assignment['assignment_details']['due_date']
             is_late = datetime.utcnow() > due_date
 
-        # Update submission
-        result = update_one(
-            CLASSROOM_SUBMISSIONS,
-            {'assignment_id': assignment_id, 'student_id': data['student_id']},
-            {
-                '$set': {
-                    'status': 'turned_in',
-                    'submission_text': data.get('submission_text', ''),
-                    'attachments': data.get('attachments', []),
-                    'submitted_at': datetime.utcnow(),
-                    'is_late': is_late,
-                    'updated_at': datetime.utcnow()
-                }
-            }
-        )
+        submission = find_one(CLASSROOM_SUBMISSIONS, {'assignment_id': assignment_id, 'student_id': data['student_id']})
 
-        if result:
-            logger.info(f"Assignment submitted | assignment_id: {assignment_id} | student_id: {data['student_id']} | late: {is_late}")
-            return jsonify({'message': 'Assignment submitted successfully', 'is_late': is_late}), 200
+        if submission:
+            update_one(
+                CLASSROOM_SUBMISSIONS,
+                {'_id': submission['_id']},
+                {
+                    '$set': {
+                        'status': 'turned_in',
+                        'submission_text': data.get('submission_text', ''),
+                        'attachments': data.get('attachments', []),
+                        'submitted_at': datetime.utcnow(),
+                        'is_late': is_late,
+                        'updated_at': datetime.utcnow()
+                    }
+                }
+            )
+            submission_id = submission['_id']
         else:
             return jsonify({'error': 'Submission record not found'}), 404
 
+        logger.info(f"Assignment submitted | assignment_id: {assignment_id} | student_id: {data['student_id']} | late: {is_late}")
+        return jsonify({'submission_id': submission_id, 'message': 'Assignment submitted successfully', 'is_late': is_late}), 200
+
     except Exception as e:
         logger.info(f"Submit assignment exception | error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/submissions/<submission_id>', methods=['GET'])
+def get_submission(submission_id):
+    try:
+        submission = find_one(CLASSROOM_SUBMISSIONS, {'_id': submission_id})
+        if not submission:
+            return jsonify({'error': 'Submission not found'}), 404
+
+        student = find_one(STUDENTS, {'_id': submission['student_id']})
+        assignment = find_one(CLASSROOM_POSTS, {'_id': submission['assignment_id']})
+
+        return jsonify({
+            'submission_id': submission['_id'],
+            'assignment_id': submission['assignment_id'],
+            'assignment_title': assignment.get('title') if assignment else None,
+            'student_id': submission['student_id'],
+            'student_name': f"{student.get('first_name', '')} {student.get('last_name', '')}" if student else None,
+            'status': submission.get('status'),
+            'submission_text': submission.get('submission_text'),
+            'attachments': submission.get('attachments', []),
+            'grade': submission.get('grade'),
+            'teacher_feedback': submission.get('teacher_feedback'),
+            'is_late': submission.get('is_late'),
+            'submitted_at': submission.get('submitted_at').isoformat() if submission.get('submitted_at') else None,
+            'graded_at': submission.get('graded_at').isoformat() if submission.get('graded_at') else None
+        }), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@classroom_bp.route('/submissions/<submission_id>', methods=['PUT'])
+def update_submission(submission_id):
+    try:
+        data = request.json
+        submission = find_one(CLASSROOM_SUBMISSIONS, {'_id': submission_id})
+        if not submission:
+            return jsonify({'error': 'Submission not found'}), 404
+
+        update_data = {}
+        if 'submission_text' in data:
+            update_data['submission_text'] = data['submission_text']
+        if 'attachments' in data:
+            update_data['attachments'] = data['attachments']
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            update_one(CLASSROOM_SUBMISSIONS, {'_id': submission_id}, {'$set': update_data})
+            return jsonify({'message': 'Submission updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 

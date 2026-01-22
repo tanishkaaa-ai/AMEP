@@ -659,7 +659,8 @@ def create_intervention():
             'teacher_id': data['teacher_id'],
             'student_id': data['student_id'],
             'classroom_id': data.get('classroom_id'),
-            'intervention_type': data['intervention_type'],  # one_on_one, parent_contact, resource_provided, etc.
+            'alert_id': data.get('alert_id'),
+            'intervention_type': data['intervention_type'],
             'description': data['description'],
             'target_behaviors': data.get('target_behaviors', []),
             'timestamp': datetime.utcnow(),

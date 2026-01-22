@@ -1,7 +1,7 @@
 import axios from 'axios';
 import io from 'socket.io-client';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Axios instance
 const api = axios.create({
@@ -36,30 +36,28 @@ export const practiceAPI = {
 };
 
 export const classroomAPI = {
-  getStudentClasses: (studentId) => api.get(`/classroom/students/${studentId}/classrooms`), // usage guess check mapping: /classrooms/student/<student_id>
-  // Mapping says: /api/classrooms/student/<student_id>. Wait, prefix is /api/classroom. So /classroom/classrooms/student/<id>? 
-  // Let's stick to the MAPPING file which I read.
-  // Mapping: /api/classrooms/student/<student_id> (Note: it says /api/classrooms... maybe blueprint is /classrooms? No app.py said /api/classroom)
-  // Let's assume MAPPING file might have typos or I need to be careful.
-  // app.py: app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
-  // classroom_routes.py viewed earlier: create_classroom is @bp.route('/classrooms', ...). So /api/classroom/classrooms.
-  // join_classroom is @bp.route('/classrooms/join'). So /api/classroom/classrooms/join.
-  // list_student_classrooms: @bp.route('/classrooms/student/<student_id>'). So /api/classroom/classrooms/student/...
-  // OK, so the path is /classroom/classrooms/...
   getStudentClasses: (studentId) => api.get(`/classroom/classrooms/student/${studentId}`),
   getTeacherClasses: (teacherId) => api.get(`/classroom/classrooms/teacher/${teacherId}`),
   joinClass: (data) => api.post('/classroom/classrooms/join', data),
   getClassStream: (classId) => api.get(`/classroom/classrooms/${classId}/stream`),
+  getAssignment: (assignmentId) => api.get(`/classroom/assignments/${assignmentId}`),
+  submitAssignment: (assignmentId, data) => api.post(`/classroom/assignments/${assignmentId}/submit`, data),
+  getStudentAssignments: (studentId, status) => api.get(`/classroom/students/${studentId}/assignments`, { params: { status } }),
 };
 
 export const engagementAPI = {
   analyzeEngagement: (data) => api.post('/engagement/analyze', data),
   getClassEngagement: (classId) => api.get(`/engagement/class/${classId}`),
-  getAlerts: () => api.get('/engagement/alerts'),
+  getAlerts: (params) => api.get('/engagement/alerts', { params }),
+  getAlert: (alertId) => api.get(`/engagement/alerts/${alertId}`),
+  updateAlert: (alertId, data) => api.put(`/engagement/alerts/${alertId}`, data),
+  dismissAlert: (alertId) => api.delete(`/engagement/alerts/${alertId}`),
+  acknowledgeAlert: (alertId) => api.post(`/engagement/alerts/${alertId}/acknowledge`),
 };
 
 export const pollsAPI = {
   createPoll: (data) => api.post('/polling/polls', data),
+  getPoll: (pollId) => api.get(`/polling/polls/${pollId}`),
   respondToPoll: (pollId, data) => api.post(`/polling/polls/${pollId}/respond`, data),
   getPollResults: (pollId) => api.get(`/polling/polls/${pollId}/results`),
   closePoll: (pollId) => api.post(`/polling/polls/${pollId}/close`),
@@ -70,11 +68,29 @@ export const projectsAPI = {
   listProjects: (params) => api.get('/pbl/projects', { params }),
   getProjectDetails: (projectId) => api.get(`/pbl/projects/${projectId}`),
   createProject: (data) => api.post('/pbl/projects', data),
-};
-
-export const softSkillsAPI = {
-  submitAssessment: (data) => api.post('/pbl/soft-skills/assess', data),
-  getTeamScores: (teamId) => api.get(`/pbl/soft-skills/team/${teamId}`),
+  updateProjectStage: (projectId, data) => api.put(`/pbl/projects/${projectId}/stage`, data),
+  submitDeliverable: (projectId, data) => api.post(`/pbl/projects/${projectId}/deliverable`, data),
+  gradeProject: (projectId, data) => api.post(`/pbl/projects/${projectId}/grade`, data),
+  getStudentProjects: (studentId) => api.get(`/pbl/students/${studentId}/projects`),
+  getStudentTeams: (studentId) => api.get(`/pbl/students/${studentId}/teams`),
+  getClassroomProjects: (classroomId) => api.get(`/pbl/projects/classroom/${classroomId}`),
+  createTeam: (projectId, data) => api.post(`/pbl/projects/${projectId}/teams`, data),
+  getTeam: (teamId) => api.get(`/pbl/teams/${teamId}`),
+  updateTeam: (teamId, data) => api.put(`/pbl/teams/${teamId}`, data),
+  addTeamMember: (teamId, data) => api.post(`/pbl/teams/${teamId}/members`, data),
+  removeTeamMember: (teamId, studentId) => api.delete(`/pbl/teams/${teamId}/members/${studentId}`),
+  createMilestone: (projectId, data) => api.post(`/pbl/projects/${projectId}/milestones`, data),
+  completeMilestone: (milestoneId) => api.put(`/pbl/milestones/${milestoneId}/complete`),
+  createTask: (teamId, data) => api.post(`/pbl/teams/${teamId}/tasks`, data),
+  getTeamTasks: (teamId) => api.get(`/pbl/teams/${teamId}/tasks`),
+  updateTaskStatus: (taskId, data) => api.put(`/pbl/tasks/${taskId}/status`, data),
+  updateTask: (taskId, data) => api.put(`/pbl/tasks/${taskId}`, data),
+  submitPeerReview: (teamId, data) => api.post(`/pbl/teams/${teamId}/peer-reviews`, data),
+  getTeamPeerReviews: (teamId) => api.get(`/pbl/teams/${teamId}/peer-reviews`),
+  getStudentSoftSkills: (studentId, teamId) => api.get(`/pbl/students/${studentId}/soft-skills`, { params: { team_id: teamId } }),
+  getTeamSoftSkillsSummary: (teamId) => api.get(`/pbl/teams/${teamId}/soft-skills-summary`),
+  getStages: () => api.get('/pbl/stages'),
+  getDimensions: () => api.get('/pbl/dimensions'),
 };
 
 export const templatesAPI = {

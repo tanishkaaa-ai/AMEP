@@ -495,30 +495,82 @@ def get_engagement_alerts():
         }), 500
 
 
+@engagement_bp.route('/alerts/<alert_id>', methods=['GET'])
+def get_alert(alert_id):
+    try:
+        alert = find_one(DISENGAGEMENT_ALERTS, {'_id': alert_id})
+        if not alert:
+            return jsonify({'error': 'Alert not found'}), 404
+
+        student = find_one(STUDENTS, {'_id': alert.get('student_id')})
+
+        result = {
+            'alert_id': alert['_id'],
+            'student_id': alert.get('student_id'),
+            'student_name': student.get('name') if student else 'Unknown',
+            'engagement_score': alert.get('engagement_score'),
+            'engagement_level': alert.get('engagement_level'),
+            'severity': alert.get('severity'),
+            'detected_behaviors': alert.get('detected_behaviors', []),
+            'recommendation': alert.get('recommendation'),
+            'timestamp': alert.get('timestamp').isoformat() if alert.get('timestamp') else None,
+            'resolved': alert.get('resolved', False),
+            'acknowledged': alert.get('acknowledged', False),
+            'acknowledged_at': alert.get('acknowledged_at').isoformat() if alert.get('acknowledged_at') else None
+        }
+
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@engagement_bp.route('/alerts/<alert_id>', methods=['PUT'])
+def update_alert(alert_id):
+    try:
+        data = request.json
+        update_data = {}
+
+        if 'severity' in data:
+            update_data['severity'] = data['severity']
+        if 'notes' in data:
+            update_data['notes'] = data['notes']
+        if 'recommendation' in data:
+            update_data['recommendation'] = data['recommendation']
+        if 'resolved' in data:
+            update_data['resolved'] = data['resolved']
+            if data['resolved']:
+                update_data['resolved_at'] = datetime.utcnow()
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            result = update_one(DISENGAGEMENT_ALERTS, {'_id': alert_id}, {'$set': update_data})
+            if result == 0:
+                return jsonify({'error': 'Alert not found'}), 404
+
+            return jsonify({'message': 'Alert updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@engagement_bp.route('/alerts/<alert_id>', methods=['DELETE'])
+def delete_alert(alert_id):
+    try:
+        result = update_one(DISENGAGEMENT_ALERTS, {'_id': alert_id}, {'$set': {'resolved': True, 'resolved_at': datetime.utcnow(), 'dismissed': True}})
+        if result == 0:
+            return jsonify({'error': 'Alert not found'}), 404
+
+        logger.info(f"Alert dismissed | alert_id: {alert_id}")
+        return jsonify({'message': 'Alert dismissed successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
 @engagement_bp.route('/alerts/<alert_id>/acknowledge', methods=['POST'])
 def acknowledge_alert(alert_id):
-    """
-    BR6: Acknowledge an engagement alert
-    """
     try:
-        update_one(
-            DISENGAGEMENT_ALERTS,
-            {'_id': alert_id},
-            {
-                '$set': {
-                    'acknowledged': True,
-                    'acknowledged_at': datetime.utcnow()
-                }
-            }
-        )
-        
+        update_one(DISENGAGEMENT_ALERTS, {'_id': alert_id}, {'$set': {'acknowledged': True, 'acknowledged_at': datetime.utcnow()}})
         return jsonify({'message': 'Alert acknowledged'}), 200
-        
     except Exception as e:
-        return jsonify({
-            'error': 'Internal server error',
-            'detail': str(e)
-        }), 500
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
 # ============================================================================

@@ -46,8 +46,8 @@ const StudentClasses = () => {
                             onClick={() => setSelectedClass(cls)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`p-4 rounded-xl cursor-pointer border-2 transition-all ${selectedClass.id === cls.id
-                                ? 'border-orange-400 bg-white shadow-md'
+                            className={`p-4 rounded-xl cursor-pointer border-2 transition-all duration-300 ease-out hover:-translate-y-1 ${selectedClass.id === cls.id
+                                ? 'border-orange-400 bg-white shadow-md -rotate-1 ring-2 ring-orange-100 ring-offset-2'
                                 : 'border-transparent bg-white/60 hover:bg-white hover:shadow-sm'
                                 }`}
                         >
@@ -134,8 +134,15 @@ const StudentClasses = () => {
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-                                <p>No posts yet for this class.</p>
+                            <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200">
+                                <div className="bg-white p-4 rounded-full shadow-sm mb-4 relative">
+                                    <Book size={32} className="text-gray-300" />
+                                    <div className="absolute -bottom-1 -right-1 bg-green-100 p-1 rounded-full">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                                    </div>
+                                </div>
+                                <h3 className="font-bold text-gray-800 text-lg">All caught up in {selectedClass.name}!</h3>
+                                <p className="text-gray-500 max-w-xs mt-2">No new assignments or announcements. Enjoy the downtime ☕</p>
                             </div>
                         )}
 
@@ -146,7 +153,7 @@ const StudentClasses = () => {
                 </div>
 
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

@@ -116,8 +116,8 @@ class MasteryCalculationRequest(BaseModel):
     student_id: str
     concept_id: str
     is_correct: bool
-    response_time: float = Field(..., gt=0)  # seconds
-    current_mastery: float = Field(..., ge=0.0, le=100.0)
+    response_time: float = Field(..., gt=0)
+    current_mastery: Optional[float] = Field(None, ge=0.0, le=100.0)
     response_history: List[Dict[str, Any]] = []
     related_concepts: List[str] = []
 

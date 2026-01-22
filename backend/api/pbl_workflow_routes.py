@@ -999,4 +999,197 @@ def get_soft_skill_dimensions():
         }), 500
 
 
+@pbl_workflow_bp.route('/students/<student_id>/projects', methods=['GET'])
+def get_student_projects(student_id):
+    try:
+        memberships = find_many(PROJECT_TEAMS, {'members': student_id})
+        project_ids = list(set([m['project_id'] for m in memberships]))
+        projects = find_many(PROJECTS, {'_id': {'$in': project_ids}}, sort=[('created_at', -1)])
+
+        result = []
+        for project in projects:
+            team = find_one(PROJECT_TEAMS, {'project_id': project['_id'], 'members': student_id})
+            result.append({
+                'project_id': project['_id'],
+                'title': project.get('title'),
+                'stage': project.get('stage'),
+                'deadline': project.get('deadline').isoformat() if project.get('deadline') else None,
+                'status': project.get('status'),
+                'team_id': team['_id'] if team else None,
+                'team_name': team.get('team_name') if team else None
+            })
+
+        return jsonify({'student_id': student_id, 'projects': result, 'total': len(result)}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/students/<student_id>/teams', methods=['GET'])
+def get_student_teams(student_id):
+    try:
+        teams = find_many(PROJECT_TEAMS, {'members': student_id})
+        result = []
+        for team in teams:
+            project = find_one(PROJECTS, {'_id': team['project_id']})
+            result.append({
+                'team_id': team['_id'],
+                'team_name': team.get('team_name'),
+                'project_id': team.get('project_id'),
+                'project_title': project.get('title') if project else None,
+                'member_count': len(team.get('members', [])),
+                'role': team.get('roles', {}).get(student_id, 'Member')
+            })
+
+        return jsonify({'student_id': student_id, 'teams': result, 'total': len(result)}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/projects/<project_id>/deliverable', methods=['POST'])
+def submit_deliverable(project_id):
+    try:
+        data = request.json
+        required = ['team_id', 'submitted_by', 'deliverable_type', 'file_url']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        deliverable_doc = {
+            '_id': str(ObjectId()),
+            'project_id': project_id,
+            'team_id': data['team_id'],
+            'submitted_by': data['submitted_by'],
+            'deliverable_type': data['deliverable_type'],
+            'file_url': data['file_url'],
+            'title': data.get('title', 'Project Deliverable'),
+            'description': data.get('description', ''),
+            'submitted_at': datetime.utcnow(),
+            'graded': False,
+            'grade': None
+        }
+
+        deliverable_id = insert_one('project_deliverables', deliverable_doc)
+        logger.info(f"Deliverable submitted | project_id: {project_id} | team_id: {data['team_id']}")
+
+        return jsonify({'deliverable_id': deliverable_id, 'message': 'Deliverable submitted successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/projects/<project_id>/grade', methods=['POST'])
+def grade_project(project_id):
+    try:
+        data = request.json
+        required = ['team_id', 'teacher_id', 'grade', 'feedback']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        grade_doc = {
+            '_id': str(ObjectId()),
+            'project_id': project_id,
+            'team_id': data['team_id'],
+            'teacher_id': data['teacher_id'],
+            'grade': data['grade'],
+            'feedback': data['feedback'],
+            'rubric_scores': data.get('rubric_scores', {}),
+            'graded_at': datetime.utcnow()
+        }
+
+        grade_id = insert_one('project_grades', grade_doc)
+        update_one(PROJECTS, {'_id': project_id}, {'$set': {'status': 'graded', 'final_grade': data['grade']}})
+
+        logger.info(f"Project graded | project_id: {project_id} | grade: {data['grade']}")
+
+        return jsonify({'grade_id': grade_id, 'message': 'Project graded successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/teams/<team_id>/members/<student_id>', methods=['DELETE'])
+def remove_team_member(team_id, student_id):
+    try:
+        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        if not team:
+            return jsonify({'error': 'Team not found'}), 404
+
+        update_one(PROJECT_TEAMS, {'_id': team_id}, {'$pull': {'members': student_id}, '$unset': {f'roles.{student_id}': ''}})
+        logger.info(f"Member removed | team_id: {team_id} | student_id: {student_id}")
+
+        return jsonify({'message': 'Member removed successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/teams/<team_id>', methods=['PUT'])
+def update_team(team_id):
+    try:
+        data = request.json
+        update_data = {}
+        if 'team_name' in data:
+            update_data['team_name'] = data['team_name']
+        if 'status' in data:
+            update_data['status'] = data['status']
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            result = update_one(PROJECT_TEAMS, {'_id': team_id}, {'$set': update_data})
+            if result == 0:
+                return jsonify({'error': 'Team not found'}), 404
+
+            logger.info(f"Team updated | team_id: {team_id}")
+            return jsonify({'message': 'Team updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/tasks/<task_id>', methods=['PUT'])
+def update_task(task_id):
+    try:
+        data = request.json
+        update_data = {}
+        if 'title' in data:
+            update_data['title'] = data['title']
+        if 'description' in data:
+            update_data['description'] = data['description']
+        if 'assigned_to' in data:
+            update_data['assigned_to'] = data['assigned_to']
+        if 'due_date' in data:
+            update_data['due_date'] = datetime.fromisoformat(data['due_date'])
+        if 'priority' in data:
+            update_data['priority'] = data['priority']
+
+        if update_data:
+            update_data['updated_at'] = datetime.utcnow()
+            result = update_one(PROJECT_TASKS, {'_id': task_id}, {'$set': update_data})
+            if result == 0:
+                return jsonify({'error': 'Task not found'}), 404
+
+            logger.info(f"Task updated | task_id: {task_id}")
+            return jsonify({'message': 'Task updated successfully'}), 200
+
+        return jsonify({'error': 'No valid fields to update'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@pbl_workflow_bp.route('/teams/<team_id>/peer-reviews', methods=['GET'])
+def get_team_peer_reviews(team_id):
+    try:
+        reviews = find_many(PEER_REVIEWS, {'team_id': team_id}, sort=[('submitted_at', -1)])
+        result = []
+        for review in reviews:
+            reviewer = find_one(STUDENTS, {'_id': review['reviewer_id']})
+            reviewee = find_one(STUDENTS, {'_id': review['reviewee_id']})
+            result.append({
+                'review_id': review['_id'],
+                'reviewer_id': review['reviewer_id'],
+                'reviewer_name': reviewer.get('name') if reviewer else 'Unknown',
+                'reviewee_id': review['reviewee_id'],
+                'reviewee_name': reviewee.get('name') if reviewee else 'Unknown',
+                'review_type': review.get('review_type'),
+                'ratings': review.get('ratings'),
+                'is_self_review': review.get('is_self_review', False),
+                'submitted_at': review.get('submitted_at').isoformat() if review.get('submitted_at') else None
+            })
+
+        return jsonify({'team_id': team_id, 'reviews': result, 'total': len(result)}), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
 logger.info("PBL Workflow routes initialized successfully")

@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import TeacherLayout from '../components/TeacherLayout';
 import {
-  Users,
-  Activity,
+  GraduationCap,
+  LineChart,
   Clock,
   AlertTriangle,
   Plus,
   MoreHorizontal,
   ChevronRight,
   TrendingUp,
-  BrainCircuit
+  Lightbulb,
+  Megaphone
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -63,7 +64,7 @@ const TeacherDashboard = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Administrator Dashboard</h1>
-            <p className="text-gray-500 mt-1">Welcome back, Prof. Anderson. Here's what's happening today.</p>
+            <p className="text-gray-500 mt-1">{new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}, Prof. Anderson. Here's what's happening today.</p>
           </div>
           <div className="flex gap-3">
             <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
@@ -78,14 +79,14 @@ const TeacherDashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            icon={Users}
+            icon={GraduationCap}
             label="Total Students"
             value={mockTeacherStats.totalStudents}
             trend="+5%"
             color="bg-blue-50 text-blue-600"
           />
           <StatCard
-            icon={Activity}
+            icon={LineChart}
             label="Avg. Engagement"
             value={`${mockTeacherStats.engagementScore}%`}
             trend="+12%"
@@ -93,19 +94,25 @@ const TeacherDashboard = () => {
             subtext="Based on last 7 days"
           />
           <StatCard
-            icon={BrainCircuit}
+            icon={Lightbulb}
             label="Mastery Index"
             value="8.4/10"
             color="bg-teal-50 text-teal-600"
             subtext="Class average across modules"
           />
-          <StatCard
-            icon={AlertTriangle}
-            label="Attention Needed"
-            value={atRiskStudents.length}
-            color="bg-red-50 text-red-600"
-            subtext="Students flagged by AI"
-          />
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-red-50 p-6 rounded-2xl border-2 border-red-200 shadow-md transform rotate-1"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-lg bg-white text-red-600 shadow-sm">
+                <Megaphone size={24} />
+              </div>
+            </div>
+            <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{atRiskStudents.length}</h3>
+            <p className="text-sm font-medium text-red-600">Attention Needed</p>
+            <p className="text-xs text-red-400 mt-2">Students flagged by AI</p>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -161,7 +168,7 @@ const TeacherDashboard = () => {
               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-[100px] opacity-20 pointer-events-none" />
               <div className="relative z-10 flex items-start gap-4">
                 <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-                  <BrainCircuit size={24} className="text-teal-400" />
+                  <Lightbulb size={24} className="text-teal-400" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-2">AI Teaching Assistant Suggestion</h3>

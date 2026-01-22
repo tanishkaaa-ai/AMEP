@@ -92,18 +92,24 @@ def register_blueprints(app):
 
     from api.auth_routes import auth_bp
     from api.mastery_routes import mastery_bp
+    from api.mastery_concepts_routes import concepts_bp
     from api.engagement_routes import engagement_bp
     from api.classroom_routes import classroom_bp
     from api.live_polling_routes import live_polling_bp
     from api.template_routes import template_bp
     from api.dashboard_routes import dashboard_bp
     from api.pbl_workflow_routes import pbl_workflow_bp
+    from api.pbl_crud_extensions import pbl_crud_bp
+    from api.polling_template_crud import poll_template_crud_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     logger.info("Registered: /api/auth")
 
     app.register_blueprint(mastery_bp, url_prefix="/api/mastery")
     logger.info("Registered: /api/mastery")
+
+    app.register_blueprint(concepts_bp, url_prefix="/api/mastery")
+    logger.info("Registered: /api/mastery (concepts & items)")
 
     app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
     logger.info("Registered: /api/classroom")
@@ -114,6 +120,21 @@ def register_blueprints(app):
     app.register_blueprint(live_polling_bp, url_prefix="/api/polling")
     logger.info("Registered: /api/polling")
 
+    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/polling")
+    logger.info("Registered: /api/polling (CRUD extensions)")
+
+    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/templates")
+    logger.info("Registered: /api/templates (CRUD extensions)")
+
+    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/engagement")
+    logger.info("Registered: /api/engagement (CRUD extensions)")
+
+    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/classroom")
+    logger.info("Registered: /api/classroom (CRUD extensions)")
+
+    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/dashboard")
+    logger.info("Registered: /api/dashboard (CRUD extensions)")
+
     app.register_blueprint(template_bp, url_prefix="/api/templates")
     logger.info("Registered: /api/templates")
 
@@ -122,6 +143,9 @@ def register_blueprints(app):
 
     app.register_blueprint(pbl_workflow_bp, url_prefix="/api/pbl")
     logger.info("Registered: /api/pbl")
+
+    app.register_blueprint(pbl_crud_bp, url_prefix="/api/pbl")
+    logger.info("Registered: /api/pbl (CRUD extensions)")
 
     logger.info("All blueprints registered successfully")
 

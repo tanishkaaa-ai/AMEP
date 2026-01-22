@@ -1,12 +1,16 @@
 import React from 'react';
-import { Shield, Star, Award, Zap, Trophy } from 'lucide-react';
+import { Shield, Star, Award, Zap, Trophy, Flame, Compass, Medal, Scroll } from 'lucide-react';
 
 const icons = {
     shield: Shield,
     star: Star,
     award: Award,
     zap: Zap,
-    trophy: Trophy
+    trophy: Trophy,
+    flame: Flame,
+    compass: Compass,
+    medal: Medal,
+    scroll: Scroll
 };
 
 const colors = {
