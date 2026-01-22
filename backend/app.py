@@ -120,20 +120,11 @@ def register_blueprints(app):
     app.register_blueprint(live_polling_bp, url_prefix="/api/polling")
     logger.info("Registered: /api/polling")
 
+    # Register poll_template_crud_bp only once for its specific CRUD operations
+    # Note: This blueprint contains mixed CRUD operations for polls, templates, interventions, etc.
+    # It's registered at /api/polling for backward compatibility with existing routes
     app.register_blueprint(poll_template_crud_bp, url_prefix="/api/polling")
     logger.info("Registered: /api/polling (CRUD extensions)")
-
-    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/templates")
-    logger.info("Registered: /api/templates (CRUD extensions)")
-
-    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/engagement")
-    logger.info("Registered: /api/engagement (CRUD extensions)")
-
-    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/classroom")
-    logger.info("Registered: /api/classroom (CRUD extensions)")
-
-    app.register_blueprint(poll_template_crud_bp, url_prefix="/api/dashboard")
-    logger.info("Registered: /api/dashboard (CRUD extensions)")
 
     app.register_blueprint(template_bp, url_prefix="/api/templates")
     logger.info("Registered: /api/templates")

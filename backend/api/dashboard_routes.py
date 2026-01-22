@@ -36,6 +36,8 @@ from models.database import (
     INSTITUTIONAL_METRICS,
     CONCEPTS,
     CLASSROOM_MEMBERSHIPS,
+    CLASSROOM_POSTS,
+    CLASSROOM_SUBMISSIONS,
     find_one,
     find_many,
     insert_one,
@@ -1048,6 +1050,150 @@ def get_unified_trends():
 
         return jsonify({'has_data': len(trends['engagement_score']) > 0, 'trends': trends, 'trend_directions': {'engagement': trend_direction}}), 200
     except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+
+@dashboard_bp.route('/student/<student_id>', methods=['GET'])
+def get_student_dashboard_data(student_id):
+    """
+    Get aggregated dashboard data for a student
+
+    GET /api/dashboard/student/{student_id}
+
+    Returns:
+    - Student profile info
+    - Mastery statistics
+    - Pending assignments
+    - Next class info
+    - Recent activity
+    """
+    try:
+        logger.info(f"Student dashboard data request | student_id: {student_id}")
+
+        # Get student profile
+        student = find_one(STUDENTS, {'_id': student_id})
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+
+        # Get mastery data
+        mastery_records = find_many(STUDENT_CONCEPT_MASTERY, {'student_id': student_id})
+        overall_mastery = sum(r.get('mastery_score', 0) for r in mastery_records) / len(mastery_records) if mastery_records else 0
+
+        # Calculate level and XP (mock calculation based on mastery)
+        total_xp = int(overall_mastery * 10)  # Simple XP calculation
+        level = max(1, total_xp // 500 + 1)
+        xp_for_next_level = level * 500
+        current_level_xp = (level - 1) * 500
+        xp_progress = total_xp - current_level_xp
+
+        # Get pending assignments
+        # Find classrooms student is in
+        memberships = find_many(CLASSROOM_MEMBERSHIPS, {'student_id': student_id, 'is_active': True})
+        classroom_ids = [m['classroom_id'] for m in memberships]
+
+        pending_assignments = 0
+        next_class = None
+
+        if classroom_ids:
+            # Get assignments from student's classrooms
+            assignments = find_many(CLASSROOM_POSTS, {
+                'classroom_id': {'$in': classroom_ids},
+                'post_type': 'assignment',
+                'assignment_details.due_date': {'$gt': datetime.utcnow()}
+            })
+
+            # Count assignments without submissions or with unsubmitted status
+            for assignment in assignments:
+                submission = find_one(CLASSROOM_SUBMISSIONS, {
+                    'assignment_id': assignment['_id'],
+                    'student_id': student_id
+                })
+                if not submission or submission.get('status') == 'assigned':
+                    pending_assignments += 1
+
+            # Find next class (simplified - just get first upcoming class)
+            current_time = datetime.utcnow()
+            today_classes = find_many(CLASSROOM_POSTS, {
+                'classroom_id': {'$in': classroom_ids},
+                'post_type': 'announcement',
+                'created_at': {
+                    '$gte': current_time.replace(hour=0, minute=0, second=0),
+                    '$lt': current_time.replace(hour=23, minute=59, second=59)
+                }
+            }, sort=[('created_at', -1)], limit=1)
+
+            if today_classes:
+                classroom = find_one(CLASSROOMS, {'_id': today_classes[0]['classroom_id']})
+                if classroom:
+                    next_class = {
+                        'subject': classroom.get('subject', 'Class'),
+                        'time': 'Now',  # Simplified
+                        'topic': today_classes[0].get('title', 'Class Session')
+                    }
+
+        # Get recent activity (recent submissions, mastery updates, etc.)
+        recent_activity = []
+
+        # Recent submissions
+        recent_submissions = find_many(CLASSROOM_SUBMISSIONS, {
+            'student_id': student_id,
+            'submitted_at': {'$gte': datetime.utcnow() - timedelta(days=7)}
+        }, sort=[('submitted_at', -1)], limit=3)
+
+        for submission in recent_submissions:
+            assignment = find_one(CLASSROOM_POSTS, {'_id': submission['assignment_id']})
+            if assignment:
+                recent_activity.append({
+                    'type': 'assignment',
+                    'title': f'Submitted "{assignment.get("title", "Assignment")}"',
+                    'date': submission.get('submitted_at').isoformat() if submission.get('submitted_at') else None,
+                    'icon': 'scroll',
+                    'color': 'blue'
+                })
+
+        # Recent mastery improvements
+        recent_mastery = find_many(STUDENT_CONCEPT_MASTERY, {
+            'student_id': student_id,
+            'last_assessed': {'$gte': datetime.utcnow() - timedelta(days=3)}
+        }, sort=[('last_assessed', -1)], limit=2)
+
+        for mastery in recent_mastery:
+            concept = find_one(CONCEPTS, {'_id': mastery['concept_id']})
+            if concept and mastery.get('mastery_score', 0) >= 80:
+                recent_activity.append({
+                    'type': 'mastery',
+                    'title': f'Mastered "{concept.get("concept_name", "Concept")}"',
+                    'date': mastery.get('last_assessed').isoformat() if mastery.get('last_assessed') else None,
+                    'icon': 'medal',
+                    'color': 'purple'
+                })
+
+        # Sort recent activity by date
+        recent_activity.sort(key=lambda x: x.get('date', ''), reverse=True)
+
+        dashboard_data = {
+            'student_id': student_id,
+            'name': f"{student.get('first_name', '')} {student.get('last_name', '')}".strip() or 'Student',
+            'level': level,
+            'xp': total_xp,
+            'next_level_xp': xp_for_next_level,
+            'streak': 0,  # Simplified - would need session tracking
+            'mastery_score': round(overall_mastery, 1),
+            'pending_assignments': pending_assignments,
+            'next_class': next_class,
+            'recent_activity': recent_activity[:5],  # Top 5 recent activities
+            'badges': [
+                {'icon': 'star', 'label': 'Rising Star', 'subtext': f'Top {min(10, max(1, int(overall_mastery // 10)))}%'},
+                {'icon': 'flame', 'label': 'Active Learner', 'subtext': f'{len(mastery_records)} concepts mastered'},
+                {'icon': 'shield', 'label': 'Consistent', 'subtext': 'Regular participation'}
+            ]
+        }
+
+        logger.info(f"Student dashboard data retrieved | student_id: {student_id} | mastery: {overall_mastery:.1f}%")
+        return jsonify(dashboard_data), 200
+
+    except Exception as e:
+        logger.info(f"Student dashboard data exception | student_id: {student_id} | error: {str(e)}")
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 logger.info("Dashboard routes initialized successfully")

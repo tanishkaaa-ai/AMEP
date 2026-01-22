@@ -24,10 +24,10 @@ import statistics
 from models.database import (
     db,
     PROJECTS,
-    PROJECT_TEAMS,
-    PROJECT_TASKS,
+    TEAMS,
+    TEAM_MEMBERSHIPS,
     PROJECT_MILESTONES,
-    PEER_REVIEWS,
+    PROJECT_ARTIFACTS,
     SOFT_SKILL_ASSESSMENTS,
     STUDENTS,
     TEACHERS,
@@ -214,7 +214,7 @@ def get_project(project_id):
             return jsonify({'error': 'Project not found'}), 404
 
         # Get teams for this project
-        teams = find_many(PROJECT_TEAMS, {'project_id': project_id})
+        teams = find_many(TEAMS, {'project_id': project_id})
 
         # Get milestones
         milestones = find_many(PROJECT_MILESTONES, {'project_id': project_id}, sort=[('due_date', 1)])
@@ -382,7 +382,7 @@ def create_team(project_id):
             'status': 'active'
         }
 
-        team_id = insert_one(PROJECT_TEAMS, team_doc)
+        team_id = insert_one(TEAMS, team_doc)
 
         logger.info(f"Team created | team_id: {team_id} | project_id: {project_id} | members: {team_size}")
 
@@ -413,7 +413,7 @@ def add_team_member(team_id):
         if 'student_id' not in data:
             return jsonify({'error': 'Missing required field: student_id'}), 400
 
-        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        team = find_one(TEAMS, {'_id': team_id})
         if not team:
             return jsonify({'error': 'Team not found'}), 404
 
@@ -426,7 +426,7 @@ def add_team_member(team_id):
 
         # Add member
         result = update_one(
-            PROJECT_TEAMS,
+            TEAMS,
             {'_id': team_id},
             {
                 '$addToSet': {'members': data['student_id']},
@@ -437,7 +437,7 @@ def add_team_member(team_id):
         # Optionally set role
         if 'role' in data:
             update_one(
-                PROJECT_TEAMS,
+                TEAMS,
                 {'_id': team_id},
                 {'$set': {f'roles.{data["student_id"]}': data['role']}}
             )
@@ -462,7 +462,7 @@ def get_team(team_id):
     GET /api/pbl-workflow/teams/{team_id}
     """
     try:
-        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        team = find_one(TEAMS, {'_id': team_id})
 
         if not team:
             return jsonify({'error': 'Team not found'}), 404
@@ -882,7 +882,7 @@ def get_team_soft_skills_summary(team_id):
     """
     try:
         # Get team members
-        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        team = find_one(TEAMS, {'_id': team_id})
 
         if not team:
             return jsonify({'error': 'Team not found'}), 404
@@ -1002,13 +1002,13 @@ def get_soft_skill_dimensions():
 @pbl_workflow_bp.route('/students/<student_id>/projects', methods=['GET'])
 def get_student_projects(student_id):
     try:
-        memberships = find_many(PROJECT_TEAMS, {'members': student_id})
+        memberships = find_many(TEAMS, {'members': student_id})
         project_ids = list(set([m['project_id'] for m in memberships]))
         projects = find_many(PROJECTS, {'_id': {'$in': project_ids}}, sort=[('created_at', -1)])
 
         result = []
         for project in projects:
-            team = find_one(PROJECT_TEAMS, {'project_id': project['_id'], 'members': student_id})
+            team = find_one(TEAMS, {'project_id': project['_id'], 'members': student_id})
             result.append({
                 'project_id': project['_id'],
                 'title': project.get('title'),
@@ -1026,7 +1026,7 @@ def get_student_projects(student_id):
 @pbl_workflow_bp.route('/students/<student_id>/teams', methods=['GET'])
 def get_student_teams(student_id):
     try:
-        teams = find_many(PROJECT_TEAMS, {'members': student_id})
+        teams = find_many(TEAMS, {'members': student_id})
         result = []
         for team in teams:
             project = find_one(PROJECTS, {'_id': team['project_id']})
@@ -1105,11 +1105,11 @@ def grade_project(project_id):
 @pbl_workflow_bp.route('/teams/<team_id>/members/<student_id>', methods=['DELETE'])
 def remove_team_member(team_id, student_id):
     try:
-        team = find_one(PROJECT_TEAMS, {'_id': team_id})
+        team = find_one(TEAMS, {'_id': team_id})
         if not team:
             return jsonify({'error': 'Team not found'}), 404
 
-        update_one(PROJECT_TEAMS, {'_id': team_id}, {'$pull': {'members': student_id}, '$unset': {f'roles.{student_id}': ''}})
+        update_one(TEAMS, {'_id': team_id}, {'$pull': {'members': student_id}, '$unset': {f'roles.{student_id}': ''}})
         logger.info(f"Member removed | team_id: {team_id} | student_id: {student_id}")
 
         return jsonify({'message': 'Member removed successfully'}), 200
@@ -1128,7 +1128,7 @@ def update_team(team_id):
 
         if update_data:
             update_data['updated_at'] = datetime.utcnow()
-            result = update_one(PROJECT_TEAMS, {'_id': team_id}, {'$set': update_data})
+            result = update_one(TEAMS, {'_id': team_id}, {'$set': update_data})
             if result == 0:
                 return jsonify({'error': 'Team not found'}), 404
 

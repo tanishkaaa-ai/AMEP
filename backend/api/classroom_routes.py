@@ -836,9 +836,8 @@ def delete_assignment(assignment_id):
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 @classroom_bp.route('/assignments/<assignment_id>/submit', methods=['POST'])
-def submit_assignment():
+def submit_assignment(assignment_id):
     try:
-        assignment_id = request.view_args['assignment_id']
         data = request.json
         logger.info(f"Assignment submission | assignment_id: {assignment_id} | student_id: {data.get('student_id')}")
 
@@ -857,6 +856,7 @@ def submit_assignment():
         submission = find_one(CLASSROOM_SUBMISSIONS, {'assignment_id': assignment_id, 'student_id': data['student_id']})
 
         if submission:
+            # Update existing submission
             update_one(
                 CLASSROOM_SUBMISSIONS,
                 {'_id': submission['_id']},
@@ -873,7 +873,24 @@ def submit_assignment():
             )
             submission_id = submission['_id']
         else:
-            return jsonify({'error': 'Submission record not found'}), 404
+            # Create new submission record
+            submission_doc = {
+                '_id': str(ObjectId()),
+                'assignment_id': assignment_id,
+                'student_id': data['student_id'],
+                'status': 'turned_in',
+                'submission_text': data.get('submission_text', ''),
+                'attachments': data.get('attachments', []),
+                'submitted_at': datetime.utcnow(),
+                'is_late': is_late,
+                'grade': None,
+                'feedback': '',
+                'graded_at': None,
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            }
+
+            submission_id = insert_one(CLASSROOM_SUBMISSIONS, submission_doc)
 
         logger.info(f"Assignment submitted | assignment_id: {assignment_id} | student_id: {data['student_id']} | late: {is_late}")
         return jsonify({'submission_id': submission_id, 'message': 'Assignment submitted successfully', 'is_late': is_late}), 200
