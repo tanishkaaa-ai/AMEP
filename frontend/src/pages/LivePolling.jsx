@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Users, AlertCircle, Clock, BarChart3, MessageSquare, Zap } from 'lucide-react';
-import { pollsAPI } from '../services/api';
+import { Send, Users, AlertCircle, Clock, BarChart3, MessageSquare, Zap, Loader } from 'lucide-react';
+import { pollsAPI, classroomAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const LivePollingSystem = () => {
@@ -8,11 +8,13 @@ const LivePollingSystem = () => {
   const [activePoll, setActivePoll] = useState(null);
   const [pollHistory, setPollHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  const teacherId = isTeacher() ? getUserId() : null;
-
-  // Stats animation trigger
   const [statsInView, setStatsInView] = useState(false);
+
+  // Class selection
+  const [classes, setClasses] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+
+  const teacherId = isTeacher() ? getUserId() : null;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -32,13 +34,35 @@ const LivePollingSystem = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Fetch teacher's classes
+  useEffect(() => {
+    const fetchClasses = async () => {
+      if (!teacherId) {
+        setLoadingClasses(false);
+        return;
+      }
+      try {
+        const response = await classroomAPI.getTeacherClasses(teacherId);
+        setClasses(response.data);
+        if (response.data.length > 0) {
+          setNewPoll(prev => ({ ...prev, classroom_id: response.data[0].classroom_id }));
+        }
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+      } finally {
+        setLoadingClasses(false);
+      }
+    };
+    fetchClasses();
+  }, [teacherId]);
+
   // Teacher: Create new poll
   const [newPoll, setNewPoll] = useState({
     question: '',
     options: ['', '', '', ''],
     type: 'understanding',
     correctAnswer: null,
-    classroom_id: 'class_101' // Mock Classroom ID
+    classroom_id: ''
   });
 
   // Polling for live results
@@ -111,7 +135,11 @@ const LivePollingSystem = () => {
       alert("Please log in as a teacher to create polls.");
       return;
     }
-    
+    if (!newPoll.classroom_id) {
+      alert("Please select a classroom.");
+      return;
+    }
+
     try {
       setLoading(true);
       const pollData = {
@@ -136,13 +164,13 @@ const LivePollingSystem = () => {
       };
 
       setActivePoll(createdPoll);
-      setNewPoll({
+      setNewPoll(prev => ({
+        ...prev,
         question: '',
         options: ['', '', '', ''],
         type: 'understanding',
         correctAnswer: null,
-        classroom_id: 'class_101'
-      });
+      }));
     } catch (error) {
       console.error("Failed to create poll:", error);
       alert("Failed to create poll. Please try again.");
@@ -164,6 +192,12 @@ const LivePollingSystem = () => {
     }
   };
 
+  if (loadingClasses) {
+    return <div className="min-h-screen bg-teal-50/20 p-6 flex items-center justify-center">
+      <Loader className="animate-spin text-teal-600" size={40} />
+    </div>;
+  }
+
   // Teacher View
   return (
     <div className="min-h-screen bg-teal-50/20 p-6 space-y-6">
@@ -182,6 +216,21 @@ const LivePollingSystem = () => {
           </h2>
 
           <div className="space-y-6 max-w-2xl">
+            {/* Class Selector */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Select Classroom</label>
+              <select
+                value={newPoll.classroom_id}
+                onChange={(e) => setNewPoll({ ...newPoll, classroom_id: e.target.value })}
+                className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+              >
+                {classes.length === 0 && <option value="">No classes found</option>}
+                {classes.map(cls => (
+                  <option key={cls.classroom_id} value={cls.classroom_id}>{cls.class_name}</option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Question</label>
               <input
@@ -228,7 +277,7 @@ const LivePollingSystem = () => {
 
             <button
               onClick={createPoll}
-              disabled={loading || !newPoll.question}
+              disabled={loading || !newPoll.question || !newPoll.classroom_id}
               className="w-full bg-teal-600 text-white py-4 rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-teal-200 disabled:opacity-50"
             >
               {loading ? 'Launching...' : <><Send size={20} /> Launch Poll</>}
