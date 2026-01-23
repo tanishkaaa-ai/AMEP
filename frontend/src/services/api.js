@@ -99,7 +99,7 @@ export const pollsAPI = {
   createPoll: (data) => api.post('/polling/polls', data),
   getPoll: (pollId) => api.get(`/polling/polls/${pollId}`),
   respondToPoll: (pollId, data) => api.post(`/polling/polls/${pollId}/respond`, data),
-  getPollResults: (pollId) => api.get(`/polling/polls/${pollId}/results`),
+  getPollResults: (pollId, params) => api.get(`/polling/polls/${pollId}/results`, { params }),
   closePoll: (pollId) => api.post(`/polling/polls/${pollId}/close`),
   getClassPolls: (classId) => api.get(`/polling/classrooms/${classId}/polls`),
 };

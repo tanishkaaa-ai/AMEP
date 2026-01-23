@@ -10,6 +10,7 @@ const LivePollingSystem = () => {
   const [pollHistory, setPollHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statsInView, setStatsInView] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Class selection
   const [classes, setClasses] = useState([]);
@@ -101,7 +102,7 @@ const LivePollingSystem = () => {
     if (activePoll?.is_active) {
       intervalId = setInterval(async () => {
         try {
-          const response = await pollsAPI.getPollResults(activePoll.poll_id);
+          const response = await pollsAPI.getPollResults(activePoll.poll_id, { include_details: showDetails });
           // Only update if data changed significantly or just refresh stats
           setActivePoll(prev => ({
             ...prev,
@@ -115,7 +116,7 @@ const LivePollingSystem = () => {
       }, 2000);
     }
     return () => clearInterval(intervalId);
-  }, [activePoll?.is_active, activePoll?.poll_id]);
+  }, [activePoll?.is_active, activePoll?.poll_id, showDetails]);
 
   const formatResponses = (data) => {
     // Map API response percentages back to UI format
@@ -333,7 +334,123 @@ const LivePollingSystem = () => {
         )}
 
         {/* Active Poll Display */}
+        {activePoll && activePoll.is_active && (
+          <div className="bg-white border border-teal-200 rounded-2xl p-8 shadow-md mb-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-2 h-full bg-teal-500"></div>
 
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse"></span>
+                    Live Now
+                  </span>
+                  <span className="text-gray-400 text-sm">
+                    Started {activePoll.created_at ? new Date(activePoll.created_at).toLocaleTimeString() : ''}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">{activePoll.question}</h2>
+              </div>
+
+              <button
+                onClick={closePoll}
+                className="bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2"
+              >
+                End Poll
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Chart Section */}
+              <div className="lg:col-span-2 space-y-4">
+                {(activePoll.responses || []).map((response, idx) => (
+                  <div key={idx} className="relative">
+                    <div className="flex justify-between mb-1">
+                      <span className="font-bold text-gray-700">{response.option}</span>
+                      <span className="font-bold text-teal-700">{response.count} votes ({response.percentage}%)</span>
+                    </div>
+                    <div className="w-full h-12 bg-gray-100 rounded-xl overflow-hidden relative">
+                      <div
+                        className="h-full bg-teal-500 transition-all duration-1000 ease-out flex items-center px-4"
+                        style={{ width: `${Math.max(response.percentage, 5)}%` }}
+                      >
+                      </div>
+                      <span className="absolute inset-y-0 right-4 flex items-center text-gray-400 font-bold z-10">
+                        {response.count}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stats Column */}
+              <div className="bg-gray-50 rounded-xl p-6 flex flex-col justify-center items-center text-center space-y-6">
+                <div>
+                  <div className="text-4xl font-black text-gray-800 mb-1">
+                    {activePoll.total_responses || activePoll.totalResponses || 0}
+                  </div>
+                  <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">Responses</div>
+                </div>
+
+                <div className="w-full h-px bg-gray-200"></div>
+
+                {activePoll.recommendation && (
+                  <div className="w-full bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="text-xs font-bold text-teal-600 uppercase mb-2">AI Insight</div>
+                    <p className="text-sm font-medium text-gray-700 leading-snug">
+                      {activePoll.recommendation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Detailed Responses Toggle */}
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 transition-colors"
+              >
+                {showDetails ? 'Hide' : 'Show'} Student Responses
+              </button>
+
+              {showDetails && (
+                <div className="mt-4 bg-gray-50 rounded-xl overflow-hidden border border-gray-200 max-h-64 overflow-y-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-gray-500 uppercase bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="px-6 py-3">Student</th>
+                        <th className="px-6 py-3">Response</th>
+                        <th className="px-6 py-3">Result</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {activePoll.detailed_responses?.length > 0 ? (
+                        activePoll.detailed_responses.map((resp, i) => (
+                          <tr key={i} className="bg-white hover:bg-gray-50">
+                            <td className="px-6 py-3 font-medium text-gray-900">{resp.student_name || 'Unknown'}</td>
+                            <td className="px-6 py-3 text-gray-600">{resp.response}</td>
+                            <td className="px-6 py-3">
+                              {resp.is_correct === true && <span className="text-green-600 font-bold">Correct</span>}
+                              {resp.is_correct === false && <span className="text-red-500 font-bold">Incorrect</span>}
+                              {resp.is_correct === null && <span className="text-gray-400">-</span>}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400 italic">
+                            No responses recorded yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Poll History */}
         {pollHistory.length > 0 && (
@@ -353,11 +470,6 @@ const LivePollingSystem = () => {
                   </div>
 
                   <div className="space-y-3">
-                    {/* Handle both format variations just in case, though backend now returns formatResponses style data if we updated it, 
-                          actually backend returns { response_percentages: {}, response_counts: {} } in calculate_poll_results.
-                          We might need to run formatResponses on these items if they come raw from API.
-                          But wait, I should probably format them when I fetch them. 
-                      */}
                     {(poll.responses || formatResponses(poll)).map((response, idx) => (
                       <div key={idx}>
                         <div className="flex items-center justify-between mb-1">
@@ -399,7 +511,6 @@ const LivePollingSystem = () => {
             </div>
           </div>
         </div>
-      </div>
     </TeacherLayout>
   );
 };

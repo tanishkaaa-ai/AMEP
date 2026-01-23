@@ -307,12 +307,14 @@ def get_poll_results(poll_id):
     """
     try:
         logger.info(f"Get poll results | poll_id: {poll_id}")
+        
+        include_details = request.args.get('include_details') == 'true'
 
         poll = find_one(LIVE_POLLS, {'_id': poll_id})
         if not poll:
             return jsonify({'error': 'Poll not found'}), 404
 
-        results = calculate_poll_results(poll_id)
+        results = calculate_poll_results(poll_id, include_details=include_details)
 
         return jsonify(results), 200
 
@@ -321,11 +323,58 @@ def get_poll_results(poll_id):
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
-def calculate_poll_results(poll_id: str) -> dict:
+@live_polling_bp.route('/polls/<poll_id>/close', methods=['POST'])
+def close_poll(poll_id):
+    """
+    Close an active poll
+    """
+    try:
+        logger.info(f"Close poll request | poll_id: {poll_id}")
+        
+        poll = find_one(LIVE_POLLS, {'_id': poll_id})
+        if not poll:
+            return jsonify({'error': 'Poll not found'}), 404
+
+        if not poll.get('is_active'):
+            return jsonify({'message': 'Poll is already closed'}), 200
+
+        update_one(
+            LIVE_POLLS, 
+            {'_id': poll_id},
+            {
+                '$set': {
+                    'is_active': False,
+                    'closed_at': datetime.utcnow()
+                }
+            }
+        )
+
+        return jsonify({'message': 'Poll closed successfully', 'poll_id': poll_id}), 200
+
+    except Exception as e:
+        logger.info(f"Close poll exception | error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+def get_student_name(student_id):
+    """Helper to get student name from ID"""
+    try:
+        student = find_one(STUDENTS, {'user_id': student_id}) # Assuming STUDENTS collection uses user_id
+        if not student:
+             # Fallback to users collection if not in students specific collection, 
+             # or just use ID if name lookup fails. 
+             # For now, let's try to look up in the main USERS collection if STUDENTS doesn't have it direct?
+             # Based on imports, we have STUDENTS. Let's assume it works.
+             return "Unknown Student"
+        return student.get('name', 'Unknown Student')
+    except:
+        return "Unknown Student"
+
+
+def calculate_poll_results(poll_id: str, include_details: bool = False) -> dict:
     """
     Calculate aggregated poll results
-
-    BR4: Anonymous aggregation ensures student privacy
+    
+    BR4: Anonymous aggregation ensures student privacy (unless details requested by teacher)
     BR6: Provides actionable insights to teacher
     """
     poll = find_one(LIVE_POLLS, {'_id': poll_id})
@@ -334,13 +383,16 @@ def calculate_poll_results(poll_id: str) -> dict:
 
     # Get all responses
     responses = find_many(POLL_RESPONSES, {'poll_id': poll_id})
-
+    
     total_responses = len(responses)
-
+    
     # Aggregate by response value
     response_counts = {}
     for option in poll.get('options', []):
         response_counts[option] = 0
+        
+    # Also collect detailed responses if requested
+    detailed_responses = []
 
     for response in responses:
         value = response.get('response')
@@ -348,6 +400,31 @@ def calculate_poll_results(poll_id: str) -> dict:
             response_counts[value] += 1
         else:
             response_counts[value] = 1
+            
+        if include_details:
+            # We need to fetch student name here. 
+            # Note: This could be N+1 query issue, but for a single class size (e.g. 30 students) it's acceptable.
+            # To optimize, we'd fetch all students for the class once.
+            # For simplicity now, we'll just format the ID.
+            # Ideally we should join with users/students collection.
+            # Let's assume `response['student_id']` is the user ID.
+            
+            # Since we don't have direct access to USERS collection in imports above (only STUDENTS),
+            # we'll use a placeholder or helper if we can. 
+            # Actually, `from models.database import ... STUDENTS` is available.
+            
+            student_name = "Student" # Default
+            student_doc = find_one(STUDENTS, {'user_id': response['student_id']})
+            if student_doc:
+                student_name = student_doc.get('name', 'Student')
+            
+            detailed_responses.append({
+                'student_id': response['student_id'],
+                'student_name': student_name,
+                'response': value,
+                'is_correct': response.get('is_correct'),
+                'response_time': response.get('response_time')
+            })
 
     # Calculate percentages
     response_percentages = {}
@@ -380,8 +457,8 @@ def calculate_poll_results(poll_id: str) -> dict:
         total_responses,
         understanding_level
     )
-
-    return {
+    
+    result = {
         'poll_id': poll_id,
         'question': poll.get('question'),
         'poll_type': poll.get('poll_type'),
@@ -395,6 +472,11 @@ def calculate_poll_results(poll_id: str) -> dict:
         'is_active': poll.get('is_active'),
         'created_at': poll.get('created_at').isoformat() if poll.get('created_at') else None
     }
+    
+    if include_details:
+        result['detailed_responses'] = detailed_responses
+        
+    return result
 
 
 def generate_teaching_recommendation(
@@ -405,8 +487,8 @@ def generate_teaching_recommendation(
 ) -> str:
     """
     BR6: Generate actionable recommendation based on poll results
-
-    Research from Paper 8h.pdf: "Immediate feedback allows lecturers
+    
+    Research from Paper 8h.pdf: "Immediate feedback allows lecturers 
     to gauge student understanding in real-time and adjust teaching timely"
     """
     if total_responses == 0:
@@ -420,9 +502,9 @@ def generate_teaching_recommendation(
                 return "⚠️ Moderate understanding - quick review recommended"
             elif understanding_level >= 40:
                 return "⚠️ Low understanding - re-explain key points before moving on"
-            else:
+            else: 
                 return "❌ Very low understanding - consider alternative teaching approach"
-
+                
     elif poll_type == 'fact_based':
         # Look for correct answer percentage
         if percentages:
@@ -433,7 +515,7 @@ def generate_teaching_recommendation(
                 return "⚠️ Some confusion - clarify misconceptions"
             else:
                 return "❌ Widespread confusion - reteach this concept"
-
+                
     return "Review responses and adjust teaching as needed"
 
 
