@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCircle, Target } from 'lucide-react';
+import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCircle, Target, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -236,12 +236,15 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
 const StudentProjects = () => {
     const { getUserId } = useAuth();
     const navigate = useNavigate();
+    const [teams, setTeams] = useState([]);
     const [activeTeam, setActiveTeam] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
     const [showPeerReview, setShowPeerReview] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
+    const [showProjectMenu, setShowProjectMenu] = useState(false);
 
     const STUDENT_ID = getUserId();
 
@@ -252,34 +255,15 @@ const StudentProjects = () => {
                 console.info('[STUDENT_PROJECTS] Fetching student teams:', { student_id: STUDENT_ID });
 
                 const teamsRes = await projectsAPI.getStudentTeams(STUDENT_ID);
-                const teams = teamsRes.data.teams || [];
-                console.info('[STUDENT_PROJECTS] Teams retrieved:', { count: teams.length, teams });
+                const teamsData = teamsRes.data.teams || [];
+                console.info('[STUDENT_PROJECTS] Teams retrieved:', { count: teamsData.length, teams: teamsData });
 
-                if (teams.length > 0) {
-                    const team = teams[0];
-                    setActiveTeam(team);
-                    console.info('[STUDENT_PROJECTS] Active team set:', {
-                        team_id: team.team_id || team._id,
-                        team_name: team.team_name,
-                        project_id: team.project_id
-                    });
+                setTeams(teamsData);
 
-                    // Fetch full team details to get members
-                    console.info('[STUDENT_PROJECTS] Fetching full team details:', { team_id: team.team_id || team._id });
-                    try {
-                        const fullTeamRes = await projectsAPI.getTeam(team.team_id || team._id);
-                        if (fullTeamRes.data) {
-                            setActiveTeam(prev => ({ ...prev, ...fullTeamRes.data }));
-                            console.info('[STUDENT_PROJECTS] Full team details updated');
-                        }
-                    } catch (teamErr) {
-                        console.error('[STUDENT_PROJECTS] Error fetching full team details:', teamErr);
-                    }
-
-                    console.info('[STUDENT_PROJECTS] Fetching team tasks:', { team_id: team.team_id || team._id });
-                    const tasksRes = await projectsAPI.getTeamTasks(team.team_id || team._id);
-                    setTasks(Array.isArray(tasksRes.data?.tasks) ? tasksRes.data.tasks : (Array.isArray(tasksRes.data) ? tasksRes.data : []));
-                    console.info('[STUDENT_PROJECTS] Tasks retrieved:', { count: tasksRes.data?.length || 0 });
+                if (teamsData.length > 0) {
+                    const firstTeam = teamsData[0];
+                    // We'll fetch full details in a separate effect or function when activeTeam (firstTeam) is set
+                    setActiveTeam(firstTeam);
                 } else {
                     console.warn('[STUDENT_PROJECTS] No teams found for student:', { student_id: STUDENT_ID });
                     setTasks([]);
@@ -305,6 +289,34 @@ const StudentProjects = () => {
             setError("Please log in to view your projects.");
         }
     }, [STUDENT_ID]);
+
+    useEffect(() => {
+        const fetchTeamData = async () => {
+            if (!activeTeam) {
+                setTasks([]);
+                return;
+            }
+
+            try {
+                // Fetch full team details to get members if not already populated
+                if (!activeTeam.members) {
+                    const fullTeamRes = await projectsAPI.getTeam(activeTeam.team_id || activeTeam._id);
+                    if (fullTeamRes.data) {
+                        setActiveTeam(prev => ({ ...prev, ...fullTeamRes.data }));
+                    }
+                }
+
+                const tasksRes = await projectsAPI.getTeamTasks(activeTeam.team_id || activeTeam._id);
+                setTasks(Array.isArray(tasksRes.data?.tasks) ? tasksRes.data.tasks : (Array.isArray(tasksRes.data) ? tasksRes.data : []));
+            } catch (err) {
+                console.error('[STUDENT_PROJECTS] Error fetching team data:', err);
+                // Don't set global error here, as main loading succeeded. Just maybe show a toast or empty tasks.
+                setTasks([]);
+            }
+        };
+
+        fetchTeamData();
+    }, [activeTeam?.team_id, activeTeam?._id]);
 
     const handleAddTask = () => {
         if (!activeTeam) return;
@@ -354,11 +366,61 @@ const StudentProjects = () => {
             <div className="h-[calc(100vh-8rem)] flex flex-col">
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
-                            <Map className="text-blue-500" /> {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
-                        </h1>
-                        <p className="text-gray-500 mt-1">Team: <span className="font-bold text-gray-700">{activeTeam.team_name}</span></p>
+                    <div className="flex-1 mr-8">
+                        {teams.length > 1 ? (
+                            <div className="relative">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Switch Project</label>
+                                <button
+                                    onClick={() => setShowProjectMenu(!showProjectMenu)}
+                                    className="group flex items-center gap-2 text-3xl font-extrabold text-gray-800 hover:text-blue-600 transition-colors focus:outline-none"
+                                >
+                                    <Map className="text-blue-500" />
+                                    {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
+                                    <ChevronDown size={24} className={`text-gray-400 transition-transform duration-200 ${showProjectMenu ? 'rotate-180' : ''} group-hover:text-blue-500`} />
+                                </button>
+
+                                {showProjectMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowProjectMenu(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-20"
+                                        >
+                                            <div className="text-xs font-bold text-gray-400 px-3 py-2 uppercase tracking-wider border-b border-gray-50 mb-1">Select Project</div>
+                                            <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                                                {teams.map(t => (
+                                                    <button
+                                                        key={t.team_id || t._id}
+                                                        onClick={() => {
+                                                            setActiveTeam(t);
+                                                            setShowProjectMenu(false);
+                                                        }}
+                                                        className={`w-full text-left p-3 rounded-xl transition-colors flex flex-col mb-1 ${(activeTeam.team_id || activeTeam._id) === (t.team_id || t._id)
+                                                            ? 'bg-blue-50 text-blue-700'
+                                                            : 'hover:bg-gray-50 text-gray-700'
+                                                            }`}
+                                                    >
+                                                        <span className="font-bold text-sm block truncate">{t.project_title || t.project_name || 'Project'}</span>
+                                                        <span className="text-xs opacity-70 block truncate">Team: {t.team_name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
+                                <Map className="text-blue-500" /> {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
+                            </h1>
+                        )}
+
+                        <p className="text-gray-500 mt-1 flex items-center gap-2">
+                            <span className="text-xs font-bold bg-gray-100 px-2 py-1 rounded-md text-gray-500">CURRENT TEAM</span>
+                            <span className="font-bold text-gray-700">{activeTeam.team_name}</span>
+                        </p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex -space-x-3">
@@ -418,13 +480,15 @@ const StudentProjects = () => {
             </div>
 
             {showPeerReview && <PeerReviewModal team={activeTeam} onClose={() => setShowPeerReview(false)} currentUserId={STUDENT_ID} />}
-            {showUpload && <UploadModal
-                onClose={() => setShowUpload(false)}
-                projectId={activeTeam.project_id}
-                teamId={activeTeam.team_id || activeTeam._id}
-                studentId={STUDENT_ID}
-            />}
-        </DashboardLayout>
+            {
+                showUpload && <UploadModal
+                    onClose={() => setShowUpload(false)}
+                    projectId={activeTeam.project_id}
+                    teamId={activeTeam.team_id || activeTeam._id}
+                    studentId={STUDENT_ID}
+                />
+            }
+        </DashboardLayout >
     );
 };
 
