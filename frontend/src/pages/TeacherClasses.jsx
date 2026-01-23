@@ -29,7 +29,18 @@ const ClassCard = ({ cls, onDelete }) => (
                     <MoreVertical size={20} />
                 </button>
             </div>
-
+            <div className="absolute top-4 right-14">
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onDelete && onDelete(cls);
+                    }}
+                    className="text-white/80 hover:text-red-200 hover:bg-red-500/20 p-1.5 rounded-lg transition-colors"
+                >
+                    <Trash2 size={20} />
+                </button>
+            </div>
             <div className="absolute bottom-6 left-6">
                 <span className="text-xs font-bold uppercase tracking-wider bg-black/20 px-2 py-1 rounded mb-2 inline-block">
                     {cls.section}
