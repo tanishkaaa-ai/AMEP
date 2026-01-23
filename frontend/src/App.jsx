@@ -11,6 +11,7 @@ import { Toaster } from 'react-hot-toast';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherClasses from './pages/TeacherClasses';
 import TeacherAnalytics from './pages/TeacherAnalytics';
+import TeacherInterventions from './pages/TeacherInterventions';
 import LivePolling from './pages/LivePolling';
 import PBLWorkspace from './pages/PBLWorkspace';
 import SoftSkillsRubric from './pages/SoftSkillsRubric';
@@ -72,6 +73,7 @@ function MainLayout({ isConnected }) {
         <Route path="/teacher/curriculum" element={<ProtectedRoute requiredRole="teacher"><TeacherCurriculum /></ProtectedRoute>} />
         <Route path="/teacher/project-review" element={<ProtectedRoute requiredRole="teacher"><TeacherProjectReview /></ProtectedRoute>} />
         <Route path="/teacher/grading" element={<ProtectedRoute requiredRole="teacher"><TeacherProjectGrading /></ProtectedRoute>} />
+        <Route path="/teacher/interventions" element={<ProtectedRoute requiredRole="teacher"><TeacherInterventions /></ProtectedRoute>} />
         <Route path="/teacher/templates" element={<ProtectedRoute requiredRole="teacher"><TemplateLibrary /></ProtectedRoute>} />
 
         <Route path="/polling" element={<ProtectedRoute requiredRole="teacher"><LivePolling /></ProtectedRoute>} />

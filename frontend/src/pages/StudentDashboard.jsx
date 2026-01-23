@@ -27,7 +27,8 @@ const StudentDashboard = () => {
             time: '--:--',
             topic: 'Enjoy your break!'
         },
-        recentActivity: []
+        recentActivity: [],
+        badges: []
     });
 
     const STUDENT_ID = getUserId();
@@ -48,9 +49,9 @@ const StudentDashboard = () => {
                 ]);
 
                 // Process Engagement/Gamification Data
-                let engagementData = { level: 1, xp: 0, streak: 0, nextLevelXp: 1000 };
+                let engagementData = { level: 1, xp: 0, streak: 0, nextLevelXp: 1000, badges: [] };
                 if (gamificationRes.status === 'fulfilled') {
-                    engagementData = gamificationRes.value.data;
+                    engagementData = { ...engagementData, ...gamificationRes.value.data };
                 }
 
                 // Process Mastery Data
@@ -124,6 +125,7 @@ const StudentDashboard = () => {
                     xp: engagementData.xp,
                     nextLevelXp: engagementData.nextLevelXp || 1000,
                     streak: engagementData.streak,
+                    badges: engagementData.badges || [],
                     masteryScore: Math.round(masteryScore),
                     pendingAssignments: pendingCount,
                     nextClass: nextClass,
@@ -343,13 +345,26 @@ const StudentDashboard = () => {
                     {/* Badges / Motivation */}
                     <div className="bg-gradient-to-b from-white to-orange-50 rounded-2xl shadow-sm border border-orange-100 p-6">
                         <h3 className="font-bold text-xl text-gray-800 mb-4">Your Badges</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <GamificationBadge icon="star" color="yellow" label="Rising Star" subtext="Top 10%" />
-                            <GamificationBadge icon="flame" color="orange" label="Streaker" subtext="5 Day Active" />
-                            <GamificationBadge icon="shield" color="blue" label="Guardian" subtext="Helper" />
-                            <div className="border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center p-3 text-gray-400 font-medium text-xs text-center">
-                                Next: <br /> Speedster
+                        {data.badges && data.badges.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3">
+                                {data.badges.map((badge, idx) => (
+                                    <GamificationBadge
+                                        key={idx}
+                                        icon={badge.icon}
+                                        color={badge.color || 'blue'}
+                                        label={badge.name}
+                                        subtext={badge.description}
+                                    />
+                                ))}
                             </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-3 opacity-50 grayscale">
+                                <GamificationBadge icon="star" color="gray" label="Locked" subtext="Keep working!" />
+                                <GamificationBadge icon="shield" color="gray" label="Locked" subtext="Help others" />
+                            </div>
+                        )}
+                        <div className="border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center p-3 text-gray-400 font-medium text-xs text-center mt-3">
+                            Next: <br /> Speedster
                         </div>
                         <Link to="/student/practice" className="w-full mt-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 shadow-sm transition-all flex justify-center items-center">
                             View Trophy Case

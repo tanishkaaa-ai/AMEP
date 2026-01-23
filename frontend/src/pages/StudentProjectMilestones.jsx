@@ -135,9 +135,8 @@ const StudentProjectMilestones = () => {
         formData.append('file', file);
 
         try {
-            // Using fetch directly as api service wrapper might not support formData yet
-            // Assuming base URL is same, or need to configure axios for multipart
-            const res = await fetch('http://127.0.0.1:5000/api/upload', {
+            const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+            const res = await fetch(`${apiBaseUrl}/api/upload`, {
                 method: 'POST',
                 body: formData
             });
