@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
 import { BookOpen, Plus, Search, Edit2, Trash2, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react';
-import { conceptsAPI } from '../services/api';
+import { conceptsAPI, classroomAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 const TeacherCurriculum = () => {
+    const { getUserId } = useAuth();
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('');
     const [concepts, setConcepts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedConcept, setExpandedConcept] = useState(null);
@@ -19,13 +23,34 @@ const TeacherCurriculum = () => {
     const [conceptItems, setConceptItems] = useState({}); // Map conceptId -> items
 
     useEffect(() => {
-        fetchConcepts();
-    }, [refreshTrigger]);
+        fetchClasses();
+    }, []);
+
+    useEffect(() => {
+        if (selectedClass) {
+            fetchConcepts();
+        } else {
+            setConcepts([]);
+        }
+    }, [refreshTrigger, selectedClass]);
+
+    const fetchClasses = async () => {
+        try {
+            const res = await classroomAPI.getTeacherClasses(getUserId());
+            setClasses(res.data);
+            if (res.data.length > 0) {
+                setSelectedClass(res.data[0].classroom_id);
+            }
+        } catch (err) {
+            console.error("Failed to load classes", err);
+            toast.error("Failed to load your classes");
+        }
+    };
 
     const fetchConcepts = async () => {
         try {
             setLoading(true);
-            const res = await conceptsAPI.getConcepts({});
+            const res = await conceptsAPI.getConcepts({ classroom_id: selectedClass });
             setConcepts(res.data);
         } catch (err) {
             toast.error('Failed to load concepts');
@@ -58,7 +83,7 @@ const TeacherCurriculum = () => {
     const handleCreateConcept = async (e) => {
         e.preventDefault();
         try {
-            await conceptsAPI.createConcept(newConcept);
+            await conceptsAPI.createConcept({ ...newConcept, classroom_id: selectedClass });
             toast.success('Concept created successfully!');
             setShowCreateModal(false);
             setNewConcept({ name: '', subject_area: 'Computer Science', description: '', difficulty_level: 'medium' });
@@ -103,12 +128,27 @@ const TeacherCurriculum = () => {
                         </h1>
                         <p className="text-gray-500">Manage mastery concepts and practice questions for students.</p>
                     </div>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors"
-                    >
-                        <Plus size={20} /> Create Concept
-                    </button>
+                    <div className="flex gap-4">
+                        <select
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                            <option value="" disabled>Select Class</option>
+                            {classes.map(cls => (
+                                <option key={cls.classroom_id} value={cls.classroom_id}>
+                                    {cls.class_name}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            disabled={!selectedClass}
+                            className={`bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors ${!selectedClass ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <Plus size={20} /> Create Concept
+                        </button>
+                    </div>
                 </div>
 
                 {/* Concepts List */}

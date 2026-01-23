@@ -121,7 +121,8 @@ def get_student_mastery(student_id):
     try:
         subject_area = request.args.get('subject_area')
         min_mastery = request.args.get('min_mastery', type=float)
-        logger.info(f"[GET_STUDENT_MASTERY] Request received | student_id: {student_id} | subject_area: {subject_area} | min_mastery: {min_mastery}")
+        classroom_id = request.args.get('classroom_id')
+        logger.info(f"[GET_STUDENT_MASTERY] Request received | student_id: {student_id} | subject_area: {subject_area} | min_mastery: {min_mastery} | classroom_id: {classroom_id}")
 
         query = {'student_id': student_id}
 
@@ -137,10 +138,13 @@ def get_student_mastery(student_id):
                     continue
                 if min_mastery and record.get('mastery_score', 0) < min_mastery:
                     continue
+                if classroom_id and concept.get('classroom_id') != classroom_id:
+                    continue
 
                 concepts_data.append({
                     'concept_id': record['concept_id'],
                     'concept_name': concept.get('concept_name', 'Unknown'),
+                    'classroom_id': concept.get('classroom_id'),
                     'mastery_score': record.get('mastery_score', 0),
                     'last_assessed': record.get('last_assessed').isoformat() if record.get('last_assessed') else None,
                     'times_assessed': record.get('times_assessed', 0),

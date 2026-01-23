@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { Target, Lock, CheckCircle, Play, BrainCircuit, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { masteryAPI } from '../services/api';
+import { masteryAPI, classroomAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const StudentPractice = () => {
     const { getUserId } = useAuth();
     const [selectedNode, setSelectedNode] = useState(null);
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('');
     const [masteryNodes, setMasteryNodes] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,14 +27,46 @@ const StudentPractice = () => {
     ];
 
     useEffect(() => {
+        fetchStudentClasses();
+    }, [STUDENT_ID]);
+
+    const fetchStudentClasses = async () => {
+        if (!STUDENT_ID) return;
+        try {
+            const res = await classroomAPI.getStudentClasses(STUDENT_ID);
+            setClasses(res.data);
+            if (res.data.length > 0) {
+                setSelectedClass(res.data[0].classroom_id);
+            }
+        } catch (err) {
+            console.error("Failed to load classes", err);
+        }
+    };
+
+    useEffect(() => {
         const fetchData = async () => {
+            if (!selectedClass) {
+                setMasteryNodes([]);
+                setRecommendations([]);
+                setLoading(false);
+                return;
+            }
+
             try {
                 setLoading(true);
-                console.info('[PRACTICE] Fetching mastery data:', { student_id: STUDENT_ID });
-                const [masteryRes, recsRes] = await Promise.all([
-                    masteryAPI.getStudentMastery(STUDENT_ID),
+                console.info('[PRACTICE] Fetching mastery data:', { student_id: STUDENT_ID, classroom_id: selectedClass });
+
+                // Create a timeout promise
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Request timed out")), 10000)
+                );
+
+                const dataPromise = Promise.all([
+                    masteryAPI.getStudentMastery(STUDENT_ID, { classroom_id: selectedClass }),
                     masteryAPI.getRecommendations(STUDENT_ID)
                 ]);
+
+                const [masteryRes, recsRes] = await Promise.race([dataPromise, timeoutPromise]);
                 console.info('[PRACTICE] Mastery data retrieved:', {
                     concepts_count: masteryRes.data.concepts?.length || 0,
                     overall_mastery: masteryRes.data.overall_mastery,
@@ -86,6 +121,7 @@ const StudentPractice = () => {
                     student_id: STUDENT_ID
                 });
                 setError(`Failed to load mastery path: ${err.message}`);
+                toast.error(`Error loading practice data: ${err.message}`);
             } finally {
                 setLoading(false);
             }
@@ -97,7 +133,7 @@ const StudentPractice = () => {
             setLoading(false);
             setError("Please log in to view your practice zone.");
         }
-    }, [STUDENT_ID]);
+    }, [selectedClass]); // Depend on selectedClass
 
     const handleStartPractice = () => {
         console.info('[PRACTICE] Start practice clicked:', { student_id: STUDENT_ID, selected_node: selectedNode });
@@ -139,6 +175,21 @@ const StudentPractice = () => {
                             <Target className="text-green-500" /> Practice Zone
                         </h1>
                         <p className="text-gray-500 mt-1">Master concepts to unlock new levels and earn XP!</p>
+
+                        <div className="mt-4 w-64">
+                            <select
+                                value={selectedClass}
+                                onChange={(e) => setSelectedClass(e.target.value)}
+                                className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="" disabled>Select Class Context</option>
+                                {classes.map(cls => (
+                                    <option key={cls.classroom_id} value={cls.classroom_id}>
+                                        {cls.class_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     {recommendations.length > 0 && (
                         <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg border border-purple-400 flex items-center gap-2 animate-pulse">

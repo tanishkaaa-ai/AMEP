@@ -15,12 +15,15 @@ def get_concepts():
     try:
         subject_area = request.args.get('subject_area')
         grade_level = request.args.get('grade_level')
+        classroom_id = request.args.get('classroom_id')
 
         query = {}
         if subject_area:
             query['subject_area'] = subject_area
         if grade_level:
             query['grade_level'] = int(grade_level)
+        if classroom_id:
+            query['classroom_id'] = classroom_id
 
         concepts = find_many(CONCEPTS, query, sort=[('subject_area', 1), ('name', 1)])
 
@@ -28,6 +31,7 @@ def get_concepts():
         for concept in concepts:
             result.append({
                 'concept_id': concept['_id'],
+                'classroom_id': concept.get('classroom_id'),
                 'name': concept.get('name'),
                 'subject_area': concept.get('subject_area'),
                 'grade_level': concept.get('grade_level'),
@@ -50,6 +54,7 @@ def create_concept():
 
         concept_doc = {
             '_id': str(ObjectId()),
+            'classroom_id': data.get('classroom_id'),  # Optional for now to support global concepts, or Make required if strict
             'name': data['name'],
             'subject_area': data['subject_area'],
             'grade_level': data.get('grade_level'),
