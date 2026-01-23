@@ -13,6 +13,8 @@ import {
     ChevronRight,
     ChevronLeft,
     BookOpen,
+    ClipboardList,
+
 
     CheckCircle,
     Award
@@ -67,6 +69,7 @@ const TeacherLayout = ({ children }) => {
         { icon: LayoutDashboard, text: 'Overview', to: '/teacher' },
         { icon: Users, text: 'Classes & Rosters', to: '/teacher/classes' },
         { icon: BarChart2, text: 'Analytics Hub', to: '/teacher/analytics' },
+        { icon: ClipboardList, text: 'Interventions', to: '/teacher/interventions' },
         { icon: Radio, text: 'Live Sessions', to: '/teacher/polls' }, // Reusing/Aliasing Polling
         { icon: MapIcon, text: 'Projects (PBL)', to: '/teacher/projects' },
         { icon: CheckCircle, text: 'Approvals', to: '/teacher/project-review' },
