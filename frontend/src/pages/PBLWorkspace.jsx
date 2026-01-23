@@ -279,6 +279,24 @@ const CreateTeamModal = ({ isOpen, onClose, onCreated, projectId, students }) =>
   );
 };
 
+// PBL STAGES CONSTANTS
+const PBL_STAGES_ORDER = [
+  'QUESTIONING',
+  'DEFINE',
+  'RESEARCH',
+  'CREATE_IMPROVE',
+  'PRESENT_EVALUATE'
+];
+
+const STAGE_LABELS = {
+  'QUESTIONING': 'Questioning & Brainstorming',
+  'DEFINE': 'Define Scope & Roles',
+  'RESEARCH': 'Research & Investigation',
+  'CREATE_IMPROVE': 'Create & Improve',
+  'PRESENT_EVALUATE': 'Present & Evaluate'
+};
+
+
 // --- MAIN COMPONENT ---
 
 const PBLWorkspace = () => {
@@ -430,6 +448,22 @@ const PBLWorkspace = () => {
     } catch (error) {
       console.error("Failed to add member", error);
       alert("Failed to add member");
+    }
+  };
+
+  const handleStageUpdate = async (newStage) => {
+    if (!project) return;
+    try {
+      setLoading(true);
+      await projectsAPI.updateProjectStage(project.project_id, { new_stage: newStage });
+      toast.success(`Project moved to ${STAGE_LABELS[newStage]}`);
+
+      // Refresh project data
+      await handleProjectSelect(project.project_id);
+    } catch (error) {
+      console.error("Failed to update stage:", error);
+      toast.error("Failed to update project stage");
+      setLoading(false);
     }
   };
 
@@ -587,8 +621,74 @@ const PBLWorkspace = () => {
                       <span className="flex items-center gap-1"><Calendar size={14} /> Due: {new Date(project.deadline).toLocaleDateString()}</span>
                     </div>
                   </div>
+
+                  {/* Stage Advancement Controls */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-gray-500">Project Stage:</span>
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                      {(() => {
+                        const currentIndex = PBL_STAGES_ORDER.indexOf(project.stage);
+                        const nextStage = PBL_STAGES_ORDER[currentIndex + 1];
+                        const prevStage = PBL_STAGES_ORDER[currentIndex - 1];
+
+                        return (
+                          <>
+                            <button
+                              onClick={() => prevStage && handleStageUpdate(prevStage)}
+                              disabled={!prevStage}
+                              className="p-2 rounded-md hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                              title="Previous Stage"
+                            >
+                              <ChevronRight className="rotate-180" size={20} />
+                            </button>
+                            <span className="px-4 font-bold text-teal-700 min-w-[150px] text-center">
+                              {STAGE_LABELS[project.stage] || project.stage}
+                            </span>
+                            <button
+                              onClick={() => nextStage && handleStageUpdate(nextStage)}
+                              disabled={!nextStage}
+                              className="p-2 rounded-md hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all text-teal-600"
+                              title="Advance Stage"
+                            >
+                              <ChevronRight size={20} />
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
                 </div>
                 <p className="text-gray-600 text-lg mb-8 leading-relaxed">{project.description}</p>
+
+                {/* Visual Stage Progress */}
+                <div className="mb-8 overflow-hidden rounded-xl bg-gray-50 border border-gray-100 p-4">
+                  <div className="flex justify-between items-center relative">
+                    {/* Progress Bar Background */}
+                    <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0"></div>
+
+                    {/* Interactive Steps */}
+                    {PBL_STAGES_ORDER.map((stage, index) => {
+                      const isCompleted = PBL_STAGES_ORDER.indexOf(project.stage) > index;
+                      const isCurrent = project.stage === stage;
+
+                      return (
+                        <div key={stage} className="relative z-10 flex flex-col items-center gap-2">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 font-bold transition-all
+                                        ${isCompleted ? 'bg-teal-500 border-teal-500 text-white' :
+                              isCurrent ? 'bg-white border-teal-500 text-teal-600 scale-110 shadow-lg' :
+                                'bg-white border-gray-200 text-gray-300'}`}
+                          >
+                            {isCompleted ? <Check size={20} /> : index + 1}
+                          </div>
+                          <span className={`text-xs font-bold whitespace-nowrap hidden md:block ${isCurrent ? 'text-teal-700' : 'text-gray-400'}`}>
+                            {STAGE_LABELS[stage].split(' ')[0]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="p-4 bg-gray-50 rounded-xl text-center">
                     <div className="text-2xl font-bold text-teal-600">{project.stage}</div>
