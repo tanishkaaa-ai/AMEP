@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { Target, Lock, CheckCircle, Play, BrainCircuit, Loader2, AlertCircle, X, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { masteryAPI, classroomAPI } from '../services/api';
+import { masteryAPI, classroomAPI, practiceAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const StudentPractice = () => {
     const { getUserId } = useAuth();
@@ -106,10 +107,6 @@ const StudentPractice = () => {
                         y: slot.y + (Math.random() * 5 - 2.5)
                     };
                 });
-
-                // If no data, keep some mock nodes or show empty state?
-                // For demo, if empty, we might want to seed some data or handle it.
-                // But the user wants "Real API". If API returns empty, UI should reflect that.
 
                 setMasteryNodes(nodes);
                 setRecommendations(recsRes.data.recommendations || []);
@@ -213,6 +210,12 @@ const StudentPractice = () => {
             }
 
             const response = await practiceAPI.generateSession(payload);
+
+            console.info('[PRACTICE] Session generated:', {
+                session_id: response.data.session_id,
+                item_count: response.data.recommended_items.length,
+                duration: response.data.estimated_duration
+            });
 
             if (response.data.recommended_items && response.data.recommended_items.length > 0) {
                 setCurrentSession(response.data);
@@ -409,6 +412,14 @@ const StudentPractice = () => {
                     onClose={() => setShowPracticeModal(false)}
                     onAnswer={handleAnswerSubmit}
                     onNext={handleNextQuestion}
+                />
+            )}
+
+            {showHistoryModal && selectedNode && (
+                <ConceptHistoryModal
+                    studentId={STUDENT_ID}
+                    concept={selectedNode}
+                    onClose={() => setShowHistoryModal(false)}
                 />
             )}
         </DashboardLayout>
