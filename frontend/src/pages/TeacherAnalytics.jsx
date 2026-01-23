@@ -46,6 +46,8 @@ const TeacherAnalytics = () => {
     const [engagementTrends, setEngagementTrends] = useState(null);
     const [classEngagement, setClassEngagement] = useState(null);
     const [softSkillsData, setSoftSkillsData] = useState(null);
+    const [attentionMap, setAttentionMap] = useState(null);
+    const [institutionalMetrics, setInstitutionalMetrics] = useState(null);
     const [dateRange, setDateRange] = useState(30);
 
     // Intervention State
@@ -80,17 +82,27 @@ const TeacherAnalytics = () => {
             setLoading(true);
             try {
                 // Parallel fetch for all analytics
-                const [masteryRes, trendsRes, engagementRes, softSkillsRes] = await Promise.allSettled([
+                const [masteryRes, trendsRes, engagementRes, softSkillsRes, attentionRes] = await Promise.allSettled([
                     dashboardAPI.getMasteryHeatmap(selectedClassId),
                     dashboardAPI.getEngagementTrends(selectedClassId, dateRange),
                     dashboardAPI.getClassEngagement(selectedClassId),
-                    projectsAPI.getClassroomSoftSkills(selectedClassId)
+                    projectsAPI.getClassroomSoftSkills(selectedClassId),
+                    dashboardAPI.getAttentionMap(selectedClassId)
                 ]);
 
                 if (masteryRes.status === 'fulfilled') setMasteryData(masteryRes.value.data);
                 if (trendsRes.status === 'fulfilled') setEngagementTrends(trendsRes.value.data);
                 if (engagementRes.status === 'fulfilled') setClassEngagement(engagementRes.value.data);
                 if (softSkillsRes.status === 'fulfilled') setSoftSkillsData(softSkillsRes.value.data);
+                if (attentionRes.status === 'fulfilled') setAttentionMap(attentionRes.value.data);
+
+                // Fetch institutional metrics separately (not dependent on class)
+                try {
+                    const instRes = await dashboardAPI.getInstitutionalMetrics();
+                    setInstitutionalMetrics(instRes.data);
+                } catch (e) {
+                    console.warn("Institutional metrics fetch failed", e);
+                }
             } catch (error) {
                 console.error("Overall analytics error", error);
             } finally {
@@ -304,6 +316,66 @@ const TeacherAnalytics = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Attention Map Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 col-span-1 lg:col-span-2 mt-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="font-bold text-gray-800 text-lg">Real-time Attention Map</h3>
+                                    <p className="text-gray-500 text-xs">Visualizing student engagement states</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                {attentionMap?.attention_map?.map((student) => (
+                                    <div
+                                        key={student.student_id}
+                                        className="p-3 rounded-lg border flex flex-col items-center justify-center text-center transition-all hover:scale-105 shadow-sm"
+                                        style={{
+                                            backgroundColor: student.color + '20', // 20% opacity using hex
+                                            borderColor: student.color
+                                        }}
+                                        title={`Score: ${student.engagement_score} | Level: ${student.engagement_level}`}
+                                    >
+                                        <div className="font-bold text-gray-800 text-sm truncate w-full">{student.student_name}</div>
+                                        <div className="text-xs font-semibold mt-1" style={{ color: student.color }}>
+                                            {student.engagement_level}
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!attentionMap?.attention_map || attentionMap.attention_map.length === 0) && (
+                                    <div className="col-span-full text-center text-gray-400 py-8">
+                                        No attention data available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Institutional Metrics (Admin/Principal View) */}
+                        {institutionalMetrics && (
+                            <div className="bg-indigo-50 p-6 rounded-2xl shadow-sm border border-indigo-100 mt-8">
+                                <h3 className="font-bold text-indigo-900 text-lg mb-4 flex items-center gap-2">
+                                    <Users className="text-indigo-600" /> Institutional Overview
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                                        <p className="text-xs text-gray-500 uppercase">Avg Engagement</p>
+                                        <p className="text-2xl font-bold text-gray-800">{institutionalMetrics.average_engagement ? institutionalMetrics.average_engagement.toFixed(1) : 0}%</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                                        <p className="text-xs text-gray-500 uppercase">Avg Mastery</p>
+                                        <p className="text-2xl font-bold text-gray-800">{institutionalMetrics.average_mastery ? institutionalMetrics.average_mastery.toFixed(1) : 0}%</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                                        <p className="text-xs text-gray-500 uppercase">Active Alerts</p>
+                                        <p className="text-2xl font-bold text-red-600">{institutionalMetrics.active_alerts_total || 0}</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                                        <p className="text-xs text-gray-500 uppercase">Total Students</p>
+                                        <p className="text-2xl font-bold text-gray-800">{institutionalMetrics.total_students || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Students At Risk Section */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 col-span-1 lg:col-span-2 mt-8">
