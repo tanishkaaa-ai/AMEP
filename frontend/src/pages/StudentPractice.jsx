@@ -27,12 +27,17 @@ const StudentPractice = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                console.info('[PRACTICE] Fetching mastery data:', { student_id: STUDENT_ID });
                 const [masteryRes, recsRes] = await Promise.all([
                     masteryAPI.getStudentMastery(STUDENT_ID),
                     masteryAPI.getRecommendations(STUDENT_ID)
                 ]);
+                console.info('[PRACTICE] Mastery data retrieved:', {
+                    concepts_count: masteryRes.data.concepts?.length || 0,
+                    overall_mastery: masteryRes.data.overall_mastery,
+                    recommendations_count: recsRes.data.recommendations?.length || 0
+                });
 
-                // Transform Mastery Data to Nodes
                 const concepts = masteryRes.data.concepts || [];
                 const nodes = concepts.map((concept, index) => {
                     const slot = GRAPH_SLOTS[index % GRAPH_SLOTS.length];
@@ -66,9 +71,20 @@ const StudentPractice = () => {
 
                 setMasteryNodes(nodes);
                 setRecommendations(recsRes.data.recommendations || []);
+                console.info('[PRACTICE] Nodes and recommendations set:', {
+                    node_count: nodes.length,
+                    mastered: nodes.filter(n => n.status === 'mastered').length,
+                    in_progress: nodes.filter(n => n.status === 'in_progress').length,
+                    locked: nodes.filter(n => n.status === 'locked').length
+                });
 
             } catch (err) {
-                console.error("Error loading practice data:", err);
+                console.error("[PRACTICE] Error loading practice data:", {
+                    error: err.message,
+                    response: err.response?.data,
+                    status: err.response?.status,
+                    student_id: STUDENT_ID
+                });
                 setError("Failed to load your mastery path.");
             } finally {
                 setLoading(false);
@@ -84,6 +100,7 @@ const StudentPractice = () => {
     }, [STUDENT_ID]);
 
     const handleStartPractice = () => {
+        console.info('[PRACTICE] Start practice clicked:', { student_id: STUDENT_ID, selected_node: selectedNode });
         alert("Generating personalized practice session... (Feature linking to /api/mastery/practice/generate coming soon)");
     };
 

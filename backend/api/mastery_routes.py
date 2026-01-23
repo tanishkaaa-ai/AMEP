@@ -55,17 +55,11 @@ adaptive_engine = AdaptivePracticeEngine()
 
 @mastery_bp.route('/calculate', methods=['POST'])
 def calculate_mastery():
-    """
-    BR1: Calculate student mastery score for a concept
-
-    POST /api/mastery/calculate
-    """
     try:
-        logger.info(f"Mastery calculation request | student_id: {request.json.get('student_id')} | concept_id: {request.json.get('concept_id')}")
-        # Validate request data using Pydantic
+        logger.info(f"[CALCULATE_MASTERY] Request received | student_id: {request.json.get('student_id')} | concept_id: {request.json.get('concept_id')} | is_correct: {request.json.get('is_correct')}")
         data = MasteryCalculationRequest(**request.json)
-        
-        logger.info(f"Calling KT engine | student_id: {data.student_id} | concept_id: {data.concept_id} | is_correct: {data.is_correct}")
+
+        logger.info(f"[CALCULATE_MASTERY] Calling KT engine | student_id: {data.student_id} | concept_id: {data.concept_id} | is_correct: {data.is_correct} | response_time: {data.response_time}ms")
         result = kt_engine.calculate_mastery(
             student_id=data.student_id,
             concept_id=data.concept_id,
@@ -75,12 +69,10 @@ def calculate_mastery():
             response_history=data.response_history,
             related_concepts=data.related_concepts
         )
-        logger.info(f"Mastery calculated | student_id: {data.student_id} | concept_id: {data.concept_id} | score: {result['mastery_score']}")
+        logger.info(f"[CALCULATE_MASTERY] KT engine completed | student_id: {data.student_id} | concept_id: {data.concept_id} | mastery_score: {result['mastery_score']:.2f} | confidence: {result['confidence']:.2f} | velocity: {result['learning_velocity']:.2f}")
         
-        # Add timestamp
         result['timestamp'] = datetime.utcnow()
-        
-        # Save to MongoDB
+
         mastery_doc = {
             '_id': f"{data.student_id}_{data.concept_id}",
             'student_id': data.student_id,
@@ -93,8 +85,8 @@ def calculate_mastery():
             'learning_velocity': result['learning_velocity'],
             'last_assessed': datetime.utcnow()
         }
-        
-        # Update or insert
+
+        logger.info(f"[CALCULATE_MASTERY] Saving to database | doc_id: {mastery_doc['_id']}")
         update_one(
             STUDENT_CONCEPT_MASTERY,
             {'_id': mastery_doc['_id']},
@@ -104,18 +96,20 @@ def calculate_mastery():
             },
             upsert=True
         )
-        
-        # Validate response
+        logger.info(f"[CALCULATE_MASTERY] SUCCESS | student_id: {data.student_id} | concept_id: {data.concept_id} | mastery: {result['mastery_score']:.2f}")
+
         response = MasteryCalculationResponse(**result)
-        
+
         return jsonify(response.dict()), 200
-        
+
     except ValueError as e:
+        logger.error(f"[CALCULATE_MASTERY] Validation error | error: {str(e)}")
         return jsonify({
             'error': 'Validation error',
             'detail': str(e)
         }), 400
     except Exception as e:
+        logger.error(f"[CALCULATE_MASTERY] ERROR | error: {str(e)} | student_id: {request.json.get('student_id') if request.json else 'unknown'}")
         return jsonify({
             'error': 'Internal server error',
             'detail': str(e)
@@ -124,34 +118,26 @@ def calculate_mastery():
 
 @mastery_bp.route('/student/<student_id>', methods=['GET'])
 def get_student_mastery(student_id):
-    """
-    BR1: Get all concept mastery scores for a student
-    
-    GET /api/mastery/student/{student_id}
-    """
     try:
-        # Get query parameters
         subject_area = request.args.get('subject_area')
         min_mastery = request.args.get('min_mastery', type=float)
-        
-        # Build query
+        logger.info(f"[GET_STUDENT_MASTERY] Request received | student_id: {student_id} | subject_area: {subject_area} | min_mastery: {min_mastery}")
+
         query = {'student_id': student_id}
-        
-        # Get mastery records
+
         mastery_records = find_many(STUDENT_CONCEPT_MASTERY, query)
+        logger.info(f"[GET_STUDENT_MASTERY] Mastery records retrieved | student_id: {student_id} | record_count: {len(mastery_records)}")
         
-        # Get concept details and filter
         concepts_data = []
         for record in mastery_records:
             concept = find_one(CONCEPTS, {'_id': record['concept_id']})
-            
+
             if concept:
-                # Apply filters
                 if subject_area and concept.get('subject_area') != subject_area:
                     continue
                 if min_mastery and record.get('mastery_score', 0) < min_mastery:
                     continue
-                
+
                 concepts_data.append({
                     'concept_id': record['concept_id'],
                     'concept_name': concept.get('concept_name', 'Unknown'),
@@ -160,17 +146,18 @@ def get_student_mastery(student_id):
                     'times_assessed': record.get('times_assessed', 0),
                     'learning_velocity': record.get('learning_velocity', 0)
                 })
-        
-        # Calculate overall mastery
+
         overall_mastery = sum(c['mastery_score'] for c in concepts_data) / len(concepts_data) if concepts_data else 0
-        
+        logger.info(f"[GET_STUDENT_MASTERY] SUCCESS | student_id: {student_id} | concepts_count: {len(concepts_data)} | overall_mastery: {overall_mastery:.2f}")
+
         return jsonify({
             'student_id': student_id,
             'concepts': concepts_data,
             'overall_mastery': round(overall_mastery, 2)
         }), 200
-        
+
     except Exception as e:
+        logger.error(f"[GET_STUDENT_MASTERY] ERROR | student_id: {student_id} | error: {str(e)}")
         return jsonify({
             'error': 'Internal server error',
             'detail': str(e)
@@ -261,41 +248,34 @@ def get_class_mastery_for_concept(concept_id, class_id):
 
 @mastery_bp.route('/practice/generate', methods=['POST'])
 def generate_practice_session():
-    """
-    BR2, BR3: Generate adaptive practice session
-    
-    POST /api/mastery/practice/generate
-    """
     try:
-        # Validate request
+        logger.info(f"[GENERATE_PRACTICE] Request received | student_id: {request.json.get('student_id')} | session_duration: {request.json.get('session_duration')}")
         data = PracticeSessionRequest(**request.json)
-        
-        # Get student's current mastery from MongoDB
+
         mastery_records = find_many(
             STUDENT_CONCEPT_MASTERY,
             {'student_id': data.student_id}
         )
-        
+        logger.info(f"[GENERATE_PRACTICE] Mastery records retrieved | student_id: {data.student_id} | record_count: {len(mastery_records)}")
+
         student_mastery = {
             record['concept_id']: record['mastery_score']
             for record in mastery_records
         }
-        
+
         learning_velocity = {
             record['concept_id']: record.get('learning_velocity', 0)
             for record in mastery_records
         }
+        logger.info(f"[GENERATE_PRACTICE] Student mastery processed | student_id: {data.student_id} | concepts: {len(student_mastery)}")
         
-        # Get available content from MongoDB
-        # In production, you'd have a content_items collection
-        # For now, create mock content
         from ai_engine.adaptive_practice import ContentItem
-        
+
         concepts = find_many(CONCEPTS, {})
+        logger.info(f"[GENERATE_PRACTICE] Concepts retrieved | count: {len(concepts)}")
         available_content = []
-        
+
         for concept in concepts:
-            # Create sample content items for each concept
             for i in range(3):
                 item = ContentItem(
                     item_id=f"{concept['_id']}_q{i}",
@@ -305,8 +285,9 @@ def generate_practice_session():
                     estimated_time=5
                 )
                 available_content.append(item)
-        
-        # Generate session using adaptive engine
+        logger.info(f"[GENERATE_PRACTICE] Content items created | count: {len(available_content)}")
+
+        logger.info(f"[GENERATE_PRACTICE] Calling adaptive engine | student_id: {data.student_id} | session_duration: {data.session_duration}")
         session = adaptive_engine.generate_practice_session(
             student_id=data.student_id,
             student_mastery=student_mastery,
@@ -314,22 +295,23 @@ def generate_practice_session():
             available_content=available_content,
             session_duration=data.session_duration
         )
-        
-        # Save session to MongoDB (optional)
+
         session_id = str(ObjectId())
         session['session_id'] = session_id
-        
-        # Validate response
+        logger.info(f"[GENERATE_PRACTICE] SUCCESS | student_id: {data.student_id} | session_id: {session_id} | item_count: {len(session.get('recommended_items', []))} | estimated_duration: {session.get('estimated_duration')}min")
+
         response = PracticeSessionResponse(**session)
-        
+
         return jsonify(response.dict()), 200
-        
+
     except ValueError as e:
+        logger.error(f"[GENERATE_PRACTICE] Validation error | error: {str(e)}")
         return jsonify({
             'error': 'Validation error',
             'detail': str(e)
         }), 400
     except Exception as e:
+        logger.error(f"[GENERATE_PRACTICE] ERROR | error: {str(e)} | student_id: {request.json.get('student_id') if request.json else 'unknown'}")
         return jsonify({
             'error': 'Internal server error',
             'detail': str(e)
@@ -338,16 +320,10 @@ def generate_practice_session():
 
 @mastery_bp.route('/response/submit', methods=['POST'])
 def submit_student_response():
-    """
-    Record student response to practice item
-    
-    POST /api/mastery/response/submit
-    """
     try:
-        # Validate request
+        logger.info(f"[SUBMIT_RESPONSE] Request received | student_id: {request.json.get('student_id')} | item_id: {request.json.get('item_id')} | is_correct: {request.json.get('is_correct')}")
         data = StudentResponseCreate(**request.json)
-        
-        # Create response document
+
         response_doc = {
             '_id': str(ObjectId()),
             'student_id': data.student_id,
@@ -360,16 +336,18 @@ def submit_student_response():
             'response_text': data.response_text,
             'submitted_at': datetime.utcnow()
         }
-        
-        # Insert into MongoDB
+
         response_id = insert_one(STUDENT_RESPONSES, response_doc)
-        
+        logger.info(f"[SUBMIT_RESPONSE] SUCCESS | student_id: {data.student_id} | response_id: {response_id} | concept_id: {data.concept_id} | is_correct: {data.is_correct} | time: {data.response_time}ms")
+
         return jsonify({
             'response_id': response_id,
             'message': 'Response recorded successfully'
         }), 201
-        
+
     except ValueError as e:
+        logger.error(f"[SUBMIT_RESPONSE] Validation error | error: {str(e)}")
+
         return jsonify({
             'error': 'Validation error',
             'detail': str(e)
