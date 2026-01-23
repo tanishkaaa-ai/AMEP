@@ -213,7 +213,7 @@ const StudentProjects = () => {
                 console.info('[STUDENT_PROJECTS] Fetching student teams:', { student_id: STUDENT_ID });
 
                 const teamsRes = await projectsAPI.getStudentTeams(STUDENT_ID);
-                const teams = teamsRes.data || [];
+                const teams = teamsRes.data.teams || [];
                 console.info('[STUDENT_PROJECTS] Teams retrieved:', { count: teams.length, teams });
 
                 if (teams.length > 0) {
