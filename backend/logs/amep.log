@@ -1,0 +1,160 @@
+2026-01-23 15:30:18 | __main__ | INFO | create_app:35 | ============================================================
+2026-01-23 15:30:18 | __main__ | INFO | create_app:36 | AMEP Application Initialization Starting...
+2026-01-23 15:30:18 | __main__ | INFO | create_app:37 | ============================================================
+2026-01-23 15:30:18 | __main__ | INFO | create_app:42 | Environment: development
+2026-01-23 15:30:18 | __main__ | INFO | create_app:43 | Debug Mode: True
+2026-01-23 15:30:18 | __main__ | INFO | create_app:47 | CORS enabled for origins: ['http://localhost:5173', 'http://localhost:3000']
+2026-01-23 15:30:18 | __main__ | INFO | create_app:55 | SocketIO initialized with threading mode
+2026-01-23 15:30:18 | __main__ | INFO | create_app:61 | Initializing database connection...
+2026-01-23 15:30:18 | __main__ | INFO | create_app:63 | Database initialized successfully
+2026-01-23 15:30:18 | __main__ | INFO | create_app:67 | Request logging middleware enabled
+2026-01-23 15:30:18 | __main__ | INFO | register_blueprints:91 | Registering API blueprints...
+2026-01-23 15:30:19 | api.mastery_routes | INFO | <module>:48 | Initializing Mastery Engines: HybridKnowledgeTracing and AdaptivePracticeEngine
+2026-01-23 15:30:19 | api.engagement_routes | INFO | <module>:46 | Initializing Engagement Detection Engine
+2026-01-23 15:30:19 | api.dashboard_routes | INFO | <module>:1184 | Dashboard routes initialized successfully
+2026-01-23 15:30:19 | api.pbl_workflow_routes | INFO | <module>:1564 | PBL Workflow routes initialized successfully
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:106 | Registered: /api/auth
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:109 | Registered: /api/mastery
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:112 | Registered: /api/mastery (concepts & items)
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:115 | Registered: /api/classroom
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:118 | Registered: /api/engagement
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:121 | Registered: /api/polling
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:127 | Registered: /api/polling (CRUD extensions)
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:130 | Registered: /api/templates
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:133 | Registered: /api/dashboard
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:136 | Registered: /api/pbl
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:139 | Registered: /api/pbl (CRUD extensions)
+2026-01-23 15:30:19 | __main__ | INFO | register_blueprints:141 | All blueprints registered successfully
+2026-01-23 15:30:19 | __main__ | INFO | register_socketio_events:150 | Registering SocketIO events...
+2026-01-23 15:30:19 | __main__ | INFO | register_socketio_events:233 | All SocketIO events registered
+2026-01-23 15:30:19 | __main__ | INFO | register_error_handlers:277 | Error handlers registered
+2026-01-23 15:30:19 | __main__ | INFO | create_app:78 | ============================================================
+2026-01-23 15:30:19 | __main__ | INFO | create_app:79 | AMEP Application Initialization Complete
+2026-01-23 15:30:19 | __main__ | INFO | create_app:80 | ============================================================
+2026-01-23 15:31:19 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/teacher/69733790ca14d6b93cc72b75/classrooms
+2026-01-23 15:31:19 | api.classroom_routes | INFO | get_teacher_classrooms:365 | Teacher classrooms request | teacher_id: 69733790ca14d6b93cc72b75
+2026-01-23 15:31:19 | __main__ | INFO | handle_connect:154 | WebSocket: Client connected
+2026-01-23 15:31:19 | api.classroom_routes | INFO | get_teacher_classrooms:395 | Teacher classrooms retrieved | teacher_id: 69733790ca14d6b93cc72b75 | count: 2
+2026-01-23 15:31:19 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/teacher/69733790ca14d6b93cc72b75/classrooms | Status: 200 | Duration: 25.86ms
+2026-01-23 15:31:19 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/students
+2026-01-23 15:31:19 | api.classroom_routes | INFO | get_classroom_students:447 | Classroom students request | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:19 | request_logger | INFO | before_request:238 | Request: GET /api/pbl/projects/classroom/69733b6374d026d8295a51eb
+2026-01-23 15:31:19 | api.classroom_routes | INFO | get_classroom_students:466 | Classroom students retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:19 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/students | Status: 200 | Duration: 2.66ms
+2026-01-23 15:31:19 | request_logger | INFO | after_request:246 | Response: GET /api/pbl/projects/classroom/69733b6374d026d8295a51eb | Status: 200 | Duration: 1.66ms
+2026-01-23 15:31:19 | request_logger | INFO | before_request:238 | Request: GET /api/pbl/projects/69733bf674d026d8295a51ed
+2026-01-23 15:31:19 | api.pbl_workflow_routes | INFO | get_project:235 | [GET_PROJECT] Request received | project_id: 69733bf674d026d8295a51ed
+2026-01-23 15:31:19 | api.pbl_workflow_routes | INFO | get_project:242 | [GET_PROJECT] Project found | project_id: 69733bf674d026d8295a51ed | title: java | stage: QUESTIONING
+2026-01-23 15:31:19 | api.pbl_workflow_routes | INFO | get_project:246 | [GET_PROJECT] Teams retrieved | project_id: 69733bf674d026d8295a51ed | team_count: 0
+2026-01-23 15:31:19 | api.pbl_workflow_routes | INFO | get_project:250 | [GET_PROJECT] Milestones retrieved | project_id: 69733bf674d026d8295a51ed | milestone_count: 2
+2026-01-23 15:31:19 | request_logger | INFO | after_request:246 | Response: GET /api/pbl/projects/69733bf674d026d8295a51ed | Status: 200 | Duration: 2.89ms
+2026-01-23 15:31:23 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:31:23 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:23 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:23 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 5.51ms
+2026-01-23 15:31:23 | __main__ | INFO | handle_connect:154 | WebSocket: Client connected
+2026-01-23 15:31:23 | __main__ | INFO | handle_connect:154 | WebSocket: Client connected
+2026-01-23 15:31:31 | request_logger | INFO | before_request:238 | Request: POST /api/auth/login
+2026-01-23 15:31:31 | api.auth_routes | INFO | login:170 | Login attempt | email: sw@gmail.com
+2026-01-23 15:31:31 | api.auth_routes | INFO | login:184 | Verifying password | email: sw@gmail.com
+2026-01-23 15:31:32 | api.auth_routes | INFO | login:195 | Updating last login | user_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | api.auth_routes | INFO | login:203 | Generating JWT token | user_id: 69733ccc74d026d8295a51f3 | role: student
+2026-01-23 15:31:32 | api.auth_routes | INFO | login:209 | Fetching student profile | user_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | api.auth_routes | INFO | login:215 | Login successful | user_id: 69733ccc74d026d8295a51f3 | email: sw@gmail.com | role: student
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: POST /api/auth/login | Status: 200 | Duration: 279.20ms
+2026-01-23 15:31:32 | request_logger | INFO | before_request:238 | Request: GET /api/engagement/student/69733ccc74d026d8295a51f3/history | Query: {'days': '30'}
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: GET /api/engagement/student/69733ccc74d026d8295a51f3/history | Status: 200 | Duration: 1.27ms
+2026-01-23 15:31:32 | request_logger | INFO | before_request:238 | Request: GET /api/mastery/student/69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | api.mastery_routes | INFO | get_student_mastery:124 | [GET_STUDENT_MASTERY] Request received | student_id: 69733ccc74d026d8295a51f3 | subject_area: None | min_mastery: None
+2026-01-23 15:31:32 | api.mastery_routes | INFO | get_student_mastery:129 | [GET_STUDENT_MASTERY] Mastery records retrieved | student_id: 69733ccc74d026d8295a51f3 | record_count: 0
+2026-01-23 15:31:32 | api.mastery_routes | INFO | get_student_mastery:151 | [GET_STUDENT_MASTERY] SUCCESS | student_id: 69733ccc74d026d8295a51f3 | concepts_count: 0 | overall_mastery: 0.00
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: GET /api/mastery/student/69733ccc74d026d8295a51f3 | Status: 200 | Duration: 1.26ms
+2026-01-23 15:31:32 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/students/69733ccc74d026d8295a51f3/assignments | Query: {'status': 'assigned'}
+2026-01-23 15:31:32 | api.classroom_routes | INFO | get_student_assignments:1117 | Student assignments request | student_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | api.classroom_routes | INFO | get_student_classrooms:407 | Student classrooms request | student_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:31:32 | api.classroom_routes | INFO | get_student_assignments:1152 | Get student assignments exception | student_id: 69733ccc74d026d8295a51f3 | error: 'str' object has no attribute 'isoformat'
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/students/69733ccc74d026d8295a51f3/assignments | Status: 500 | Duration: 2.95ms
+2026-01-23 15:31:32 | api.classroom_routes | INFO | get_student_classrooms:435 | Student classrooms retrieved | student_id: 69733ccc74d026d8295a51f3 | count: 1
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3 | Status: 200 | Duration: 2.47ms
+2026-01-23 15:31:32 | request_logger | INFO | before_request:238 | Request: GET /api/engagement/student/69733ccc74d026d8295a51f3/gamification
+2026-01-23 15:31:32 | request_logger | INFO | after_request:246 | Response: GET /api/engagement/student/69733ccc74d026d8295a51f3/gamification | Status: 200 | Duration: 0.92ms
+2026-01-23 15:31:35 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3
+2026-01-23 15:31:35 | api.classroom_routes | INFO | get_student_classrooms:407 | Student classrooms request | student_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:31:35 | api.classroom_routes | INFO | get_student_classrooms:435 | Student classrooms retrieved | student_id: 69733ccc74d026d8295a51f3 | count: 1
+2026-01-23 15:31:35 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3 | Status: 200 | Duration: 3.73ms
+2026-01-23 15:31:35 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/stream
+2026-01-23 15:31:35 | api.classroom_routes | INFO | get_classroom_stream:604 | Classroom stream request | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:35 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:31:35 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:35 | api.classroom_routes | INFO | get_classroom_stream:654 | Classroom stream retrieved | classroom_id: 69733b6374d026d8295a51eb | posts: 2
+2026-01-23 15:31:35 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/stream | Status: 200 | Duration: 5.21ms
+2026-01-23 15:31:35 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:35 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 4.34ms
+2026-01-23 15:31:45 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:31:45 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:45 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:45 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 5.69ms
+2026-01-23 15:31:46 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/teacher/69733790ca14d6b93cc72b75/classrooms
+2026-01-23 15:31:46 | api.classroom_routes | INFO | get_teacher_classrooms:365 | Teacher classrooms request | teacher_id: 69733790ca14d6b93cc72b75
+2026-01-23 15:31:46 | api.classroom_routes | INFO | get_teacher_classrooms:395 | Teacher classrooms retrieved | teacher_id: 69733790ca14d6b93cc72b75 | count: 2
+2026-01-23 15:31:46 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/teacher/69733790ca14d6b93cc72b75/classrooms | Status: 200 | Duration: 4.54ms
+2026-01-23 15:31:46 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:31:46 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:46 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:46 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 4.18ms
+2026-01-23 15:31:48 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:48 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:49 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.73ms
+2026-01-23 15:31:51 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:51 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:51 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 3.03ms
+2026-01-23 15:31:53 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:53 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:53 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.53ms
+2026-01-23 15:31:55 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:31:55 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:31:55 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:31:55 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 7.40ms
+2026-01-23 15:31:55 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:55 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:55 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.07ms
+2026-01-23 15:31:57 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:57 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:57 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 3.99ms
+2026-01-23 15:31:58 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/assignments/69733d0874d026d8295a51f7
+2026-01-23 15:31:58 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/assignments/69733d0874d026d8295a51f7 | Status: 500 | Duration: 3.66ms
+2026-01-23 15:31:59 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:31:59 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:31:59 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.71ms
+2026-01-23 15:32:00 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3
+2026-01-23 15:32:00 | api.classroom_routes | INFO | get_student_classrooms:407 | Student classrooms request | student_id: 69733ccc74d026d8295a51f3
+2026-01-23 15:32:00 | api.classroom_routes | INFO | get_student_classrooms:435 | Student classrooms retrieved | student_id: 69733ccc74d026d8295a51f3 | count: 1
+2026-01-23 15:32:00 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/student/69733ccc74d026d8295a51f3 | Status: 200 | Duration: 4.04ms
+2026-01-23 15:32:00 | request_logger | INFO | before_request:238 | Request: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/stream
+2026-01-23 15:32:00 | api.classroom_routes | INFO | get_classroom_stream:604 | Classroom stream request | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:32:00 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:32:00 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:32:00 | api.classroom_routes | INFO | get_classroom_stream:654 | Classroom stream retrieved | classroom_id: 69733b6374d026d8295a51eb | posts: 2
+2026-01-23 15:32:00 | request_logger | INFO | after_request:246 | Response: GET /api/classroom/classrooms/69733b6374d026d8295a51eb/stream | Status: 200 | Duration: 4.69ms
+2026-01-23 15:32:00 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:32:00 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 4.57ms
+2026-01-23 15:32:07 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:32:07 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:32:07 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.62ms
+2026-01-23 15:32:10 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:32:10 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:32:10 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:32:10 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 5.68ms
+2026-01-23 15:32:20 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:32:20 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:32:20 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:32:20 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 6.55ms
+2026-01-23 15:32:25 | request_logger | INFO | before_request:238 | Request: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Query: {'include_details': 'false'}
+2026-01-23 15:32:25 | api.live_polling_routes | INFO | get_poll_results:309 | Get poll results | poll_id: 69733d1f74d026d8295a51fc
+2026-01-23 15:32:25 | request_logger | INFO | after_request:246 | Response: GET /api/polling/polls/69733d1f74d026d8295a51fc/results | Status: 200 | Duration: 4.52ms
+2026-01-23 15:32:27 | __main__ | INFO | handle_disconnect:162 | WebSocket: Client disconnected | Args: ('ping timeout',)
+2026-01-23 15:32:30 | request_logger | INFO | before_request:238 | Request: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls
+2026-01-23 15:32:30 | api.live_polling_routes | INFO | get_classroom_polls:526 | Get classroom polls | classroom_id: 69733b6374d026d8295a51eb
+2026-01-23 15:32:30 | api.live_polling_routes | INFO | get_classroom_polls:548 | Classroom polls retrieved | classroom_id: 69733b6374d026d8295a51eb | count: 2
+2026-01-23 15:32:30 | request_logger | INFO | after_request:246 | Response: GET /api/polling/classrooms/69733b6374d026d8295a51eb/polls | Status: 200 | Duration: 5.34ms
