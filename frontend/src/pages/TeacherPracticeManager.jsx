@@ -105,6 +105,10 @@ const TeacherPracticeManager = () => {
     };
 
     const handleCreateConcept = () => {
+        if (!selectedClass) {
+            toast.error("Please select a specific class to create a concept");
+            return;
+        }
         setConceptForm({ id: null, name: '', description: '', subject_area: 'Science', difficulty_level: 0.5 });
         setShowConceptModal(true);
     };
