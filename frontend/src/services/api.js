@@ -140,6 +140,10 @@ export const projectsAPI = {
   getProjectMilestones: (projectId) => api.get(`/pbl/projects/${projectId}/milestones`),
   getProjectDeliverables: (projectId) => api.get(`/pbl/projects/${projectId}/deliverables`),
   updateDeliverableGrade: (deliverableId, data) => api.put(`/pbl/deliverables/${deliverableId}/grade`, data),
+  // Milestone Workflow
+  submitMilestone: (projectId, milestoneId, data) => api.post(`/pbl/projects/${projectId}/milestones/${milestoneId}/submit`, data),
+  approveMilestone: (projectId, milestoneId, data) => api.post(`/pbl/projects/${projectId}/milestones/${milestoneId}/approve`, data),
+  rejectMilestone: (projectId, milestoneId, data) => api.post(`/pbl/projects/${projectId}/milestones/${milestoneId}/reject`, data),
 };
 
 export const templatesAPI = {

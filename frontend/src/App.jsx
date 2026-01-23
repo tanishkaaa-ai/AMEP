@@ -1,6 +1,7 @@
 // Placeholder to avoid error if I don't replace anything. I need to find the right file first.
 // I will skip this replacement and instead view TeacherDashboard.jsx
 
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { socket } from './services/api';
 import { AuthProvider } from './contexts/AuthContext';
@@ -27,6 +28,7 @@ import TeacherCurriculum from './pages/TeacherCurriculum';
 import TeacherAssignment from './pages/TeacherAssignment';
 import StudentProjectMilestones from './pages/StudentProjectMilestones';
 import TeacherProjectReview from './pages/TeacherProjectReview';
+import StudentPeerReview from './pages/StudentPeerReview';
 
 function MainLayout({ isConnected }) {
   const location = useLocation();
@@ -82,6 +84,7 @@ function MainLayout({ isConnected }) {
         <Route path="/student/practice" element={<ProtectedRoute requiredRole="student"><StudentPractice /></ProtectedRoute>} />
         <Route path="/student/projects" element={<ProtectedRoute requiredRole="student"><StudentProjects /></ProtectedRoute>} />
         <Route path="/student/milestones" element={<ProtectedRoute requiredRole="student"><StudentProjectMilestones /></ProtectedRoute>} />
+        <Route path="/student/peer-review" element={<ProtectedRoute requiredRole="student"><StudentPeerReview /></ProtectedRoute>} />
         <Route path="/student/polls" element={<ProtectedRoute requiredRole="student"><StudentPolls /></ProtectedRoute>} />
       </Routes>
     </>

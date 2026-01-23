@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCircle, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -155,19 +156,36 @@ const PeerReviewModal = ({ team, onClose, currentUserId }) => {
     );
 };
 
-const UploadModal = ({ onClose }) => {
+const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!file) return;
         setUploading(true);
-        // Simulate upload
-        setTimeout(() => {
-            setUploading(false);
+
+        try {
+            // In a real app, we would upload to S3/Cloudinary here.
+            // For this MVP, we'll pretend we got a URL back.
+            const fakeFileUrl = `https://storage.googleapis.com/amep-projects/${projectId}/${file.name}`;
+
+            await projectsAPI.submitDeliverable(projectId, {
+                team_id: teamId,
+                submitted_by: studentId,
+                deliverable_type: 'final_report', // Could be dynamic
+                file_url: fakeFileUrl,
+                title: file.name,
+                description: 'Student uploaded deliverable'
+            });
+
             toast.success("Deliverable uploaded successfully!");
             onClose();
-        }, 1500);
+        } catch (error) {
+            console.error("Upload failed", error);
+            toast.error("Failed to upload deliverable");
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (
@@ -217,6 +235,7 @@ const UploadModal = ({ onClose }) => {
 
 const StudentProjects = () => {
     const { getUserId } = useAuth();
+    const navigate = useNavigate();
     const [activeTeam, setActiveTeam] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -349,7 +368,7 @@ const StudentProjects = () => {
                             ))}
                         </div>
                         <button
-                            onClick={() => window.location.href = '/student/milestones'}
+                            onClick={() => navigate('/student/milestones')}
                             className="bg-white border-2 border-yellow-200 text-yellow-700 px-4 py-2 rounded-xl font-bold hover:bg-yellow-50 transition-colors flex items-center gap-2"
                         >
                             <Target size={18} /> Milestones
@@ -399,7 +418,12 @@ const StudentProjects = () => {
             </div>
 
             {showPeerReview && <PeerReviewModal team={activeTeam} onClose={() => setShowPeerReview(false)} currentUserId={STUDENT_ID} />}
-            {showUpload && <UploadModal onClose={() => setShowUpload(false)} />}
+            {showUpload && <UploadModal
+                onClose={() => setShowUpload(false)}
+                projectId={activeTeam.project_id}
+                teamId={activeTeam.team_id || activeTeam._id}
+                studentId={STUDENT_ID}
+            />}
         </DashboardLayout>
     );
 };

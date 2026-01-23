@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
+import CreateInterventionModal from '../components/CreateInterventionModal';
 import { useAuth } from '../contexts/AuthContext';
 import { classroomAPI, dashboardAPI } from '../services/api';
 import {
@@ -45,6 +46,10 @@ const TeacherAnalytics = () => {
     const [engagementTrends, setEngagementTrends] = useState(null);
     const [classEngagement, setClassEngagement] = useState(null);
     const [dateRange, setDateRange] = useState(30);
+
+    // Intervention State
+    const [showInterventionModal, setShowInterventionModal] = useState(false);
+    const [selectedStudentForIntervention, setSelectedStudentForIntervention] = useState(null);
 
     useEffect(() => {
         const fetchClasses = async () => {
@@ -309,6 +314,60 @@ const TeacherAnalytics = () => {
                             </div>
                         </div>
 
+                        {/* Students At Risk Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 col-span-1 lg:col-span-2 mt-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                        <AlertTriangle className="text-red-500" /> Students At Risk
+                                    </h3>
+                                    <p className="text-gray-500 text-xs">Students requiring immediate attention based on engagement drops.</p>
+                                </div>
+                                <button className="text-gray-400 hover:text-teal-600"><Download size={20} /></button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wider">
+                                            <th className="pb-3 pl-4">Student</th>
+                                            <th className="pb-3">Risk Factor</th>
+                                            <th className="pb-3">Last Active</th>
+                                            <th className="pb-3 text-right pr-4">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {[
+                                            { id: 's1', name: 'Alex Johnson', risk: 'Low Engagement', lastActive: '2 days ago' },
+                                            { id: 's2', name: 'Sam Smith', risk: 'Missed Assignment', lastActive: '1 day ago' },
+                                            { id: 's3', name: 'Jordan Lee', risk: 'Declining Mastery', lastActive: '4 hours ago' }
+                                        ].map((student) => (
+                                            <tr key={student.id} className="group hover:bg-red-50/30 transition-colors">
+                                                <td className="py-4 pl-4 font-bold text-gray-700">{student.name}</td>
+                                                <td className="py-4">
+                                                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">
+                                                        {student.risk}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 text-sm text-gray-500">{student.lastActive}</td>
+                                                <td className="py-4 text-right pr-4">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedStudentForIntervention(student.id); // In real app use ID
+                                                            setShowInterventionModal(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-50 transition-colors shadow-sm text-sm"
+                                                    >
+                                                        Intervene
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         {/* Soft Skills Dashboard */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-8">
                             <div className="flex justify-between items-center mb-6">
@@ -341,8 +400,15 @@ const TeacherAnalytics = () => {
                     </>
                 )}
             </div>
+
+            <CreateInterventionModal
+                studentId={selectedStudentForIntervention}
+                isOpen={showInterventionModal}
+                onClose={() => setShowInterventionModal(false)}
+            />
         </TeacherLayout>
     );
 };
 
 export default TeacherAnalytics;
+
