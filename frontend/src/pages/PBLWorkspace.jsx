@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle, Workflow, Target, Check, Briefcase, Sparkles, Award, Gauge, Plus, ChevronRight, Layout, Loader, X, MoreHorizontal } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle, Workflow, Target, Check, Briefcase, Sparkles, Award, Gauge, Plus, ChevronRight, Layout, Loader, X, MoreHorizontal, TrendingUp } from 'lucide-react';
 import TeacherLayout from '../components/TeacherLayout';
 import { projectsAPI, classroomAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const StatCard = ({ icon: Icon, label, value, trend, color, subtext }) => (
+  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:translate-y-[-2px] transition-transform duration-200">
+    <div className="flex items-start justify-between mb-4">
+      <div className={`p-3 rounded-lg ${color}`}>
+        <Icon size={24} />
+      </div>
+      {trend && (
+        <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+          <TrendingUp size={12} /> {trend}
+        </span>
+      )}
+    </div>
+    <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{value}</h3>
+    <p className="text-sm font-medium text-gray-500">{label}</p>
+    {subtext && <p className="text-xs text-gray-400 mt-2">{subtext}</p>}
+  </div>
+);
 
 const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, teacherId }) => {
   const [formData, setFormData] = useState({
@@ -300,6 +318,35 @@ const PBLWorkspace = () => {
               <Plus size={18} /> New Project
             </button>
           </div>
+        </div>
+
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <StatCard
+            icon={Target}
+            label="Active Projects"
+            value={projects.length}
+            color="bg-blue-50 text-blue-600"
+          />
+          <StatCard
+            icon={Users}
+            label="Student Teams"
+            value={teams.length}
+            color="bg-purple-50 text-purple-600"
+          />
+          <StatCard
+            icon={Briefcase}
+            label="Avg Progress"
+            value={`${project?.metrics?.completion || 0}%`}
+            color="bg-teal-50 text-teal-600"
+            trend="+8%"
+          />
+          <StatCard
+            icon={Award}
+            label="Skills Gained"
+            value="12"
+            color="bg-amber-50 text-amber-600"
+          />
         </div>
 
         {!project ? (

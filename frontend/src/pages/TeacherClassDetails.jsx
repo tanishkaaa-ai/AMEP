@@ -29,6 +29,12 @@ const TeacherClassDetails = () => {
     const [newPostContent, setNewPostContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // New state for assignment creation
+    const [postType, setPostType] = useState('announcement'); // 'announcement' | 'assignment'
+    const [title, setTitle] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [points, setPoints] = useState(100);
+
     const fetchData = async () => {
         try {
             const [clsRes, studentsRes, streamRes] = await Promise.all([
@@ -55,20 +61,39 @@ const TeacherClassDetails = () => {
 
     const handleCreatePost = async () => {
         if (!newPostContent.trim()) return;
+        if (postType === 'assignment' && !title.trim()) return;
 
         setSubmitting(true);
         try {
-            const postData = {
+            let postData = {
                 author_id: getUserId(),
                 author_role: 'teacher',
-                post_type: 'announcement',
-                title: 'Announcement', // Simple implementation for now
+                post_type: postType,
                 content: newPostContent,
                 attachments: []
             };
 
+            if (postType === 'assignment') {
+                postData.title = title;
+                postData.assignment_details = {
+                    assignment_type: 'homework', // Default
+                    due_date: dueDate ? new Date(dueDate).toISOString() : null,
+                    points: parseInt(points) || 100,
+                    attachments: []
+                };
+            } else {
+                postData.title = 'Announcement';
+            }
+
             await classroomAPI.createPost(classroomId, postData);
+
+            // Reset form
             setNewPostContent('');
+            setTitle('');
+            setDueDate('');
+            setPoints(100);
+            setPostType('announcement');
+
             // Refresh stream
             const streamRes = await classroomAPI.getClassStream(classroomId);
             setStream(streamRes.data);
@@ -158,19 +183,68 @@ const TeacherClassDetails = () => {
                     <div className="lg:col-span-2 space-y-6">
                         {activeTab === 'stream' && (
                             <>
-                                {/* Create Post */}
+                                {/* Create Post / Assignment Box */}
                                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                                    <div className="flex gap-4 mb-4">
+                                        <button
+                                            onClick={() => setPostType('announcement')}
+                                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${postType === 'announcement' ? 'bg-teal-100 text-teal-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            Announcement
+                                        </button>
+                                        <button
+                                            onClick={() => setPostType('assignment')}
+                                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${postType === 'assignment' ? 'bg-teal-100 text-teal-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            Assignment
+                                        </button>
+                                    </div>
+
                                     <div className="flex gap-4">
                                         <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 font-bold shrink-0">
                                             T
                                         </div>
-                                        <div className="flex-1">
+                                        <div className="flex-1 space-y-4">
+                                            {postType === 'assignment' && (
+                                                <input
+                                                    type="text"
+                                                    value={title}
+                                                    onChange={(e) => setTitle(e.target.value)}
+                                                    placeholder="Assignment Title"
+                                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                                />
+                                            )}
+
                                             <textarea
                                                 value={newPostContent}
                                                 onChange={(e) => setNewPostContent(e.target.value)}
-                                                placeholder="Announce something to your class..."
+                                                placeholder={postType === 'assignment' ? "Assignment instructions..." : "Announce something to your class..."}
                                                 className="w-full resize-none border-none focus:ring-0 text-gray-700 placeholder-gray-400 h-24 p-0 outline-none"
                                             />
+
+                                            {postType === 'assignment' && (
+                                                <div className="flex gap-4">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-bold text-gray-500 mb-1">Due Date</label>
+                                                        <input
+                                                            type="datetime-local"
+                                                            value={dueDate}
+                                                            onChange={(e) => setDueDate(e.target.value)}
+                                                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="w-32">
+                                                        <label className="block text-xs font-bold text-gray-500 mb-1">Points</label>
+                                                        <input
+                                                            type="number"
+                                                            value={points}
+                                                            onChange={(e) => setPoints(e.target.value)}
+                                                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                                 <div className="flex gap-2 text-gray-400">
                                                     <button className="p-2 hover:bg-gray-100 rounded-lg hover:text-teal-600 transition-colors"><FileText size={20} /></button>
@@ -179,7 +253,7 @@ const TeacherClassDetails = () => {
                                                 <button
                                                     onClick={handleCreatePost}
                                                     className="px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                                                    disabled={!newPostContent.trim() || submitting}
+                                                    disabled={!newPostContent.trim() || (postType === 'assignment' && !title.trim()) || submitting}
                                                 >
                                                     {submitting && <Loader className="animate-spin" size={16} />}
                                                     Post
