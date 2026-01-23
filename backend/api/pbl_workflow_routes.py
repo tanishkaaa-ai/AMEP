@@ -637,7 +637,7 @@ def create_task(team_id):
             'assigned_to': data['assigned_to'],  # student_id
             'due_date': datetime.fromisoformat(data['due_date']) if 'due_date' in data else None,
             'priority': data.get('priority', 'medium'),  # low, medium, high
-            'status': 'todo',  # todo, in_progress, completed
+            'status': data.get('status', 'todo'),  # todo, in_progress, completed
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow(),
             'completed_at': None

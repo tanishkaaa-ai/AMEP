@@ -72,10 +72,9 @@ const TeacherLayout = ({ children }) => {
         { icon: ClipboardList, text: 'Interventions', to: '/teacher/interventions' },
         { icon: Radio, text: 'Live Sessions', to: '/teacher/polls' }, // Reusing/Aliasing Polling
         { icon: MapIcon, text: 'Projects (PBL)', to: '/teacher/projects' },
-        { icon: CheckCircle, text: 'Approvals', to: '/teacher/project-review' },
-        { icon: Award, text: 'Grading', to: '/teacher/grading' },
-        { icon: BookOpen, text: 'Curriculum', to: '/teacher/curriculum' },
-        { icon: BookOpen, text: 'Practice Content', to: '/teacher/practice-manager' },
+        { icon: Award, text: 'Grading & APPROVALS', to: '/teacher/grading' }, // Combined
+        { icon: BookOpen, text: 'Practice Manager', to: '/teacher/practice-manager' },
+        { icon: Users, text: 'Soft Skills', to: '/soft-skills' }, // Added
         { icon: Library, text: 'Templates', to: '/teacher/templates' },
     ];
 

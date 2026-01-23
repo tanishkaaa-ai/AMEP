@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { conceptsAPI } from '../services/api';
+import { conceptsAPI, classroomAPI } from '../services/api';
 import TeacherLayout from '../components/TeacherLayout';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import {
     BookOpen,
@@ -16,6 +17,10 @@ import {
 } from 'lucide-react';
 
 const TeacherPracticeManager = () => {
+    const { getUserId } = useAuth();
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('');
+
     const [concepts, setConcepts] = useState([]);
     const [selectedConcept, setSelectedConcept] = useState(null);
     const [items, setItems] = useState([]);
@@ -38,30 +43,42 @@ const TeacherPracticeManager = () => {
         explanation: ''
     });
 
-    useEffect(() => {
-        fetchConcepts();
-    }, []);
+    // --- Fetch Logic --- 
 
     useEffect(() => {
-        if (selectedConcept) {
-            fetchItems(selectedConcept.concept_id);
-        } else {
-            setItems([]);
-        }
-    }, [selectedConcept]);
+        const loadClasses = async () => {
+            try {
+                const res = await classroomAPI.getTeacherClasses(getUserId());
+                setClasses(res.data);
+            } catch (err) {
+                console.error("Failed to load classes", err);
+            }
+        };
+        if (getUserId()) loadClasses();
+    }, [getUserId]);
+
+    useEffect(() => {
+        fetchConcepts();
+    }, [selectedClass]);
 
     const fetchConcepts = async () => {
         try {
             setLoading(true);
-            const res = await conceptsAPI.getConcepts();
+            const params = selectedClass ? { classroom_id: selectedClass } : {};
+            const res = await conceptsAPI.getConcepts(params);
             setConcepts(res.data.concepts || res.data || []);
         } catch (error) {
             console.error("Failed to load concepts", error);
-            toast.error("Failed to load concepts");
+            // toast.error("Failed to load concepts"); // Silent fail on init sometimes better
         } finally {
             setLoading(false);
         }
     };
+
+    // Better implementation using existing imports
+    // We need to import classroomAPI and useAuth
+
+    // ... (See below for actual code to insert/replace)
 
     const fetchItems = async (conceptId) => {
         try {
@@ -115,7 +132,7 @@ const TeacherPracticeManager = () => {
                 await conceptsAPI.updateConcept(conceptForm.id, conceptForm);
                 toast.success("Concept updated");
             } else {
-                await conceptsAPI.createConcept(conceptForm);
+                await conceptsAPI.createConcept({ ...conceptForm, classroom_id: selectedClass || undefined });
                 toast.success("Concept created");
             }
             setShowConceptModal(false);
@@ -208,6 +225,20 @@ const TeacherPracticeManager = () => {
                             <BookOpen className="text-teal-600" /> Practice Content Manager
                         </h1>
                         <p className="text-gray-500">Manage curriculum concepts and practice questions</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value="">All Classes (Global)</option>
+                            {classes.map(cls => (
+                                <option key={cls.classroom_id} value={cls.classroom_id}>
+                                    {cls.class_name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

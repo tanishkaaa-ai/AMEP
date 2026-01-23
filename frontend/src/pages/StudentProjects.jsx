@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import CreateTaskModal from '../components/CreateTaskModal';
 import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCircle, Target, ChevronDown, Trophy, Star, Award, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../services/api';
@@ -54,7 +55,7 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) =>
             </div>
 
             <button
-                onClick={onAddTask}
+                onClick={() => onAddTask(status)}
                 className="mt-3 w-full py-2 flex items-center justify-center gap-2 text-gray-500 hover:bg-white hover:shadow-sm rounded-lg transition-all text-sm font-bold"
             >
                 <Plus size={16} /> Add Task
@@ -303,6 +304,10 @@ const StudentProjects = () => {
     const [teamProgress, setTeamProgress] = useState(null);
     const [achievements, setAchievements] = useState([]);
 
+    // Task Creation
+    const [showTaskModal, setShowTaskModal] = useState(false);
+    const [newTaskStatus, setNewTaskStatus] = useState('todo');
+
     const STUDENT_ID = getUserId();
 
     useEffect(() => {
@@ -377,7 +382,6 @@ const StudentProjects = () => {
 
             } catch (err) {
                 console.error('[STUDENT_PROJECTS] Error fetching team data:', err);
-                // Don't set global error here, as main loading succeeded. Just maybe show a toast or empty tasks.
                 setTasks([]);
             }
         };
@@ -385,9 +389,18 @@ const StudentProjects = () => {
         fetchTeamData();
     }, [activeTeam?.team_id, activeTeam?._id]);
 
-    const handleAddTask = () => {
+    const handleAddTask = (status = 'todo') => {
         if (!activeTeam) return;
-        alert(`Adding task for team ${activeTeam.team_name}... (Feature coming soon)`);
+        setNewTaskStatus(status);
+        setShowTaskModal(true);
+    };
+
+    const handleTaskCreated = async () => {
+        // Refresh tasks
+        if (activeTeam) {
+            const tasksRes = await projectsAPI.getTeamTasks(activeTeam.team_id || activeTeam._id);
+            setTasks(Array.isArray(tasksRes.data?.tasks) ? tasksRes.data.tasks : (Array.isArray(tasksRes.data) ? tasksRes.data : []));
+        }
     };
 
     if (loading) {
@@ -594,6 +607,16 @@ const StudentProjects = () => {
                     studentId={STUDENT_ID}
                 />
             }
+
+            <CreateTaskModal
+                isOpen={showTaskModal}
+                onClose={() => setShowTaskModal(false)}
+                onTaskCreated={handleTaskCreated}
+                teamId={activeTeam?.team_id || activeTeam?._id}
+                initialStatus={newTaskStatus}
+                members={activeTeam?.members || []}
+            />
+
         </DashboardLayout >
     );
 };
