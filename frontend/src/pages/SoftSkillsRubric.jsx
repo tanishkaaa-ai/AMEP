@@ -6,7 +6,6 @@ import { classroomAPI, projectsAPI } from '../services/api';
 
 const SoftSkillsRubric = () => {
   const { user, getUserId } = useAuth();
-  const { user, getUserId } = useAuth();
   const [activeTab, setActiveTab] = useState('rubric');
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -149,8 +148,6 @@ const SoftSkillsRubric = () => {
   const getLevelLabel = (level) => {
     const l = Math.round(level);
     switch (l) {
-    const l = Math.round(level);
-    switch (l) {
       case 1: return 'Beginning';
       case 2: return 'Developing';
       case 3: return 'Proficient';
@@ -159,40 +156,6 @@ const SoftSkillsRubric = () => {
       default: return 'No Data';
     }
   };
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh]">
-          <Loader2 className="animate-spin text-orange-500 mb-4" size={48} />
-          <p className="text-gray-500 font-medium text-lg">Loading your assessment...</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!softSkillsData || !softSkillsData.dimension_scores) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8 bg-white rounded-3xl border border-dashed border-gray-200">
-          <Award size={64} className="text-gray-200 mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Soft Skills Data Yet</h2>
-          <p className="text-gray-500 max-w-md">Complete your peer reviews in the project workspace to build your competency profile!</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const dimensions = Object.entries(softSkillsData.dimension_scores).map(([id, data]) => ({
-    id,
-    name: data.dimension_name,
-    avgScore: data.average_rating,
-    description: data.level || "Competency Rating",
-    indicators: [] // Backend doesn't support sub-indicators yet
-  }));
-
-  const overallScorePercent = softSkillsData.overall_soft_skills_score || 0;
-  const overallDisplayScore = (overallScorePercent / 20).toFixed(1); // 0-100 to 0-5
 
   const RubricView = () => (
     <div className="space-y-6">
@@ -431,8 +394,8 @@ const SoftSkillsRubric = () => {
           <button
             onClick={() => setActiveTab('rubric')}
             className={`px-6 py-3 font-bold transition-all border-b-2 ${activeTab === 'rubric'
-              ? 'border-teal-600 text-teal-700'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-teal-600 text-teal-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <div className="flex items-center gap-2">
@@ -443,8 +406,8 @@ const SoftSkillsRubric = () => {
           <button
             onClick={() => setActiveTab('students')}
             className={`px-6 py-3 font-bold transition-all border-b-2 ${activeTab === 'students'
-              ? 'border-teal-600 text-teal-700'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-teal-600 text-teal-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <div className="flex items-center gap-2">
@@ -455,8 +418,8 @@ const SoftSkillsRubric = () => {
           <button
             onClick={() => setActiveTab('analytics')}
             className={`px-6 py-3 font-bold transition-all border-b-2 ${activeTab === 'analytics'
-              ? 'border-teal-600 text-teal-700'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-teal-600 text-teal-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <div className="flex items-center gap-2">
