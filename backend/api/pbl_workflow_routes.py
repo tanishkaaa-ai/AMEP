@@ -1016,21 +1016,30 @@ def get_student_projects(student_id):
 @pbl_workflow_bp.route('/students/<student_id>/teams', methods=['GET'])
 def get_student_teams(student_id):
     try:
+        logger.info(f"[GET_STUDENT_TEAMS] Request received | student_id: {student_id}")
+
         teams = find_many(TEAMS, {'members': student_id})
+        logger.info(f"[GET_STUDENT_TEAMS] Teams found | student_id: {student_id} | count: {len(teams)}")
+
         result = []
         for team in teams:
             project = find_one(PROJECTS, {'_id': team['project_id']})
-            result.append({
+            team_data = {
                 'team_id': team['_id'],
                 'team_name': team.get('team_name'),
                 'project_id': team.get('project_id'),
                 'project_title': project.get('title') if project else None,
                 'member_count': len(team.get('members', [])),
-                'role': team.get('roles', {}).get(student_id, 'Member')
-            })
+                'role': team.get('roles', {}).get(student_id, 'Member'),
+                'status': team.get('status', 'active')
+            }
+            result.append(team_data)
+            logger.info(f"[GET_STUDENT_TEAMS] Team processed | team_id: {team['_id']} | project_title: {team_data['project_title']}")
 
+        logger.info(f"[GET_STUDENT_TEAMS] SUCCESS | student_id: {student_id} | teams_count: {len(result)}")
         return jsonify({'student_id': student_id, 'teams': result, 'total': len(result)}), 200
     except Exception as e:
+        logger.error(f"[GET_STUDENT_TEAMS] ERROR | student_id: {student_id} | error: {str(e)}")
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 @pbl_workflow_bp.route('/projects/<project_id>/deliverable', methods=['POST'])

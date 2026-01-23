@@ -305,7 +305,7 @@ const StudentProjects = () => {
                 <div className="mb-6 flex justify-between items-end">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
-                            <Map className="text-blue-500" /> {activeTeam.project_name || 'Project Workspace'}
+                            <Map className="text-blue-500" /> {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
                         </h1>
                         <p className="text-gray-500 mt-1">Team: <span className="font-bold text-gray-700">{activeTeam.team_name}</span></p>
                     </div>
