@@ -171,15 +171,15 @@ const StudentAssignment = () => {
                             {submitted ? (
                                 <div className="text-left">
                                     {/* Grade & Feedback Section */}
-                                    {(assignment.current_user_submission?.status === 'returned' || assignment.current_user_submission?.grade !== null) && (
+                                    {assignment.current_user_submission && (assignment.current_user_submission.status === 'returned' || assignment.current_user_submission.grade != null) && (
                                         <div className="mb-6 border-b border-gray-100 pb-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h4 className="font-bold text-gray-800 text-lg">Grade & Feedback</h4>
                                                 <span className="text-2xl font-bold text-green-600 bg-green-50 px-4 py-2 rounded-xl">
-                                                    {assignment.current_user_submission.grade} <span className="text-sm text-green-400 font-normal">/ {assignment.points || 100}</span>
+                                                    {assignment.current_user_submission?.grade || 0} <span className="text-sm text-green-400 font-normal">/ {assignment.points || 100}</span>
                                                 </span>
                                             </div>
-                                            {assignment.current_user_submission.teacher_feedback ? (
+                                            {assignment.current_user_submission?.teacher_feedback ? (
                                                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                                     <p className="text-sm font-bold text-blue-800 mb-1">Teacher Feedback:</p>
                                                     <p className="text-blue-700">{assignment.current_user_submission.teacher_feedback}</p>

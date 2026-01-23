@@ -62,6 +62,14 @@ const TeacherPracticeManager = () => {
         fetchConcepts();
     }, [selectedClass]);
 
+    useEffect(() => {
+        if (selectedConcept) {
+            fetchItems(selectedConcept.concept_id);
+        } else {
+            setItems([]);
+        }
+    }, [selectedConcept]);
+
     const fetchConcepts = async () => {
         try {
             setLoading(true);

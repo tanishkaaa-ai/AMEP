@@ -34,6 +34,56 @@ const StudentPractice = () => {
         { x: 30, y: 80 }, { x: 70, y: 20 }, { x: 90, y: 40 }
     ];
 
+    // Helper function to calculate nodes state (moved inside to access GRAPH_SLOTS, or passed as arg)
+    const calculateGraphNodes = (rawConcepts) => {
+        // Sort concepts
+        const sortedConcepts = [...rawConcepts].sort((a, b) =>
+            (a.concept_name || '').localeCompare(b.concept_name || '')
+        );
+
+        return sortedConcepts.map((concept, index) => {
+            const slot = GRAPH_SLOTS[index % GRAPH_SLOTS.length];
+
+            // Locking Logic
+            let isLocked = false;
+            // First concept is always unlocked. Others depend on previous mastery.
+            if (index > 0) {
+                const prevConcept = sortedConcepts[index - 1];
+                // Unlock if previous concept has been attempted (score > 0)
+                if ((Number(prevConcept.mastery_score) || 0) <= 0) {
+                    isLocked = true;
+                }
+            }
+
+            let status = concept.status || 'available';
+
+            if (isLocked) {
+                status = 'locked';
+            } else if (status === 'locked') {
+                // Un-lock if our local logic says it's fine
+                status = 'available';
+            }
+
+            // If mastery >= 85, force status to 'mastered' visually
+            if ((concept.mastery_score || 0) >= 85) {
+                status = 'mastered';
+            }
+
+            return {
+                id: concept.concept_id,
+                title: concept.concept_name,
+                status: status,
+                score: Math.round(concept.mastery_score || 0),
+                // Preserve existing random offset if possible? 
+                // For simplicity, we regenerate. Ideally we'd map by ID.
+                x: slot.x + (Math.random() * 5 - 2.5),
+                y: slot.y + (Math.random() * 5 - 2.5),
+                // Keep raw object for updates
+                _raw: concept
+            };
+        });
+    };
+
     useEffect(() => {
         fetchStudentClasses();
     }, [STUDENT_ID]);
@@ -82,26 +132,8 @@ const StudentPractice = () => {
                 });
 
                 const concepts = masteryRes.data.concepts || [];
-                const nodes = concepts.map((concept, index) => {
-                    const slot = GRAPH_SLOTS[index % GRAPH_SLOTS.length];
-                    // trust backend status
-                    let status = concept.status || 'locked';
-
-                    // Map 'available' to 'in_progress' visually if we want them clickable, 
-                    // or keep 'available' and style it specifically.
-                    // Let's treat 'available' similar to 'in_progress' but gray/blue?
-                    // For now, let's map 'available' to 'available' and update styles.
-
-                    return {
-                        id: concept.concept_id,
-                        title: concept.concept_name,
-                        status: status,
-                        score: Math.round(concept.mastery_score),
-                        // Add some randomness to bubbles so they don't look too rigid
-                        x: slot.x + (Math.random() * 5 - 2.5),
-                        y: slot.y + (Math.random() * 5 - 2.5)
-                    };
-                });
+                // Calculate nodes using shared logic
+                const nodes = calculateGraphNodes(concepts);
 
                 setMasteryNodes(nodes);
                 setRecommendations(recsRes.data.recommendations || []);
@@ -168,11 +200,25 @@ const StudentPractice = () => {
             });
 
             // 3. Update local graph state
-            setMasteryNodes(prev => prev.map(node =>
-                node.id === currentItem.concept_id
-                    ? { ...node, score: Math.round(masteryResponse.data.mastery_score), status: masteryResponse.data.mastery_score > 0 ? 'in_progress' : node.status }
-                    : node
-            ));
+            // 3. Update local graph state AND re-calculate locks
+            setMasteryNodes(prevNodes => {
+                // 1. Reconstruct raw concepts list from nodes (we stored _raw in step 1)
+                // If _raw is missing, we might have trouble.
+                // Alternative: Update the specific node's _raw data, then recalculate all.
+
+                const updatedConcepts = prevNodes.map(node => {
+                    if (node.id === currentItem.concept_id) {
+                        return {
+                            ...node._raw,
+                            mastery_score: masteryResponse.data.mastery_score
+                        };
+                    }
+                    return node._raw;
+                });
+
+                // 2. Re-run calculation to propagate unlock status
+                return calculateGraphNodes(updatedConcepts);
+            });
 
         } catch (error) {
             console.error('[PRACTICE] Failed to submit answer:', error);
@@ -361,7 +407,7 @@ const StudentPractice = () => {
 
                                 {selectedNode.status === 'locked' ? (
                                     <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium">
-                                        This module is currently locked. Complete prerequisites to unlock.
+                                        This module is currently locked. Attempt the previous module to unlock.
                                     </div>
                                 ) : (
                                     <>
