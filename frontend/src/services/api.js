@@ -150,16 +150,16 @@ export const templatesAPI = {
 };
 
 export const conceptsAPI = {
-  getConcepts: (params) => api.get('/concepts', { params }),
-  createConcept: (data) => api.post('/concepts', data),
-  getConcept: (conceptId) => api.get(`/concepts/${conceptId}`),
-  updateConcept: (conceptId, data) => api.put(`/concepts/${conceptId}`, data),
-  deleteConcept: (conceptId) => api.delete(`/concepts/${conceptId}`),
-  getItems: (params) => api.get('/items', { params }),
-  createItem: (data) => api.post('/items', data),
-  getItem: (itemId) => api.get(`/items/${itemId}`),
-  updateItem: (itemId, data) => api.put(`/items/${itemId}`, data),
-  deleteItem: (itemId) => api.delete(`/items/${itemId}`),
+  getConcepts: (params) => api.get('/mastery/concepts', { params }),
+  createConcept: (data) => api.post('/mastery/concepts', data),
+  getConcept: (conceptId) => api.get(`/mastery/concepts/${conceptId}`),
+  updateConcept: (conceptId, data) => api.put(`/mastery/concepts/${conceptId}`, data),
+  deleteConcept: (conceptId) => api.delete(`/mastery/concepts/${conceptId}`),
+  getItems: (params) => api.get('/mastery/items', { params }),
+  createItem: (data) => api.post('/mastery/items', data),
+  getItem: (itemId) => api.get(`/mastery/items/${itemId}`),
+  updateItem: (itemId, data) => api.put(`/mastery/items/${itemId}`, data),
+  deleteItem: (itemId) => api.delete(`/mastery/items/${itemId}`),
 };
 
 export const dashboardAPI = {
