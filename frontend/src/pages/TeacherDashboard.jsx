@@ -39,6 +39,68 @@ const StatCard = ({ icon: Icon, label, value, trend, color, subtext }) => (
   </motion.div>
 );
 
+const InterventionModal = ({ alert, onClose, onAssign }) => {
+  const strategies = [
+    "Extra Tutoring Session",
+    "Peer Study Group",
+    "Modified Assignment",
+    "Parent Conference",
+    "Guidance Counseling"
+  ];
+  const [selectedStrategy, setSelectedStrategy] = useState(strategies[0]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl w-full max-w-md shadow-xl p-6"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-xl text-gray-800">Assign Intervention</h3>
+          <button onClick={onClose}><div className="bg-gray-100 p-1 rounded-full"><AlertTriangle size={16} className="text-gray-500" /></div></button>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-sm text-gray-500 mb-2">Student</p>
+          <div className="font-bold text-lg text-gray-800 flex items-center gap-2">
+            {alert.student_name}
+            <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase">{alert.severity} Risk</span>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-bold text-gray-700 mb-2">Recommended Strategy</label>
+          <div className="space-y-2">
+            {strategies.map(s => (
+              <button
+                key={s}
+                onClick={() => setSelectedStrategy(s)}
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors border
+                                    ${selectedStrategy === s
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-50">Cancel</button>
+          <button
+            onClick={() => onAssign(selectedStrategy)}
+            className="flex-1 py-3 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 shadow-lg shadow-teal-200"
+          >
+            Assign Intervention
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const TeacherDashboard = () => {
   const { user, getUserId } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -51,6 +113,7 @@ const TeacherDashboard = () => {
   const [todaysClasses, setTodaysClasses] = useState([]);
   const [atRiskStudents, setAtRiskStudents] = useState([]);
   const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [selectedAlert, setSelectedAlert] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -143,6 +206,12 @@ const TeacherDashboard = () => {
     fetchDashboardData();
   }, [getUserId]);
 
+  const handleAssignIntervention = (strategy) => {
+    // In a real app, API call here
+    alert(`Assigned ${strategy} to ${selectedAlert.student_name}`);
+    setSelectedAlert(null);
+  };
+
   if (loading) {
     return (
       <TeacherLayout>
@@ -216,6 +285,7 @@ const TeacherDashboard = () => {
 
           {/* Main Content: Class Schedule / Overview */}
           <div className="lg:col-span-2 space-y-6">
+            {/* ... (Existing Today's Classes code) ... */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="font-bold text-lg text-gray-800">Today's Classes</h2>
@@ -294,7 +364,11 @@ const TeacherDashboard = () => {
               </div>
               <div className="p-2">
                 {atRiskStudents.length > 0 ? (atRiskStudents.map((alert) => (
-                  <div key={alert.alert_id} className="p-3 transition-colors hover:bg-red-50/50 rounded-xl cursor-pointer">
+                  <div
+                    key={alert.alert_id}
+                    onClick={() => setSelectedAlert(alert)}
+                    className="p-3 transition-colors hover:bg-red-50/50 rounded-xl cursor-pointer"
+                  >
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-bold text-gray-800 text-sm">{alert.student_name}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full uppercase">
@@ -337,6 +411,13 @@ const TeacherDashboard = () => {
         </div>
 
       </div>
+      {selectedAlert && (
+        <InterventionModal
+          alert={selectedAlert}
+          onClose={() => setSelectedAlert(null)}
+          onAssign={handleAssignIntervention}
+        />
+      )}
     </TeacherLayout>
   );
 };

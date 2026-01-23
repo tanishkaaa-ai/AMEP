@@ -4,6 +4,7 @@ import { Map, Plus, MoreHorizontal, CheckCircle, Clock, Circle, Loader2, AlertCi
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) => {
     const columnTasks = tasks.filter(t => t.status === status);
@@ -60,12 +61,148 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) =>
     );
 };
 
+const PeerReviewModal = ({ team, onClose }) => {
+    // Mock team members excluding self (in real app, filter by ID)
+    const members = [
+        { id: 2, name: 'Alice Johnson' },
+        { id: 3, name: 'Bob Smith' }
+    ];
+    const [reviews, setReviews] = useState({});
+
+    const handleRatingChange = (memberId, skill, value) => {
+        setReviews(prev => ({
+            ...prev,
+            [memberId]: {
+                ...prev[memberId],
+                [skill]: value
+            }
+        }));
+    };
+
+    const handleSubmit = () => {
+        console.log("Submitting reviews:", reviews);
+        // projectsAPI.submitPeerReview(reviews)
+        toast.success("Peer reviews submitted successfully!");
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="font-bold text-xl text-gray-800">Peer Review</h3>
+                    <button onClick={onClose}><AlertCircle className="rotate-45" size={24} /></button>
+                </div>
+                <div className="p-6 overflow-y-auto">
+                    <p className="text-gray-500 mb-6">Rate your team members on their soft skills contribution.</p>
+                    {members.map(member => (
+                        <div key={member.id} className="mb-8 border-b border-gray-100 pb-6 last:border-0">
+                            <h4 className="font-bold text-lg text-gray-800 mb-4">{member.name}</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {['Collaboration', 'Communication', 'Critical Thinking', 'Effort'].map(skill => (
+                                    <div key={skill}>
+                                        <label className="block text-sm font-medium text-gray-600 mb-1">{skill}</label>
+                                        <div className="flex gap-2">
+                                            {[1, 2, 3, 4, 5].map(rating => (
+                                                <button
+                                                    key={rating}
+                                                    onClick={() => handleRatingChange(member.id, skill, rating)}
+                                                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors
+                                                        ${reviews[member.id]?.[skill] === rating
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                                >
+                                                    {rating}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="p-6 border-t border-gray-100 flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">Submit Reviews</button>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const UploadModal = ({ onClose }) => {
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleUpload = () => {
+        if (!file) return;
+        setUploading(true);
+        // Simulate upload
+        setTimeout(() => {
+            setUploading(false);
+            toast.success("Deliverable uploaded successfully!");
+            onClose();
+        }, 1500);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl w-full max-w-md shadow-xl p-6"
+            >
+                <h3 className="font-bold text-xl text-gray-800 mb-4">Upload Project Deliverable</h3>
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50 mb-6">
+                    <input
+                        type="file"
+                        id="file-upload"
+                        className="hidden"
+                        onChange={(e) => setFile(e.target.files[0])}
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer block">
+                        {file ? (
+                            <div className="text-blue-600 font-bold flex items-center justify-center gap-2">
+                                <CheckCircle size={20} /> {file.name}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2">
+                                    <Plus size={24} />
+                                </div>
+                                <span className="text-gray-500 font-medium">Click to upload file</span>
+                            </>
+                        )}
+                    </label>
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={onClose} className="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-50">Cancel</button>
+                    <button
+                        onClick={handleUpload}
+                        disabled={!file || uploading}
+                        className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {uploading ? <Loader2 className="animate-spin" /> : 'Upload'}
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 const StudentProjects = () => {
     const { getUserId } = useAuth();
     const [activeTeam, setActiveTeam] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showPeerReview, setShowPeerReview] = useState(false);
+    const [showUpload, setShowUpload] = useState(false);
 
     const STUDENT_ID = getUserId();
 
@@ -179,8 +316,17 @@ const StudentProjects = () => {
                                 <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-400">?</div>
                             ))}
                         </div>
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">
-                            Share Artifacts
+                        <button
+                            onClick={() => setShowUpload(true)}
+                            className="bg-white border-2 border-gray-200 text-gray-600 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                        >
+                            Upload Deliverable
+                        </button>
+                        <button
+                            onClick={() => setShowPeerReview(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors"
+                        >
+                            Submit Peer Review
                         </button>
                     </div>
                 </div>
@@ -213,6 +359,9 @@ const StudentProjects = () => {
                     />
                 </div>
             </div>
+
+            {showPeerReview && <PeerReviewModal team={activeTeam} onClose={() => setShowPeerReview(false)} />}
+            {showUpload && <UploadModal onClose={() => setShowUpload(false)} />}
         </DashboardLayout>
     );
 };

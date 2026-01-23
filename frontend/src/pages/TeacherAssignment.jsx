@@ -5,6 +5,79 @@ import { classroomAPI } from '../services/api';
 import { ArrowLeft, Loader, Check, X, FileText, User, Calendar, Award } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+const RubricGrading = ({ onGradeChange, currentGrade }) => {
+    const rubric = [
+        {
+            id: 1, name: "Content Accuracy", weight: 40, levels: [
+                { score: 10, label: "Excellent", desc: "All facts accurate, deep understanding shown." },
+                { score: 7, label: "Good", desc: "Mostly accurate, some minor errors." },
+                { score: 4, label: "Fair", desc: "Some accurate facts, significant errors." },
+                { score: 0, label: "Poor", desc: "Investigate inaccurate or missing." }
+            ]
+        },
+        {
+            id: 2, name: "Analysis & Logic", weight: 30, levels: [
+                { score: 10, label: "Strong", desc: "Clear reasoning, strong evidence connection." },
+                { score: 7, label: "Moderate", desc: "Reasonable logic, some gaps." },
+                { score: 4, label: "Weak", desc: "Flawed logic or weak connections." },
+                { score: 0, label: "None", desc: "No analysis provided." }
+            ]
+        },
+        {
+            id: 3, name: "Presentation", weight: 30, levels: [
+                { score: 10, label: "Clear", desc: "Professional, well-organized." },
+                { score: 7, label: "Adequate", desc: "Readable, some organization issues." },
+                { score: 4, label: "Messy", desc: "Hard to follow." },
+                { score: 0, label: "Poor", desc: "Illegible or chaotic." }
+            ]
+        }
+    ];
+
+    const [scores, setScores] = useState({});
+
+    const handleLevelClick = (criteriaId, score, weight) => {
+        const newScores = { ...scores, [criteriaId]: score };
+        setScores(newScores);
+
+        // Calculate weighted total
+        let total = 0;
+        rubric.forEach(c => {
+            const s = newScores[c.id] || 0;
+            total += (s / 10) * c.weight;
+        });
+        onGradeChange(Math.round(total));
+    };
+
+    return (
+        <div className="space-y-4 mb-4">
+            {rubric.map(criteria => (
+                <div key={criteria.id} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="flex justify-between mb-2">
+                        <span className="font-bold text-sm text-gray-700">{criteria.name}</span>
+                        <span className="text-xs font-bold text-gray-400">{criteria.weight}%</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1">
+                        {criteria.levels.map(level => (
+                            <button
+                                key={level.score}
+                                onClick={() => handleLevelClick(criteria.id, level.score, criteria.weight)}
+                                className={`p-1 rounded text-xs transition-colors text-center border
+                                    ${scores[criteria.id] === level.score
+                                        ? 'bg-teal-100 border-teal-300 text-teal-800 font-bold'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                                title={level.desc}
+                            >
+                                {level.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
+            <div className="text-right text-xs text-gray-400">Total Calculated: {currentGrade}</div>
+        </div>
+    );
+};
+
 const TeacherAssignment = () => {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
@@ -135,8 +208,8 @@ const TeacherAssignment = () => {
                                 <div
                                     key={sub.submission_id}
                                     className={`bg-white p-4 rounded-xl shadow-sm border transition-all cursor-pointer ${selectedSubmission?.submission_id === sub.submission_id
-                                            ? 'border-teal-500 ring-2 ring-teal-100'
-                                            : 'border-gray-200 hover:border-teal-300'
+                                        ? 'border-teal-500 ring-2 ring-teal-100'
+                                        : 'border-gray-200 hover:border-teal-300'
                                         }`}
                                     onClick={() => handleGradeClick(sub)}
                                 >
@@ -193,7 +266,12 @@ const TeacherAssignment = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">Grade (out of {assignment.points})</label>
+                                        <h3 className="text-sm font-bold text-gray-500 mb-2">Rubric Grading</h3>
+                                        <RubricGrading onGradeChange={setGrade} currentGrade={grade} />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Final Grade (out of {assignment.points})</label>
                                         <input
                                             type="number"
                                             value={grade}

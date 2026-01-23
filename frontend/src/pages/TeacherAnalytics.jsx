@@ -279,7 +279,65 @@ const TeacherAnalytics = () => {
                                 </div>
                             </div>
 
+                            {/* Soft Skills Dashboard */}
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 col-span-1 lg:col-span-2">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h3 className="font-bold text-gray-800 text-lg">Soft Skills Development</h3>
+                                        <p className="text-gray-500 text-xs">Based on peer reviews and assessments</p>
+                                    </div>
+                                    <button className="text-gray-400 hover:text-teal-600"><Download size={20} /></button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                                    {[
+                                        { skill: 'Collaboration', score: 85, color: 'text-blue-500' },
+                                        { skill: 'Communication', score: 72, color: 'text-green-500' },
+                                        { skill: 'Critical Thinking', score: 68, color: 'text-purple-500' },
+                                        { skill: 'Creativity', score: 90, color: 'text-orange-500' }
+                                    ].map(item => (
+                                        <div key={item.skill} className="text-center">
+                                            {/* Circular Progress (CSS only simulation) */}
+                                            <div className="w-24 h-24 mx-auto rounded-full border-8 border-gray-100 flex items-center justify-center relative mb-3">
+                                                <div className="absolute inset-0 rounded-full border-8 border-current" style={{ clipPath: 'circle(50% at 50% 50%)', rotate: '-45deg', color: item.color === 'text-blue-500' ? '#3B82F6' : item.color === 'text-green-500' ? '#22C55E' : item.color === 'text-purple-500' ? '#A855F7' : '#F97316' }}></div>
+                                                <span className="text-2xl font-bold text-gray-800">{item.score}%</span>
+                                            </div>
+                                            <h4 className="font-bold text-gray-700">{item.skill}</h4>
+                                            <p className="text-xs text-gray-400 mt-1">Class Avg.</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Soft Skills Dashboard */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="font-bold text-gray-800 text-lg">Soft Skills Development</h3>
+                                    <p className="text-gray-500 text-xs">Based on peer reviews and assessments</p>
+                                </div>
+                                <button className="text-gray-400 hover:text-teal-600"><Download size={20} /></button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                                {[
+                                    { skill: 'Collaboration', score: 85, color: 'text-blue-500' },
+                                    { skill: 'Communication', score: 72, color: 'text-green-500' },
+                                    { skill: 'Critical Thinking', score: 68, color: 'text-purple-500' },
+                                    { skill: 'Creativity', score: 90, color: 'text-orange-500' }
+                                ].map(item => (
+                                    <div key={item.skill} className="text-center">
+                                        {/* Circular Progress (CSS only simulation) */}
+                                        <div className="w-24 h-24 mx-auto rounded-full border-8 border-gray-100 flex items-center justify-center relative mb-3">
+                                            <div className="absolute inset-0 rounded-full border-8 border-current" style={{ clipPath: 'circle(50% at 50% 50%)', rotate: '-45deg', color: item.color === 'text-blue-500' ? '#3B82F6' : item.color === 'text-green-500' ? '#22C55E' : item.color === 'text-purple-500' ? '#A855F7' : '#F97316' }}></div>
+                                            <span className="text-2xl font-bold text-gray-800">{item.score}%</span>
+                                        </div>
+                                        <h4 className="font-bold text-gray-700">{item.skill}</h4>
+                                        <p className="text-xs text-gray-400 mt-1">Class Avg.</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                     </>
                 )}
             </div>
