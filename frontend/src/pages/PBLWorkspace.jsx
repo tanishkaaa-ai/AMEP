@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle, Workflow, Target, Check, Briefcase, Sparkles, Award, Gauge, Plus, ChevronRight, Layout, Loader, X, MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
 import TeacherLayout from '../components/TeacherLayout';
-import { projectsAPI, classroomAPI } from '../services/api';
+import { projectsAPI, classroomAPI, templatesAPI } from '../services/api'; // Added templatesAPI
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom'; // Added useLocation
 
 // --- MODALS ---
 
-const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, teacherId }) => {
+const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, teacherId, initialData }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: initialData?.title || '',
+    description: initialData?.description || '',
     deadline: '',
   });
   const [loading, setLoading] = useState(false);
@@ -314,6 +315,31 @@ const PBLWorkspace = () => {
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState('');
+
+  // Template handling
+  const location = useLocation();
+  const [templateData, setTemplateData] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const templateId = params.get('template_id');
+
+    if (templateId) {
+      const fetchTemplate = async () => {
+        try {
+          const res = await templatesAPI.getTemplate(templateId);
+          setTemplateData(res.data);
+          setIsCreateModalOpen(true);
+          // Clean URL without refresh
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (err) {
+          console.error("Failed to load template", err);
+          toast.error("Failed to load template");
+        }
+      };
+      fetchTemplate();
+    }
+  }, [location.search]);
 
   // ... (inside PBLWorkspace component)
 
@@ -860,6 +886,7 @@ const PBLWorkspace = () => {
             onProjectCreated={fetchProjects}
             classroomId={selectedClassId}
             teacherId={getUserId()}
+            initialData={templateData}
           />
         )}
         {isMilestoneModalOpen && (

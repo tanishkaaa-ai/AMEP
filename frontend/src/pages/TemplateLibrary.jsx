@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, Download, Search, Filter, Clock, Users, Target, Workflow, Sparkles, Award, Shield, Globe, Code2, Zap, TrendingUp, Loader } from 'lucide-react';
+import { BookOpen, FileText, Download, Search, Filter, Clock, Users, Target, Workflow, Sparkles, Award, Shield, Globe, Code2, Zap, TrendingUp, Loader, Plus } from 'lucide-react';
 import { templatesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import TeacherLayout from '../components/TeacherLayout';
@@ -176,13 +176,55 @@ const TemplateLibrary = () => {
     </div>
   );
 
+  // Create Template Logic
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    title: '',
+    description: '',
+    subject_area: 'Science',
+    grade_level: 7,
+    template_type: 'project',
+    duration_weeks: 2
+  });
+
+  const handleCreateTemplate = async (e) => {
+    e.preventDefault();
+    try {
+      await templatesAPI.createTemplate({
+        ...newTemplate,
+        teacher_id: getUserId()
+      });
+      setShowCreateModal(false);
+      fetchTemplates(); // Refresh list
+      // Reset form
+      setNewTemplate({
+        title: '',
+        description: '',
+        subject_area: 'Science',
+        grade_level: 7,
+        template_type: 'project',
+        duration_weeks: 2
+      });
+    } catch (error) {
+      console.error("Failed to create template", error);
+    }
+  };
+
   return (
     <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Template Library</h1>
-          <p className="text-gray-500">Curriculum-Aligned Templates • Save 3 Hours Weekly</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Template Library</h1>
+            <p className="text-gray-500">Curriculum-Aligned Templates • Save 3 Hours Weekly</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-teal-700 transition-colors flex items-center gap-2 shadow-lg shadow-teal-200"
+          >
+            <Plus size={20} /> Create New Template
+          </button>
         </div>
 
         {/* Search and Filters */}
@@ -276,7 +318,75 @@ const TemplateLibrary = () => {
               {templates.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {templates.map(template => (
-                    <TemplateCard key={template.template_id} template={template} />
+                    <div key={template.template_id} className={`bg-white border border-gray-100 rounded-2xl p-6 hover:border-teal-200 transition-all duration-300 hover:shadow-lg hover:shadow-teal-100 ${template.usage_count > 1000 ? 'ring-2 ring-teal-500/10' : ''}`}>
+                      {template.usage_count > 1000 && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-teal-50 border border-teal-100 rounded-full text-teal-600 text-xs font-bold mb-4">
+                          <Sparkles size={12} />
+                          Popular
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-teal-50 rounded-xl">
+                          <FileText className="text-teal-600" size={24} />
+                        </div>
+                        <button
+                          onClick={() => toggleFavorite(template.template_id)}
+                          className="p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <svg
+                            className={`${favorites.includes(template.template_id) ? 'text-amber-400' : 'text-gray-300'} w-5 h-5`}
+                            fill={favorites.includes(template.template_id) ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">{template.title}</h3>
+                      <p className="text-gray-500 mb-4 text-sm line-clamp-2">{template.description || 'No description available.'}</p>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {template.template_type && (
+                          <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full border border-blue-100 capitalize">
+                            {template.template_type.replace('_', ' ')}
+                          </span>
+                        )}
+                        {template.subject_area && (
+                          <span className="px-3 py-1 bg-violet-50 text-violet-600 text-xs font-medium rounded-full border border-violet-100">
+                            {template.subject_area}
+                          </span>
+                        )}
+                        {template.grade_level && (
+                          <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full border border-emerald-100">
+                            Grade {template.grade_level}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mb-4">
+                        <StarRating rating={template.rating || 0} />
+                        <div className="flex items-center gap-1 text-gray-400 text-sm">
+                          <Download size={14} />
+                          <span>{(template.usage_count || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                        <div className="text-xs text-gray-500">
+                          By {template.author?.name || 'Unknown'}
+                        </div>
+                        <a
+                          href={`/teacher/projects?template_id=${template.template_id}`}
+                          className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-all flex items-center gap-2 shadow-sm"
+                        >
+                          <Download size={16} />
+                          Use Template
+                        </a>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -303,8 +413,88 @@ const TemplateLibrary = () => {
           </p>
         </div>
       </div>
+
+      {/* Create Template Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">Create New Template</h2>
+            <form onSubmit={handleCreateTemplate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input
+                  required
+                  type="text"
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+                  value={newTemplate.title}
+                  onChange={e => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                  placeholder="e.g. Physics Lab 101"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+                  value={newTemplate.description}
+                  onChange={e => setNewTemplate({ ...newTemplate, description: e.target.value })}
+                  rows={3}
+                ></textarea>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <select
+                    className="w-full p-2 border rounded-lg"
+                    value={newTemplate.subject_area}
+                    onChange={e => setNewTemplate({ ...newTemplate, subject_area: e.target.value })}
+                  >
+                    {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    className="w-full p-2 border rounded-lg"
+                    value={newTemplate.grade_level}
+                    onChange={e => setNewTemplate({ ...newTemplate, grade_level: parseInt(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select
+                  className="w-full p-2 border rounded-lg"
+                  value={newTemplate.template_type}
+                  onChange={e => setNewTemplate({ ...newTemplate, template_type: e.target.value })}
+                >
+                  {categories.map(c => <option key={c} value={c.toLowerCase().replace(' ', '_')}>{c}</option>)}
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                >
+                  Create Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </TeacherLayout>
   );
 };
+
 
 export default TemplateLibrary;

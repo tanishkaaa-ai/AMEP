@@ -84,19 +84,13 @@ const TeacherAnalytics = () => {
                     dashboardAPI.getMasteryHeatmap(selectedClassId),
                     dashboardAPI.getEngagementTrends(selectedClassId, dateRange),
                     dashboardAPI.getClassEngagement(selectedClassId),
-                    classroomAPI.getTeacherClasses(getUserId()) // Re-fetching classes isn't right here, need soft skills logic
-                    // Actually we need to import projectsAPI to call the new endpoint
+                    projectsAPI.getClassroomSoftSkills(selectedClassId)
                 ]);
 
-                // Correction: fetching soft skills requires projectsAPI which is imported but let's make sure
-                // dynamic imports or just importing it at top if missing. It is likely missing.
-                // Wait, I can't check imports in this block. I should assume it's missing and add it in a separate step or hope it's there.
-                // Looking at file view, 'projectsAPI' was NOT imported in TeacherAnalytics.jsx.
-                // I will add the import in a separate step.
-
-                // Let's rewrite this block assuming I'll fix imports next.
-                // I will use projectsAPI.getClassroomSoftSkills(selectedClassId)
-
+                if (masteryRes.status === 'fulfilled') setMasteryData(masteryRes.value.data);
+                if (trendsRes.status === 'fulfilled') setEngagementTrends(trendsRes.value.data);
+                if (engagementRes.status === 'fulfilled') setClassEngagement(engagementRes.value.data);
+                if (softSkillsRes.status === 'fulfilled') setSoftSkillsData(softSkillsRes.value.data);
             } catch (error) {
                 console.error("Overall analytics error", error);
             } finally {

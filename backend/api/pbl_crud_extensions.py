@@ -40,6 +40,8 @@ def get_project_milestones(project_id):
                 'submitted_by_team': milestone.get('submitted_by_team'),
                 'team_name': team_name,
                 'submission_notes': milestone.get('submission_notes', ''),
+                'report_url': milestone.get('report_url'),
+                'zip_url': milestone.get('zip_url'),
                 'submitted_at': milestone.get('submitted_at').isoformat() if milestone.get('submitted_at') else None
             })
         return jsonify(result), 200

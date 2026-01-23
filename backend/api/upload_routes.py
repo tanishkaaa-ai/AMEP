@@ -3,6 +3,9 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import uuid
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -26,20 +29,21 @@ def upload_file():
         if file and allowed_file(file.filename):
             # Generate unique filename
             original_filename = secure_filename(file.filename)
-            extension = original_filename.rsplit('.', 1)[1].lower()
             unique_filename = f"{uuid.uuid4()}_{original_filename}"
             
-            # Ensure upload directory exists
-            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            # Ensure upload directory exists - USE ABSOLUTE PATH
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # pointing to backend root
+            upload_dir = os.path.join(base_dir, 'static', 'uploads')
             os.makedirs(upload_dir, exist_ok=True)
             
             # Save file
             file_path = os.path.join(upload_dir, unique_filename)
             file.save(file_path)
             
-            # Generate URL
-            # Note: In production, this should differ. For local dev, static files are served from /static
-            file_url = f"/static/uploads/{unique_filename}"
+            logger.info(f"File uploaded successfully | path: {file_path}")
+            
+            # Generate URL - Use API route for serving
+            file_url = f"/api/uploads/{unique_filename}"
             
             return jsonify({
                 'message': 'File uploaded successfully',
@@ -50,4 +54,17 @@ def upload_file():
         return jsonify({'error': 'File type not allowed'}), 400
         
     except Exception as e:
+        logger.error(f"Upload error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+from flask import send_from_directory
+
+@upload_bp.route('/uploads/<filename>', methods=['GET'])
+def download_file(filename):
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        upload_dir = os.path.join(base_dir, 'static', 'uploads')
+        return send_from_directory(upload_dir, filename)
+    except Exception as e:
+        logger.error(f"Download error: {str(e)}")
+        return jsonify({'error': 'File not found'}), 404
