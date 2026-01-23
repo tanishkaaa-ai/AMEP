@@ -214,7 +214,8 @@ const CreateTeamModal = ({ isOpen, onClose, onCreated, projectId, students }) =>
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to create team');
+      const message = error.response?.data?.error || 'Failed to create team';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
