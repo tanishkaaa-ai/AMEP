@@ -49,7 +49,6 @@ function MainLayout({ isConnected }) {
             <li><Link to="/teacher">Dashboard</Link></li>
             <li><Link to="/polling">Live Polling</Link></li>
             <li><Link to="/projects">Projects</Link></li>
-            <li><Link to="/soft-skills">Soft Skills</Link></li>
             <li><Link to="/templates">Templates</Link></li>
           </ul>
 
@@ -78,7 +77,6 @@ function MainLayout({ isConnected }) {
 
         <Route path="/polling" element={<ProtectedRoute requiredRole="teacher"><LivePolling /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute requiredRole="teacher"><PBLWorkspace /></ProtectedRoute>} />
-        <Route path="/soft-skills" element={<ProtectedRoute requiredRole="teacher"><SoftSkillsRubric /></ProtectedRoute>} />
         <Route path="/templates" element={<ProtectedRoute requiredRole="teacher"><TemplateLibrary /></ProtectedRoute>} />
 
         {/* Student Portal Routes */}
@@ -87,6 +85,7 @@ function MainLayout({ isConnected }) {
         <Route path="/student/assignment/:assignmentId" element={<ProtectedRoute requiredRole="student"><StudentAssignment /></ProtectedRoute>} />
         <Route path="/student/practice" element={<ProtectedRoute requiredRole="student"><StudentPractice /></ProtectedRoute>} />
         <Route path="/student/projects" element={<ProtectedRoute requiredRole="student"><StudentProjects /></ProtectedRoute>} />
+        <Route path="/student/soft-skills" element={<ProtectedRoute requiredRole="student"><SoftSkillsRubric /></ProtectedRoute>} />
         <Route path="/student/milestones" element={<ProtectedRoute requiredRole="student"><StudentProjectMilestones /></ProtectedRoute>} />
         <Route path="/student/peer-review" element={<ProtectedRoute requiredRole="student"><StudentPeerReview /></ProtectedRoute>} />
         <Route path="/student/achievements" element={<ProtectedRoute requiredRole="student"><StudentAchievements /></ProtectedRoute>} />
