@@ -11,7 +11,6 @@ import {
     Menu,
     X,
     ChevronRight,
-    ChevronRight,
     ChevronLeft,
     BookOpen
 } from 'lucide-react';
