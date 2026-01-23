@@ -168,25 +168,31 @@ const StudentProjectMilestones = () => {
 
             toast.success('Milestone submitted for approval!');
 
-            // Cleanup
+            // Cleanup form
             setSubmittingId(null);
             setSubmissionNotes('');
             setReportFile(null);
             setZipFile(null);
 
-            // Refresh milestones
-            const progressRes = await projectsAPI.getTeamProgress(team.team_id || team._id);
-            const progress = progressRes.data;
-            const allMilestones = [
-                ...(progress.unlocked_milestones || []),
-                ...(progress.locked_milestones || [])
-            ].sort((a, b) => a.order - b.order);
-            // Re-trigger fetch or update local state logic would be here
-            window.location.reload(); // Simple refresh for now to sync everything
+            // Optimistically update local state to reflect submission
+            setMilestones(prevMilestones =>
+                prevMilestones.map(m => {
+                    if (m.milestone_id === submittingId) {
+                        return {
+                            ...m,
+                            pending_approval: true,
+                            is_locked: false // Ensure it stays visible/accessible
+                        };
+                    }
+                    return m;
+                })
+            );
 
         } catch (error) {
             console.error('[STUDENT_MILESTONES] Submit failed:', error);
-            toast.error('Failed to submit milestone');
+            // Enhanced error message
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to submit milestone';
+            toast.error(errorMessage);
         } finally {
             setIsUploading(false);
         }
