@@ -38,12 +38,13 @@ const StudentDashboard = () => {
                 setLoading(true);
 
                 // Parallel data fetching
-                const [engagementRes, masteryRes, assignmentsRes, classesRes, gamificationRes] = await Promise.allSettled([
+                const [engagementRes, masteryRes, assignmentsRes, classesRes, gamificationRes, projectsRes] = await Promise.allSettled([
                     engagementAPI.getStudentEngagementHistory(STUDENT_ID, 30),
                     masteryAPI.getStudentMastery(STUDENT_ID),
                     classroomAPI.getStudentAssignments(STUDENT_ID, 'assigned'),
                     classroomAPI.getStudentClasses(STUDENT_ID),
-                    engagementAPI.getGamificationProfile(STUDENT_ID)
+                    engagementAPI.getGamificationProfile(STUDENT_ID),
+                    projectsAPI.getStudentProjects(STUDENT_ID)
                 ]);
 
                 // Process Engagement/Gamification Data
