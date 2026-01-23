@@ -75,6 +75,7 @@ const TeacherLayout = ({ children }) => {
         { icon: CheckCircle, text: 'Approvals', to: '/teacher/project-review' },
         { icon: Award, text: 'Grading', to: '/teacher/grading' },
         { icon: BookOpen, text: 'Curriculum', to: '/teacher/curriculum' },
+        { icon: BookOpen, text: 'Practice Content', to: '/teacher/practice-manager' },
         { icon: Library, text: 'Templates', to: '/teacher/templates' },
     ];
 

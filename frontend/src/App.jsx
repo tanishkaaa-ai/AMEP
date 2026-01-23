@@ -12,6 +12,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherClasses from './pages/TeacherClasses';
 import TeacherAnalytics from './pages/TeacherAnalytics';
 import TeacherInterventions from './pages/TeacherInterventions';
+import TeacherPracticeManager from './pages/TeacherPracticeManager';
 import LivePolling from './pages/LivePolling';
 import PBLWorkspace from './pages/PBLWorkspace';
 import SoftSkillsRubric from './pages/SoftSkillsRubric';
@@ -74,6 +75,7 @@ function MainLayout({ isConnected }) {
         <Route path="/teacher/project-review" element={<ProtectedRoute requiredRole="teacher"><TeacherProjectReview /></ProtectedRoute>} />
         <Route path="/teacher/grading" element={<ProtectedRoute requiredRole="teacher"><TeacherProjectGrading /></ProtectedRoute>} />
         <Route path="/teacher/interventions" element={<ProtectedRoute requiredRole="teacher"><TeacherInterventions /></ProtectedRoute>} />
+        <Route path="/teacher/practice-manager" element={<ProtectedRoute requiredRole="teacher"><TeacherPracticeManager /></ProtectedRoute>} />
         <Route path="/teacher/templates" element={<ProtectedRoute requiredRole="teacher"><TemplateLibrary /></ProtectedRoute>} />
 
         <Route path="/polling" element={<ProtectedRoute requiredRole="teacher"><LivePolling /></ProtectedRoute>} />

@@ -899,6 +899,56 @@ def track_intervention():
     except Exception as e:
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
+@dashboard_bp.route('/interventions/<intervention_id>/effectiveness', methods=['GET'])
+def get_intervention_effectiveness(intervention_id):
+    try:
+        intervention = find_one(TEACHER_INTERVENTIONS, {'_id': intervention_id})
+        if not intervention:
+            return jsonify({'error': 'Intervention not found'}), 404
+
+        # Calculate if not present
+        if 'predicted_improvement' not in intervention:
+             intervention_effectiveness_map = {
+                'one_on_one_tutoring': 0.15,
+                'small_group_review': 0.10,
+                'homework_assignment': 0.05, 
+                'peer_teaching': 0.12, 
+                'adaptive_practice': 0.18,
+                'parent_conference': 0.08,
+                'counseling_referral': 0.20,
+                'modified_assignment': 0.10,
+                'extra_practice': 0.08,
+                'small_group_instruction': 0.10,
+                'one_on_one_meeting': 0.12
+             }
+             itype = intervention.get('intervention_type', 'one_on_one_tutoring')
+             predicted_improvement = intervention_effectiveness_map.get(itype, 0.10)
+             
+             # Store it
+             update_one(TEACHER_INTERVENTIONS, {'_id': intervention_id}, {
+                 '$set': {
+                     'predicted_improvement': predicted_improvement * 100, # as percentage points usually
+                     'predicted_effectiveness': predicted_improvement, # as decimal 0-1
+                     'confidence': 0.85,
+                     'recommendation': 'HIGH_IMPACT' if predicted_improvement >= 0.15 else 'MEDIUM_IMPACT'
+                 }
+             })
+             
+             intervention['predicted_effectiveness'] = predicted_improvement
+             intervention['confidence'] = 0.85
+             intervention['recommendation'] = 'HIGH_IMPACT' if predicted_improvement >= 0.15 else 'MEDIUM_IMPACT'
+
+        return jsonify({
+            'intervention_id': intervention_id,
+            'predicted_effectiveness': intervention.get('predicted_effectiveness', 0.10),
+            'confidence': intervention.get('confidence', 0.80),
+            'recommendation': intervention.get('recommendation', 'MEDIUM_IMPACT'),
+            'similar_interventions_count': 5, # Mock
+            'average_past_effectiveness': 0.72 # Mock
+        }), 200
+    except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
 @dashboard_bp.route('/interventions/<intervention_id>/measure', methods=['POST'])
 def measure_intervention_impact(intervention_id):
     try:

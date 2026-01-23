@@ -44,7 +44,20 @@ const CreateInterventionModal = ({ studentId, alertId, isOpen, onClose }) => {
             });
 
             console.info('[INTERVENTION] Created successfully:', response.data);
-            toast.success(`Intervention created! Follow-up: ${new Date(response.data.follow_up_date).toLocaleDateString()}`);
+
+            // Fetch effectiveness prediction
+            try {
+                const effectiveness = await dashboardAPI.getInterventionEffectiveness(response.data.intervention_id);
+                const pred = effectiveness.data || {};
+                const score = pred.predicted_effectiveness ? (pred.predicted_effectiveness * 100).toFixed(0) + '%' : 'N/A';
+                const icon = pred.recommendation === 'HIGH_IMPACT' ? '✅' : '⚠️';
+
+                toast.success(`Intervention created! Effectiveness: ${score} ${icon}`, { duration: 5000 });
+            } catch (effError) {
+                console.warn('Failed to get effectiveness', effError);
+                toast.success(`Intervention created! Follow-up: ${new Date(response.data.follow_up_date).toLocaleDateString()}`);
+            }
+
             onClose();
 
         } catch (error) {

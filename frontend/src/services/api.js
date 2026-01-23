@@ -178,6 +178,7 @@ export const dashboardAPI = {
   getMasteryHeatmap: (classId) => api.get(`/dashboard/mastery-heatmap/${classId}`),
   getEngagementTrends: (classId, days) => api.get(`/dashboard/engagement-trends/${classId}`, { params: { days } }),
   createIntervention: (data) => api.post('/dashboard/interventions', data),
+  getInterventionEffectiveness: (interventionId) => api.get(`/dashboard/interventions/${interventionId}/effectiveness`),
   updateInterventionOutcome: (interventionId, data) => api.put(`/dashboard/interventions/${interventionId}/outcome`, data),
   getStudentInterventions: (studentId) => api.get(`/dashboard/interventions/student/${studentId}`),
   trackIntervention: (data) => api.post('/dashboard/interventions/track', data),

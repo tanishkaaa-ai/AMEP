@@ -12,7 +12,8 @@ import {
     Filter,
     Search,
     Plus,
-    Loader
+    Loader,
+    TrendingUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -110,6 +111,8 @@ const TeacherInterventions = () => {
                     ))}
                 </div>
 
+                <RecommendationsSection teacherId={getUserId()} onRequestCreate={handleCreateIntervention} />
+
                 {loading ? (
                     <div className="flex justify-center py-20">
                         <Loader className="animate-spin text-teal-500" size={32} />
@@ -180,6 +183,66 @@ const TeacherInterventions = () => {
                 studentId={selectedStudentId}
             />
         </TeacherLayout>
+    );
+};
+
+const RecommendationsSection = ({ teacherId, onRequestCreate }) => {
+    const [recommendations, setRecommendations] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!teacherId) return;
+        const fetchRecommendations = async () => {
+            try {
+                const response = await dashboardAPI.getInterventionRecommendations(teacherId);
+                setRecommendations(response.data.recommendations || []);
+            } catch (error) {
+                console.error('Failed to load recommendations:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRecommendations();
+    }, [teacherId]);
+
+    if (loading || recommendations.length === 0) return null;
+
+    return (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 mb-6">
+            <h3 className="font-bold text-lg text-blue-800 mb-4 flex items-center gap-2">
+                🤖 AI Recommendations
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recommendations.map((rec, idx) => (
+                    <div key={idx} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-gray-800">{rec.student_name}</h4>
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase">
+                                {rec.priority || 'Normal'}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{rec.rationale}</p>
+
+                        <div className="flex items-center justify-between mt-auto">
+                            <div className="text-xs text-indigo-600 font-medium">
+                                Suggested: {rec.recommended_intervention?.replace(/_/g, ' ')}
+                            </div>
+                            <button
+                                onClick={() => onRequestCreate(rec.student_id)}
+                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
+                            >
+                                Use This
+                            </button>
+                        </div>
+                        {rec.predicted_effectiveness > 0 && (
+                            <div className="mt-2 text-xs text-green-600 font-bold flex items-center gap-1">
+                                <TrendingUp size={12} /> {(rec.predicted_effectiveness * 100).toFixed(0)}% predicted impact
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 };
 
