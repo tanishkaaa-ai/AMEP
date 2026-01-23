@@ -59,7 +59,7 @@ export const authAPI = {
 
 export const masteryAPI = {
   calculateMastery: (data) => api.post('/mastery/calculate', data),
-  getStudentMastery: (studentId) => api.get(`/mastery/student/${studentId}`),
+  getStudentMastery: (studentId, params) => api.get(`/mastery/student/${studentId}`, { params }),
   getRecommendations: (studentId) => api.get(`/mastery/recommendations/${studentId}`),
   getHistory: (studentId, conceptId) => api.get(`/mastery/history/${studentId}/${conceptId}`),
   submitResponse: (data) => api.post('/mastery/response/submit', data),
