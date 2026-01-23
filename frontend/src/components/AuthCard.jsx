@@ -140,17 +140,16 @@ const AuthCard = ({ isRegister = false }) => {
     const result = await login(loginData);
 
     if (result.success) {
-      // Navigate based on user role
+      // Use window.location for full page reload to ensure clean state
       if (result.user?.role === 'teacher') {
-        navigate('/teacher');
+        window.location.href = '/teacher';
       } else {
-        navigate('/student');
+        window.location.href = '/student';
       }
     } else {
       setApiError(result.error || 'Login failed. Please try again.');
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -187,17 +186,16 @@ const AuthCard = ({ isRegister = false }) => {
     const result = await registerUser(payload);
 
     if (result.success) {
-      // Navigate based on user role
+      // Use window.location for full page reload to ensure clean state
       if (result.user?.role === 'teacher') {
-        navigate('/teacher');
+        window.location.href = '/teacher';
       } else {
-        navigate('/student');
+        window.location.href = '/student';
       }
     } else {
       setApiError(result.error || 'Registration failed. Please try again.');
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

@@ -4,6 +4,24 @@ import { templatesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import TeacherLayout from '../components/TeacherLayout';
 
+const StatCard = ({ icon: Icon, label, value, trend, color, subtext }) => (
+  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:translate-y-[-2px] transition-transform duration-200">
+    <div className="flex items-start justify-between mb-4">
+      <div className={`p-3 rounded-lg ${color}`}>
+        <Icon size={24} />
+      </div>
+      {trend && (
+        <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+          <TrendingUp size={12} /> {trend}
+        </span>
+      )}
+    </div>
+    <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{value}</h3>
+    <p className="text-sm font-medium text-gray-500">{label}</p>
+    {subtext && <p className="text-xs text-gray-400 mt-2">{subtext}</p>}
+  </div>
+);
+
 const TemplateLibrary = () => {
   const { getUserId } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -217,53 +235,30 @@ const TemplateLibrary = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <FileText className="text-blue-600" size={24} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-                <p className="text-gray-500 text-sm">Total Templates</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-50 rounded-xl">
-                <Download className="text-green-600" size={24} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-800">{stats.downloads.toLocaleString()}</p>
-                <p className="text-gray-500 text-sm">Total Downloads</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-50 rounded-xl">
-                <Users className="text-amber-600" size={24} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-                <p className="text-gray-500 text-sm">Curated Resources</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-50 rounded-xl">
-                <TrendingUp className="text-purple-600" size={24} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-800">50%</p>
-                <p className="text-gray-500 text-sm">Time Saved</p>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            icon={FileText}
+            label="Total Templates"
+            value={stats.total}
+            color="bg-blue-50 text-blue-600"
+          />
+          <StatCard
+            icon={Download}
+            label="Total Downloads"
+            value={stats.downloads.toLocaleString()}
+            color="bg-green-50 text-green-600"
+          />
+          <StatCard
+            icon={Users}
+            label="Curated Resources"
+            value={stats.total}
+            color="bg-amber-50 text-amber-600"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Time Saved"
+            value="50%"
+            color="bg-purple-50 text-purple-600"
+          />
         </div>
 
         {loading ? (

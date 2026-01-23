@@ -329,6 +329,7 @@ const PBLWorkspace = () => {
       setProjects(fetchedProjects);
 
       if (fetchedProjects.length > 0) {
+        // Fetch full details of the first project
         const detailRes = await projectsAPI.getProjectDetails(fetchedProjects[0].project_id);
         const transformedProject = transformBackendData(detailRes.data);
         setProject(transformedProject);
@@ -343,6 +344,45 @@ const PBLWorkspace = () => {
     } finally {
       setLoading(false);
     }
+
+  };
+
+  const fetchTeams = async (projectId) => {
+    if (!projectId) return;
+    try {
+      // Verify endpoints - usually getProjectDetails includes teams, but let's be safe
+      const res = await projectsAPI.getProjectDetails(projectId);
+      if (res.data.teams) {
+        setTeams(res.data.teams);
+      }
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+    }
+  };
+
+  const handleCreateTeam = async (teamName, selectedMembers) => {
+    if (!project) return;
+    try {
+      await projectsAPI.createTeam(project.project_id, {
+        team_name: teamName,
+        members: selectedMembers
+      });
+      // Refresh
+      fetchProjects();
+    } catch (error) {
+      console.error("Error creating team:", error);
+      alert("Failed to create team");
+    }
+  };
+
+  const handleAddMember = async (teamId, studentId) => {
+    try {
+      await projectsAPI.addTeamMember(teamId, { student_id: studentId });
+      fetchProjects();
+    } catch (error) {
+      console.error("Failed to add member", error);
+      alert("Failed to add member");
+    }
   };
 
   const transformBackendData = (data) => {
@@ -354,8 +394,12 @@ const PBLWorkspace = () => {
         efficiency: 0,
         collaboration: 0
       },
+      artifacts: data.artifacts || [],
+      // Ensure milestones array exists
       milestones: data.milestones || [],
-      stages: Object.values(data.stage_info ? { [data.stage]: data.stage_info } : {})
+      team: data.teams && data.teams.length > 0 ? data.teams[0] : { name: "No Team Selected", members: [] },
+      // Ensure stages exist
+      stages: Object.values(data.stage_info ? { [data.stage]: data.stage_info } : {}) // simplified fallback
     };
   };
 

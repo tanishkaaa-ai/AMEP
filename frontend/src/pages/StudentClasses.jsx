@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { Book, User, Clock, MessageSquare, FileText, ChevronRight, Loader2, AlertCircle, Plus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +9,7 @@ import { toast } from 'react-hot-toast';
 
 const StudentClasses = () => {
     const { getUserId } = useAuth();
+    const navigate = useNavigate();
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(null);
     const [stream, setStream] = useState([]);
@@ -70,12 +72,11 @@ const StudentClasses = () => {
     }, [selectedClass]);
 
     const handleStartAssignment = (assignmentId) => {
-        // navigate(`/student/assignment/${assignmentId}`);
-        alert("Assignment navigation to be implemented");
+        navigate(`/student/assignment/${assignmentId}`);
     };
 
     const handleViewDetails = (postId) => {
-        alert(`Viewing details for ${postId}...`);
+        navigate(`/student/assignment/${postId}`);
     };
 
     const handleJoinClass = async (e) => {
