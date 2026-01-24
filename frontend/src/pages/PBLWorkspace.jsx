@@ -1,5 +1,6 @@
+```
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle, Workflow, Target, Check, Briefcase, Sparkles, Award, Gauge, Plus, ChevronRight, Layout, Loader, X, MoreHorizontal, Trash2, Edit2, Download } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Users, FileText, Upload, Calendar, AlertTriangle, Workflow, Target, Check, Briefcase, Sparkles, Award, Gauge, Plus, ChevronRight, Layout, Loader, X, MoreHorizontal, Trash2, Edit2, Download, CheckSquare } from 'lucide-react';
 import TeacherLayout from '../components/TeacherLayout';
 import { projectsAPI, classroomAPI, templatesAPI } from '../services/api'; // Added templatesAPI
 import { useAuth } from '../contexts/AuthContext';
@@ -43,7 +44,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, te
       description: template.description
     }));
     setShowTemplates(false);
-    toast.success(`Loaded template: ${template.title}`);
+    toast.success(`Loaded template: ${ template.title } `);
   };
 
   const handleSubmit = async (e) => {
@@ -295,10 +296,10 @@ const CreateTeamModal = ({ isOpen, onClose, onCreated, projectId, students }) =>
             <div className="space-y-2 border border-gray-100 rounded-xl p-2 max-h-60 overflow-y-auto">
               {students.map(student => (
                 <div key={student.student_id}
-                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedStudents.includes(student.student_id) ? 'bg-teal-50 border border-teal-200' : 'hover:bg-gray-50 border border-transparent'}`}
+                  className={`flex items - center p - 3 rounded - lg cursor - pointer transition - colors ${ selectedStudents.includes(student.student_id) ? 'bg-teal-50 border border-teal-200' : 'hover:bg-gray-50 border border-transparent' } `}
                   onClick={() => toggleStudent(student.student_id)}
                 >
-                  <div className={`w-5 h-5 rounded-md border flex items-center justify-center mr-3 ${selectedStudents.includes(student.student_id) ? 'bg-teal-600 border-teal-600' : 'border-gray-300'}`}>
+                  <div className={`w - 5 h - 5 rounded - md border flex items - center justify - center mr - 3 ${ selectedStudents.includes(student.student_id) ? 'bg-teal-600 border-teal-600' : 'border-gray-300' } `}>
                     {selectedStudents.includes(student.student_id) && <Check size={14} className="text-white" />}
                   </div>
                   <div>
@@ -339,6 +340,85 @@ const STAGE_LABELS = {
   'PRESENT_EVALUATE': 'Present & Evaluate'
 };
 
+
+
+const TaskListModal = ({ isOpen, onClose, teamName, tasks, loading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col"
+      >
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Team Tasks</h2>
+            <p className="text-sm text-gray-500">{teamName}</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto flex-1">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader className="animate-spin text-teal-600" /></div>
+          ) : tasks.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">
+              <CheckSquare size={48} className="mx-auto mb-3 opacity-30" />
+              <p>No tasks created by this team yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Groups by Status for better visualization */}
+              {['todo', 'in_progress', 'completed'].map(status => {
+                const statusTasks = tasks.filter(t => t.status === status);
+                if (statusTasks.length === 0) return null;
+
+                const statusLabels = {
+                  todo: { label: 'To Do', color: 'bg-gray-100 text-gray-600' },
+                  in_progress: { label: 'In Progress', color: 'bg-blue-50 text-blue-600' },
+                  completed: { label: 'Completed', color: 'bg-green-50 text-green-600' }
+                };
+
+                return (
+                  <div key={status}>
+                    <h3 className="text-xs font-bold uppercase text-gray-400 mb-2 mt-4 first:mt-0">{statusLabels[status].label}</h3>
+                    <div className="space-y-2">
+                      {statusTasks.map(task => (
+                        <div key={task.task_id} className="border border-gray-200 rounded-xl p-4 flex justify-between items-center hover:border-teal-200 transition-colors">
+                          <div>
+                            <h4 className={`font - bold text - gray - 800 ${ status === 'completed' ? 'line-through text-gray-400' : '' } `}>{task.title}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-gray-50 text-gray-500 font-medium">
+                                {task.assignee_name}
+                              </span>
+                              {task.due_date && (
+                                <span className="text-xs flex items-center gap-1 text-gray-400">
+                                  <Calendar size={10} /> {new Date(task.due_date).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={`px - 3 py - 1 rounded - full text - xs font - bold ${ statusLabels[status].color } `}>
+                            {statusLabels[status].label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // --- MAIN COMPONENT ---
 
@@ -519,12 +599,32 @@ const PBLWorkspace = () => {
     }
   };
 
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [currentTeamTasks, setCurrentTeamTasks] = useState([]);
+  const [currentTeamName, setCurrentTeamName] = useState('');
+  const [tasksLoading, setTasksLoading] = useState(false);
+
+  const handleViewTasks = async (team) => {
+      setCurrentTeamName(team.team_name);
+      setIsTaskModalOpen(true);
+      setTasksLoading(true);
+      try {
+          const res = await projectsAPI.getTeamTasks(team.team_id);
+          setCurrentTeamTasks(res.data.tasks || []);
+      } catch (err) {
+          console.error("Failed to load tasks", err);
+          toast.error("Failed to load team tasks");
+      } finally {
+          setTasksLoading(false);
+      }
+  };
+
   const handleStageUpdate = async (newStage) => {
     if (!project) return;
     try {
       setLoading(true);
       await projectsAPI.updateProjectStage(project.project_id, { new_stage: newStage });
-      toast.success(`Project moved to ${STAGE_LABELS[newStage]}`);
+      toast.success(`Project moved to ${ STAGE_LABELS[newStage] } `);
 
       // Refresh project data
       await handleProjectSelect(project.project_id);
@@ -614,10 +714,10 @@ const PBLWorkspace = () => {
                     className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all cursor-pointer group"
                   >
                     <div className="flex justify-between items-start mb-4">
-                      <div className={`p-2 rounded-lg ${p.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <div className={`p - 2 rounded - lg ${ p.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500' } `}>
                         <Workflow size={24} />
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      <div className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase ${ p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' } `}>
                         {p.status}
                       </div>
                     </div>
@@ -663,10 +763,11 @@ const PBLWorkspace = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-bold transition-all duration-300 whitespace-nowrap border-b-2 ${activeTab === tab.id
-                    ? 'border-teal-600 text-teal-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                  className={`flex items - center gap - 2 px - 6 py - 4 font - bold transition - all duration - 300 whitespace - nowrap border - b - 2 ${
+  activeTab === tab.id
+    ? 'border-teal-600 text-teal-600'
+    : 'border-transparent text-gray-500 hover:text-gray-700'
+} `}
                 >
                   <tab.icon size={18} />
                   {tab.label}
@@ -683,7 +784,7 @@ const PBLWorkspace = () => {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-800 mb-2">{project.title}</h2>
                     <div className="flex items-center gap-3 text-gray-500">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${project.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
+                      <span className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase ${ project.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100' } `}>
                         {project.status}
                       </span>
                       <span className="flex items-center gap-1"><Calendar size={14} /> Due: {new Date(project.deadline).toLocaleDateString()}</span>
@@ -741,14 +842,16 @@ const PBLWorkspace = () => {
 
                       return (
                         <div key={stage} className="relative z-10 flex flex-col items-center gap-2">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 font-bold transition-all
-                                        ${isCompleted ? 'bg-teal-500 border-teal-500 text-white' :
-                              isCurrent ? 'bg-white border-teal-500 text-teal-600 scale-110 shadow-lg' :
-                                'bg-white border-gray-200 text-gray-300'}`}
+                          <div className={`w - 10 h - 10 rounded - full flex items - center justify - center border - 4 font - bold transition - all
+                                        ${
+  isCompleted ? 'bg-teal-500 border-teal-500 text-white' :
+    isCurrent ? 'bg-white border-teal-500 text-teal-600 scale-110 shadow-lg' :
+      'bg-white border-gray-200 text-gray-300'
+} `}
                           >
                             {isCompleted ? <Check size={20} /> : index + 1}
                           </div>
-                          <span className={`text-xs font-bold whitespace-nowrap hidden md:block ${isCurrent ? 'text-teal-700' : 'text-gray-400'}`}>
+                          <span className={`text - xs font - bold whitespace - nowrap hidden md:block ${ isCurrent ? 'text-teal-700' : 'text-gray-400' } `}>
                             {STAGE_LABELS[stage].split(' ')[0]}
                           </span>
                         </div>
@@ -824,8 +927,15 @@ const PBLWorkspace = () => {
                       </div>
                       <div className="flex justify-between text-xs font-bold text-gray-400">
                         <span>Progress</span>
-                        <span>0%</span>
+                        <span>{team.progress || 0}%</span>
                       </div>
+                      
+                      <button 
+                        onClick={() => handleViewTasks(team)}
+                        className="w-full mt-4 py-2 border border-blue-100 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm"
+                      >
+                         <CheckSquare size={16} /> View Team Tasks
+                      </button>
                     </div>
                   ))}
                   {teams.length === 0 && (
@@ -888,7 +998,7 @@ const PBLWorkspace = () => {
                               {m.due_date ? new Date(m.due_date).toLocaleDateString() : 'No date'}
                             </td>
                             <td className="p-4">
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${m.is_completed ? 'bg-green-100 text-green-700' : m.pending_approval ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>
+                              <span className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase ${ m.is_completed ? 'bg-green-100 text-green-700' : m.pending_approval ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600' } `}>
                                 {m.is_completed ? 'Completed' : m.pending_approval ? 'For Review' : 'Pending'}
                               </span>
                             </td>
@@ -969,6 +1079,15 @@ const PBLWorkspace = () => {
             projectId={project?.project_id}
             students={students}
           />
+        )}
+        {isTaskModalOpen && (
+             <TaskListModal 
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                teamName={currentTeamName}
+                tasks={currentTeamTasks}
+                loading={tasksLoading}
+             />
         )}
       </AnimatePresence>
     </TeacherLayout>
