@@ -4,7 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import GamificationBadge from '../components/GamificationBadge';
 import ProgressBar from '../components/ProgressBar';
 import StudentSoftSkillsProfile from '../components/StudentSoftSkillsProfile';
-import { BookOpen, Clock, Calendar, ChevronRight, Compass, Flame, ClipboardList, GraduationCap, AlertCircle, Loader2 } from 'lucide-react';
+import { Clock, Calendar, Flame, ClipboardList, GraduationCap, AlertCircle, Loader2, TrendingUp, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { masteryAPI, classroomAPI, engagementAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -179,198 +179,236 @@ const StudentDashboard = () => {
         );
     }
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        return hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+    };
+
     return (
         <DashboardLayout>
-            <div className="space-y-8">
-
-                {/* Hero Section */}
+            <div className="space-y-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-r from-orange-400 to-yellow-400 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden"
+                    className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden"
                 >
-                    <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
-                            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}, {data.name}! 🚀
-                        </h1>
-                        <p className="text-orange-50 font-medium text-lg mb-6 max-w-xl">
-                            You're on a <span className="font-bold bg-white/20 px-2 py-1 rounded-lg">{data.streak}-day streak</span>! Keep it up to unlock the "Time Traveler" badge.
-                        </p>
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
 
-                        <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl max-w-sm border border-white/20">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="font-bold text-sm uppercase tracking-wider opacity-90">Level {data.level}</span>
-                                <span className="text-xs font-mono">{data.xp} / {data.nextLevelXp} XP</span>
+                    <div className="relative z-10">
+                        <div className="flex items-start justify-between mb-6">
+                            <div>
+                                <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">
+                                    {getGreeting()}, {data.name}!
+                                </h1>
+                                <p className="text-purple-100 text-lg flex items-center gap-2">
+                                    <Zap className="w-5 h-5" fill="currentColor" />
+                                    <span className="font-bold">{data.streak} day streak</span>
+                                    <span className="opacity-80">— Keep crushing it!</span>
+                                </p>
                             </div>
-                            <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden">
+                            <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30">
+                                <div className="text-xs text-purple-100 font-semibold">Level</div>
+                                <div className="text-3xl font-black">{data.level}</div>
+                            </div>
+                        </div>
+
+                        <div className="bg-black/20 backdrop-blur-sm p-5 rounded-2xl border border-white/20">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="font-bold text-sm">Experience Progress</span>
+                                <span className="text-sm font-mono bg-white/20 px-3 py-1 rounded-lg">{data.xp} / {data.nextLevelXp} XP</span>
+                            </div>
+                            <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden shadow-inner">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${(data.xp / data.nextLevelXp) * 100}%` }}
-                                    transition={{ duration: 1.5, ease: "circOut" }}
-                                    className="bg-white h-full rounded-full"
+                                    transition={{ duration: 1.2, ease: "easeOut" }}
+                                    className="bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-300 h-full rounded-full shadow-lg"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Background Decorations */}
-                    <Compass className="absolute top-4 right-8 text-yellow-200 opacity-50 rotate-12" size={64} />
-                    <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+                    <div className="absolute -top-6 -right-6 w-40 h-40 bg-yellow-300/20 rounded-full blur-3xl"></div>
+                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-pink-300/20 rounded-full blur-2xl"></div>
                 </motion.div>
 
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Active Project Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-orange-100 relative group"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-2xl border border-orange-200/50 hover:shadow-lg transition-all group"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
-                                <Flame size={24} />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
+                                <Flame className="w-6 h-6 text-orange-500" />
                             </div>
-                            <h3 className="font-bold text-gray-700">Active Project</h3>
+                            <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-lg">Active</span>
                         </div>
+                        <h3 className="text-sm font-semibold text-gray-600 mb-1">Current Project</h3>
                         {data.activeProject ? (
                             <>
-                                <h4 className="text-xl font-extrabold text-gray-800 mb-1 truncate">{data.activeProject.title}</h4>
-                                <p className="text-xs text-green-600 font-bold uppercase tracking-wider mb-4 flex items-center gap-1">
-                                    <Clock size={12} /> {data.activeProject.stage} Phase
-                                </p>
-                                <Link to="/student/projects" className="w-full mt-2 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors text-sm flex justify-center items-center shadow-md shadow-orange-200">
-                                    Continue Mission
+                                <p className="text-xl font-black text-gray-800 mb-2 truncate">{data.activeProject.title}</p>
+                                <div className="flex items-center gap-1 text-xs text-orange-600 font-semibold mb-3">
+                                    <Clock className="w-3 h-3" />
+                                    {data.activeProject.stage} Phase
+                                </div>
+                                <Link to="/student/projects" className="block w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:shadow-md transition-all text-center text-sm">
+                                    Continue
                                 </Link>
                             </>
                         ) : (
-                            <div className="text-center py-4">
-                                <p className="text-gray-400 italic text-sm">No active mission.</p>
-                                <Link to="/student/classes" className="text-orange-500 text-xs font-bold hover:underline mt-2 block">Browse Classes</Link>
+                            <div className="py-8 text-center">
+                                <p className="text-gray-400 text-sm mb-2">No active project</p>
+                                <Link to="/student/classes" className="text-orange-600 font-bold text-xs hover:underline">Browse Classes</Link>
                             </div>
                         )}
                     </motion.div>
 
-                    {/* Mastery Card */}
                     <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-orange-100"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-200/50 hover:shadow-lg transition-all group"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-green-100 p-3 rounded-xl text-green-600">
-                                <GraduationCap size={24} />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
+                                <GraduationCap className="w-6 h-6 text-emerald-600" />
                             </div>
-                            <h3 className="font-bold text-gray-700">Mastery Score</h3>
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
                         </div>
-                        <div className="mb-2">
-                            <span className="text-4xl font-extrabold text-gray-800">{data.masteryScore}%</span>
+                        <h3 className="text-sm font-semibold text-gray-600 mb-1">Mastery Score</h3>
+                        <p className="text-4xl font-black text-gray-800 mb-3">{data.masteryScore}%</p>
+                        <div className="bg-emerald-100 rounded-full h-2 overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${data.masteryScore}%` }}
+                                transition={{ duration: 1 }}
+                                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full"
+                            />
                         </div>
-                        <ProgressBar value={data.masteryScore} color="bg-green-500" height="h-2" showLabel={false} />
-                        <p className="text-xs text-gray-500 mt-3">Top 15% of your class</p>
+                        <p className="text-xs text-emerald-700 font-semibold mt-2">Top 15% in class</p>
                     </motion.div>
 
-                    {/* Assignments Card */}
                     <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-orange-100"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-200/50 hover:shadow-lg transition-all group"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
-                                <ClipboardList size={24} />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
+                                <ClipboardList className="w-6 h-6 text-blue-600" />
                             </div>
-                            <h3 className="font-bold text-gray-700">Pending Tasks</h3>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-extrabold text-gray-800">{data.pendingAssignments}</span>
-                            <span className="text-gray-500 font-medium">due this week</span>
+                        <h3 className="text-sm font-semibold text-gray-600 mb-1">Pending Tasks</h3>
+                        <div className="flex items-baseline gap-2 mb-3">
+                            <span className="text-4xl font-black text-gray-800">{data.pendingAssignments}</span>
+                            <span className="text-sm text-gray-500 font-medium">this week</span>
                         </div>
-                        <Link to="/student/classes" className="w-full mt-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm flex justify-center items-center">
-                            View Assignments
+                        <Link to="/student/classes" className="block w-full py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-center text-sm">
+                            View All
                         </Link>
                     </motion.div>
 
-                    {/* Next Class Card - Asymmetric Emphasis */}
                     <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-purple-50 p-6 rounded-2xl shadow-sm border-2 border-purple-100 relative overflow-hidden"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200/50 hover:shadow-lg transition-all group"
                     >
-                        <div className="absolute top-0 right-0 w-16 h-16 bg-purple-100 rounded-bl-full -mr-8 -mt-8 opacity-50" />
-                        <div className="flex items-center gap-3 mb-4 relative z-10">
-                            <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
-                                <Calendar size={24} />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
+                                <Calendar className="w-6 h-6 text-purple-600" />
                             </div>
-                            <h3 className="font-bold text-gray-700">Next Class</h3>
                         </div>
-                        <div>
-                            <p className="text-lg font-bold text-gray-800">{data.nextClass.subject}</p>
-                            <p className="text-purple-600 font-medium">{data.nextClass.time}</p>
-                            <p className="text-sm text-gray-500 mt-1">{data.nextClass.topic}</p>
-                        </div>
-                        <Link to="/student/classes" className="w-full mt-4 py-2 border border-purple-200 text-purple-600 font-bold rounded-lg hover:bg-purple-50 transition-colors text-sm flex justify-center items-center">
-                            Join Class
+                        <h3 className="text-sm font-semibold text-gray-600 mb-1">Next Class</h3>
+                        <p className="text-lg font-black text-gray-800 truncate">{data.nextClass.subject}</p>
+                        <p className="text-purple-600 font-bold text-sm mb-1">{data.nextClass.time}</p>
+                        <p className="text-xs text-gray-500 mb-3 truncate">{data.nextClass.topic}</p>
+                        <Link to="/student/classes" className="block w-full py-2 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-all text-center text-sm">
+                            Join Now
                         </Link>
                     </motion.div>
                 </div>
 
-                {/* Lower Section: Recent Activity & Badges */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* Soft Skills Profile */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1">
                         <StudentSoftSkillsProfile studentId={STUDENT_ID} />
                     </div>
 
-                    {/* Recent Activity Feed */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-                        <div className="p-6 border-b border-orange-50 flex justify-between items-center">
-                            <h3 className="font-bold text-xl text-gray-800">Recent Adventures</h3>
-                            <Link to="/student/practice" className="text-orange-500 font-bold text-sm hover:underline">View All</Link>
+                    <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-gray-50">
+                            <h3 className="font-black text-lg text-gray-800">Recent Activity</h3>
+                            <Link to="/student/practice" className="text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors">View All →</Link>
                         </div>
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-gray-100">
                             {data.recentActivity.length > 0 ? (
                                 data.recentActivity.map((activity, idx) => (
-                                    <div key={idx} className="p-4 hover:bg-orange-50/30 transition-colors flex items-center gap-4">
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="p-4 hover:bg-purple-50/50 transition-all flex items-center gap-4 cursor-pointer group"
+                                    >
                                         <GamificationBadge icon={activity.icon} color={activity.color} label="" />
                                         <div className="flex-1">
-                                            <p className="font-bold text-gray-800">{activity.title}</p>
-                                            <p className="text-sm text-gray-500">{activity.date}</p>
+                                            <p className="font-bold text-gray-800 group-hover:text-purple-700 transition-colors">{activity.title}</p>
+                                            <p className="text-xs text-gray-500">{activity.date}</p>
                                         </div>
-                                        <ChevronRight className="text-gray-300" size={20} />
-                                    </div>
+                                        <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-purple-500 transition-colors"></div>
+                                    </motion.div>
                                 ))
                             ) : (
-                                <div className="p-8 text-center text-gray-400 italic">No recent activity yet. Go explore!</div>
+                                <div className="p-12 text-center text-gray-400">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                        <Zap className="w-8 h-8 text-gray-300" />
+                                    </div>
+                                    <p className="font-medium">No recent activity</p>
+                                    <p className="text-sm mt-1">Start exploring to see updates here!</p>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Badges / Motivation */}
-                    <div className="bg-gradient-to-b from-white to-orange-50 rounded-2xl shadow-sm border border-orange-100 p-6">
-                        <h3 className="font-bold text-xl text-gray-800 mb-4">Your Badges</h3>
+                    <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl shadow-sm border border-amber-200/50 p-6">
+                        <h3 className="font-black text-lg text-gray-800 mb-4 flex items-center gap-2">
+                            <span className="text-xl">🏆</span> Your Badges
+                        </h3>
                         {data.badges && data.badges.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-3">
-                                {data.badges.map((badge, idx) => (
-                                    <GamificationBadge
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                {data.badges.slice(0, 4).map((badge, idx) => (
+                                    <motion.div
                                         key={idx}
-                                        icon={badge.icon}
-                                        color={badge.color || 'blue'}
-                                        label={badge.name}
-                                        subtext={badge.description}
-                                    />
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                    >
+                                        <GamificationBadge
+                                            icon={badge.icon}
+                                            color={badge.color || 'amber'}
+                                            label={badge.name}
+                                            subtext={badge.description}
+                                        />
+                                    </motion.div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-3 opacity-50 grayscale">
-                                <GamificationBadge icon="star" color="gray" label="Locked" subtext="Keep working!" />
-                                <GamificationBadge icon="shield" color="gray" label="Locked" subtext="Help others" />
+                            <div className="grid grid-cols-2 gap-3 mb-4 opacity-60">
+                                <GamificationBadge icon="star" color="gray" label="Locked" subtext="Keep going!" />
+                                <GamificationBadge icon="shield" color="gray" label="Locked" subtext="Almost there!" />
                             </div>
                         )}
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center p-3 text-gray-400 font-medium text-xs text-center mt-3">
-                            Next: <br /> Speedster
+                        <div className="bg-white/60 backdrop-blur-sm border-2 border-dashed border-amber-300 rounded-xl p-4 mb-4 text-center">
+                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Next Unlock</p>
+                            <p className="font-black text-gray-800">Speedster Badge</p>
+                            <p className="text-xs text-gray-600 mt-1">Complete 5 tasks quickly</p>
                         </div>
-                        <Link to="/student/achievements" className="w-full mt-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 shadow-sm transition-all flex justify-center items-center">
-                            View Trophy Case
+                        <Link to="/student/achievements" className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-center">
+                            Trophy Case →
                         </Link>
                     </div>
-
                 </div>
             </div>
         </DashboardLayout>
