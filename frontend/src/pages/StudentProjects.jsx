@@ -38,10 +38,13 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask }) =>
                         </div>
                         <h4 className="font-bold text-gray-800 text-sm mb-3">{task.title}</h4>
                         <div className="flex items-center justify-between border-t border-gray-50 pt-3">
-                            <div className="flex -space-x-2">
+                            <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-orange-600">
                                     {(task.assignee_name && task.assignee_name[0]) || '?'}
                                 </div>
+                                <span className="text-xs font-bold text-gray-600">
+                                    {task.assignee_name || 'Unassigned'}
+                                </span>
                             </div>
                             {/* <span className="text-xs text-gray-400">#PBL-{task.task_id ? task.task_id.slice(-4) : '...'}</span> */}
                         </div>
