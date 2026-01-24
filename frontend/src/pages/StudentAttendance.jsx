@@ -16,6 +16,9 @@ const StudentAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [hasRegisteredIP, setHasRegisteredIP] = useState(false);
+  const [registeredIPAddress, setRegisteredIPAddress] = useState(null);
+
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -41,18 +44,26 @@ const StudentAttendance = () => {
 
   // Start/stop camera based on eligibility
   useEffect(() => {
-    if (canMark && !cameraActive) {
+    // Only start camera if we can mark AND we haven't already captured a photo
+    if (canMark && !cameraActive && !capturedPhoto) {
       startCamera();
-    } else if (!canMark && cameraActive) {
+    } else if ((!canMark || capturedPhoto) && cameraActive) {
       stopCamera();
     }
-  }, [canMark]);
+  }, [canMark, capturedPhoto]);
 
   const checkIPRegistration = async () => {
-    // Check if user has a classroom to monitor
-    // This would come from their enrolled classes
-    // For now, we'll let them enter it manually
-    setHasRegisteredIP(true);
+    try {
+      const response = await attendanceAPI.getStudentStatus();
+      setHasRegisteredIP(response.data.is_registered);
+      if (response.data.registered_ip) {
+        setRegisteredIPAddress(response.data.registered_ip);
+      }
+    } catch (error) {
+      console.error('Error checking IP registration:', error);
+      // Fallback to false if error, forcing registration attempt which will fail/succeed with proper error
+      setHasRegisteredIP(false);
+    }
   };
 
   const registerIP = async () => {
@@ -60,7 +71,8 @@ const StudentAttendance = () => {
       setLoading(true);
       await attendanceAPI.bindIP();
       toast.success('Device registered successfully!');
-      setHasRegisteredIP(true);
+      // Re-check status to confirm
+      await checkIPRegistration();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to register device');
     } finally {
@@ -134,22 +146,36 @@ const StudentAttendance = () => {
   };
 
   const capturePhoto = () => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 480;
+    if (!videoRef.current || videoRef.current.readyState !== 4) { // HAVE_ENOUGH_DATA
+      console.warn("Video not ready for capture");
+      return;
+    }
 
-      const context = canvas.getContext('2d');
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 480;
 
-      const photoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-      resolve(photoBase64);
-    });
+    const context = canvas.getContext('2d');
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    const photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    setCapturedPhoto(photoBase64);
+    // Camera will stop automatically via useEffect when capturedPhoto is set
+  };
+
+  const retakePhoto = () => {
+    setCapturedPhoto(null);
+    // Camera will start automatically via useEffect when capturedPhoto is null
   };
 
   const markAttendance = async () => {
     if (!canMark) {
       toast.error('Cannot mark attendance. Check requirements.');
+      return;
+    }
+
+    if (!capturedPhoto) {
+      toast.error('Please capture a photo first.');
       return;
     }
 
@@ -160,11 +186,6 @@ const StudentAttendance = () => {
       toast.loading('Getting your location...');
       const position = await getCurrentLocation();
 
-      // Capture photo
-      toast.dismiss();
-      toast.loading('Capturing photo...');
-      const photo = await capturePhoto();
-
       // Submit attendance
       toast.dismiss();
       toast.loading('Submitting attendance...');
@@ -173,15 +194,15 @@ const StudentAttendance = () => {
         session_id: session._id,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-        photo: photo
+        photo: capturedPhoto
       });
 
       toast.dismiss();
       toast.success('Attendance marked successfully! ✅');
 
-      // Stop camera and disable button
-      stopCamera();
+      // Clear state
       setCanMark(false);
+      setCapturedPhoto(null);
 
     } catch (error) {
       toast.dismiss();
@@ -206,12 +227,22 @@ const StudentAttendance = () => {
         <h1 className="text-3xl font-bold mb-6">Mark Attendance</h1>
 
         {/* Step 1: Register IP */}
-        {!hasRegisteredIP && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Step 1: Register Your Device</h2>
-            <p className="text-gray-600 mb-4">
-              First, you need to register the device you'll use for attendance.
-            </p>
+        <div className={`bg-white rounded-lg shadow p-6 mb-6 transition-opacity ${hasRegisteredIP ? 'opacity-75' : 'opacity-100'}`}>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                Step 1: Register Your Device
+                {hasRegisteredIP && <span className="text-green-500 text-sm">✓ Completed</span>}
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {hasRegisteredIP
+                  ? `Device registered successfully. IP: ${registeredIPAddress}`
+                  : "First, you need to register the device you'll use for attendance."}
+              </p>
+            </div>
+          </div>
+
+          {!hasRegisteredIP && (
             <button
               onClick={registerIP}
               disabled={loading}
@@ -219,12 +250,12 @@ const StudentAttendance = () => {
             >
               {loading ? 'Registering...' : 'Register This Device'}
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Step 2: Enter Classroom ID */}
         {hasRegisteredIP && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in-up">
             <h2 className="text-xl font-semibold mb-4">Step 2: Enter Classroom</h2>
             <div className="flex gap-4">
               <input
@@ -294,27 +325,64 @@ const StudentAttendance = () => {
         )}
 
         {/* Camera and Capture */}
-        {canMark && cameraActive && (
+        {canMark && (
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Capture Your Photo</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {capturedPhoto ? 'Review Photo' : 'Capture Your Photo'}
+            </h2>
 
-            <div className="mb-4">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full max-w-2xl mx-auto rounded-lg border-4 border-blue-500"
-              />
+            <div className="mb-4 relative">
+              {capturedPhoto ? (
+                <img
+                  src={capturedPhoto}
+                  alt="Captured"
+                  className="w-full max-w-2xl mx-auto rounded-lg border-4 border-green-500"
+                  style={{ minHeight: '300px', objectFit: 'cover' }}
+                />
+              ) : (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full max-w-2xl mx-auto rounded-lg border-4 border-blue-500 bg-black"
+                  style={{ minHeight: '300px' }}
+                />
+              )}
+
+              {!capturedPhoto && (
+                <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs animate-pulse">
+                  REC
+                </div>
+              )}
             </div>
 
-            <div className="text-center">
-              <button
-                onClick={markAttendance}
-                disabled={loading}
-                className="px-8 py-4 bg-green-600 text-white text-xl rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Submitting...' : '📸 Capture & Submit Attendance'}
-              </button>
+            <div className="flex justify-center gap-4">
+              {!capturedPhoto ? (
+                <button
+                  onClick={capturePhoto}
+                  className="px-8 py-4 bg-blue-600 text-white text-xl rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <span className="text-2xl">📸</span> Capture Photo
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={retakePhoto}
+                    disabled={loading}
+                    className="px-6 py-4 bg-gray-500 text-white text-lg rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                  >
+                    Retake
+                  </button>
+                  <button
+                    onClick={markAttendance}
+                    disabled={loading}
+                    className="px-8 py-4 bg-green-600 text-white text-xl rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    Submit Attendance <span className="text-2xl">✅</span>
+                  </button>
+                </>
+              )}
             </div>
 
             <p className="text-center text-sm text-gray-500 mt-4">

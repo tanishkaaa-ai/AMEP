@@ -268,23 +268,33 @@ const TeacherAttendance = () => {
 
         {/* Active Session */}
         {activeSession && (
-          <div className="bg-green-50 border-2 border-green-500 rounded-lg p-6 mb-6">
+          <div className={`border-2 rounded-lg p-6 mb-6 ${activeSession.is_open
+              ? 'bg-green-50 border-green-500'
+              : 'bg-gray-50 border-gray-200'
+            }`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-green-800">
-                  🟢 Attendance Session Active
+                <h2 className={`text-2xl font-bold ${activeSession.is_open ? 'text-green-800' : 'text-gray-800'
+                  }`}>
+                  {activeSession.is_open ? '🟢 Attendance Session Active' : '📋 Session Details'}
                 </h2>
-                <p className="text-green-700">
-                  Closes at: {formatTime(activeSession.closes_at)}
+                <p className={activeSession.is_open ? 'text-green-700' : 'text-gray-600'}>
+                  {activeSession.is_open
+                    ? `Closes at: ${formatTime(activeSession.closes_at)}`
+                    : `Session Date: ${formatDate(activeSession.opened_at)}`
+                  }
                 </p>
               </div>
-              <button
-                onClick={closeAttendanceSession}
-                disabled={loading}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                Close Session
-              </button>
+
+              {activeSession.is_open && (
+                <button
+                  onClick={closeAttendanceSession}
+                  disabled={loading}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  Close Session
+                </button>
+              )}
             </div>
 
             <div className="bg-white rounded-lg p-4">
