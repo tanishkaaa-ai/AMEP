@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, NavLink } from 'react-router-dom';
+import { useParams, NavLink, useLocation } from 'react-router-dom';
 import TeacherLayout from '../components/TeacherLayout';
 import { classroomAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -60,6 +60,16 @@ const TeacherClassDetails = () => {
             fetchData();
         }
     }, [classroomId]);
+
+    const location = useLocation();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const tabParam = params.get('tab');
+        if (tabParam && ['stream', 'students', 'grades'].includes(tabParam)) {
+            setActiveTab(tabParam);
+        }
+    }, [location.search]);
 
     // Fetch grades when tab is active
     useEffect(() => {
@@ -433,8 +443,8 @@ const TeacherClassDetails = () => {
                                                         return (
                                                             <td key={assignment.post_id} className="px-6 py-4 text-center">
                                                                 <span className={`inline-block px-2.5 py-1 rounded-md font-bold text-xs ${grade !== undefined
-                                                                        ? 'bg-green-100 text-green-700'
-                                                                        : 'bg-gray-100 text-gray-400'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : 'bg-gray-100 text-gray-400'
                                                                     }`}>
                                                                     {grade !== undefined ? grade : '--'}
                                                                 </span>
