@@ -106,6 +106,7 @@ export const pollsAPI = {
   getPollResults: (pollId, params) => api.get(`/polling/polls/${pollId}/results`, { params }),
   closePoll: (pollId) => api.post(`/polling/polls/${pollId}/close`),
   getClassPolls: (classId, params) => api.get(`/polling/classrooms/${classId}/polls`, { params }),
+  getStudentActivePolls: (studentId) => api.get(`/polling/student/${studentId}/active`),
 };
 
 export const projectsAPI = {

@@ -381,7 +381,9 @@ const TeacherDashboard = () => {
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {alert.behaviors?.map((b, i) => (
-                        <span key={i} className="text-[10px] text-red-500 bg-white border border-red-100 px-1 rounded">{b}</span>
+                        <span key={i} className="text-[10px] text-red-500 bg-white border border-red-100 px-1 rounded">
+                          {typeof b === 'string' ? b : b.description || b.type}
+                        </span>
                       ))}
                     </div>
                     <p className="text-xs text-red-600 font-medium mt-1">Rec: {alert.recommendations?.[0] || 'Monitor'}</p>

@@ -126,6 +126,25 @@ def create_poll():
         if data.get('poll_type', 'understanding') not in valid_types:
             return jsonify({'error': f'poll_type must be one of: {valid_types}'}), 400
 
+        # Check for existing active poll in this classroom
+        if data.get('classroom_id'):
+            existing_active = find_one(LIVE_POLLS, {
+                'classroom_id': data['classroom_id'],
+                'is_active': True
+            })
+            if existing_active:
+                logger.info(f"Auto-closing existing active poll {existing_active['_id']} for classroom {data['classroom_id']}")
+                update_one(
+                    LIVE_POLLS, 
+                    {'_id': existing_active['_id']},
+                    {
+                        '$set': {
+                            'is_active': False,
+                            'closed_at': datetime.utcnow()
+                        }
+                    }
+                )
+
         # Auto-generate options for common types
         poll_type = data.get('poll_type', 'understanding')
         options = data.get('options', [])
@@ -562,6 +581,59 @@ def get_classroom_polls(classroom_id):
 
     except Exception as e:
         logger.info(f"Get classroom polls exception | error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+
+
+@live_polling_bp.route('/student/<student_id>/active', methods=['GET'])
+def get_student_active_polls(student_id):
+    """Get all active polls for classrooms the student is in"""
+    try:
+        logger.info(f"Get student active polls | student_id: {student_id}")
+
+        # 1. Get student's classrooms
+        memberships = find_many(
+            CLASSROOM_MEMBERSHIPS,
+            {'student_id': student_id, 'is_active': True}
+        )
+        classroom_ids = [m['classroom_id'] for m in memberships]
+
+        if not classroom_ids:
+             return jsonify([]), 200
+
+        # 2. Get active polls for these classrooms
+        query = {
+            'classroom_id': {'$in': classroom_ids},
+            'is_active': True
+        }
+        
+        polls = find_many(LIVE_POLLS, query, sort=[('created_at', -1)])
+        
+        formatted_polls = []
+        for poll in polls:
+             # Check if responded
+             response = find_one(POLL_RESPONSES, {
+                'poll_id': poll['_id'],
+                'student_id': student_id
+             })
+             
+             poll_data = {
+                 'poll_id': poll['_id'],
+                 'question': poll.get('question'),
+                 'poll_type': poll.get('poll_type'),
+                 'options': poll.get('options', []),
+                 'is_active': True,
+                 'classroom_id': poll.get('classroom_id'),
+                 'has_responded': bool(response),
+                 'user_response': response.get('response') if response else None,
+                 'created_at': poll.get('created_at').isoformat() if poll.get('created_at') else None
+             }
+             formatted_polls.append(poll_data)
+             
+        return jsonify(formatted_polls), 200
+        
+    except Exception as e:
+        logger.info(f"Student active polls exception | error: {str(e)}")
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 

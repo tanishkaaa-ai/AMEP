@@ -270,69 +270,67 @@ const LivePollingSystem = () => {
           </select>
         </div>
 
-        {/* Create Poll Section (only if no active poll) */}
-        {!activePoll && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <MessageSquare className="text-teal-600" />
-              Create New Poll
-            </h2>
+        {/* Create Poll Section - Always visible to allow replacing active poll */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <MessageSquare className="text-teal-600" />
+            {activePoll ? 'Start New Poll (Ends Current)' : 'Create New Poll'}
+          </h2>
 
-            <div className="space-y-6 max-w-2xl">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Question</label>
-                <input
-                  type="text"
-                  value={newPoll.question}
-                  onChange={(e) => setNewPoll({ ...newPoll, question: e.target.value })}
-                  placeholder="What would you like to ask your students?"
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Poll Type</label>
-                <select
-                  value={newPoll.type}
-                  onChange={(e) => setNewPoll({ ...newPoll, type: e.target.value })}
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 text-gray-900"
-                >
-                  <option value="understanding">Understanding Check</option>
-                  <option value="multiple_choice">Multiple Choice</option>
-                  <option value="fact_based">Fact-Based (has correct answer)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Options</label>
-                <div className="space-y-3">
-                  {newPoll.options.map((option, idx) => (
-                    <input
-                      key={idx}
-                      type="text"
-                      value={option}
-                      onChange={(e) => {
-                        const updated = [...newPoll.options];
-                        updated[idx] = e.target.value;
-                        setNewPoll({ ...newPoll, options: updated });
-                      }}
-                      placeholder={`Option ${idx + 1}`}
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 text-gray-900"
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={createPoll}
-                disabled={loading || !newPoll.question || !newPoll.classroom_id}
-                className="w-full bg-teal-600 text-white py-4 rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-teal-200 disabled:opacity-50"
-              >
-                {loading ? 'Launching...' : <><Send size={20} /> Launch Poll</>}
-              </button>
+          <div className="space-y-6 max-w-2xl">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Question</label>
+              <input
+                type="text"
+                value={newPoll.question}
+                onChange={(e) => setNewPoll({ ...newPoll, question: e.target.value })}
+                placeholder="What would you like to ask your students?"
+                className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+              />
             </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Poll Type</label>
+              <select
+                value={newPoll.type}
+                onChange={(e) => setNewPoll({ ...newPoll, type: e.target.value })}
+                className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 text-gray-900"
+              >
+                <option value="understanding">Understanding Check</option>
+                <option value="multiple_choice">Multiple Choice</option>
+                <option value="fact_based">Fact-Based (has correct answer)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Options</label>
+              <div className="space-y-3">
+                {newPoll.options.map((option, idx) => (
+                  <input
+                    key={idx}
+                    type="text"
+                    value={option}
+                    onChange={(e) => {
+                      const updated = [...newPoll.options];
+                      updated[idx] = e.target.value;
+                      setNewPoll({ ...newPoll, options: updated });
+                    }}
+                    placeholder={`Option ${idx + 1}`}
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 text-gray-900"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={createPoll}
+              disabled={loading || !newPoll.question || !newPoll.classroom_id}
+              className="w-full bg-teal-600 text-white py-4 rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-teal-200 disabled:opacity-50"
+            >
+              {loading ? 'Launching...' : <><Send size={20} /> {activePoll ? 'End Current & Launch New' : 'Launch Poll'}</>}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Active Poll Display */}
         {activePoll && activePoll.is_active && (

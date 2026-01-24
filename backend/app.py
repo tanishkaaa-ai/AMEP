@@ -304,5 +304,6 @@ if __name__ == "__main__":
         host=app.config.get("HOST", "0.0.0.0"),
         port=app.config.get("PORT", 5000),
         debug=app.config.get("DEBUG", False),
-        use_reloader=False
+        use_reloader=False,
+        allow_unsafe_werkzeug=True
     )
