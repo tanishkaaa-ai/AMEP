@@ -1,0 +1,276 @@
+import React, { useState, useEffect } from 'react';
+import AdminLayout from '../components/AdminLayout';
+import { dashboardAPI } from '../services/api';
+import {
+    Users,
+    School,
+    Activity,
+    BarChart2,
+    CheckCircle,
+    AlertTriangle,
+    Clock,
+    TrendingUp,
+    Shield
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue' }) => {
+    const colors = {
+        blue: 'bg-blue-100 text-blue-600',
+        green: 'bg-green-100 text-green-600',
+        orange: 'bg-orange-100 text-orange-600',
+        purple: 'bg-purple-100 text-purple-600',
+        slate: 'bg-slate-100 text-slate-600'
+    };
+
+    return (
+        <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
+        >
+            <div className="flex items-start justify-between">
+                <div>
+                    <h3 className="text-gray-500 text-sm font-medium">{label}</h3>
+                    <div className="mt-2 text-3xl font-bold text-gray-800">{value}</div>
+                    {subtext && <p className="mt-1 text-xs text-gray-400">{subtext}</p>}
+                </div>
+                <div className={`p-3 rounded-xl ${colors[color]}`}>
+                    <Icon size={24} />
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+const AdminDashboard = () => {
+    const [metrics, setMetrics] = useState(null);
+    const [teachers, setTeachers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [metricsRes, teachersRes] = await Promise.all([
+                    dashboardAPI.getInstitutionalMetrics(),
+                    dashboardAPI.getAdminTeacherStats()
+                ]);
+                setMetrics(metricsRes.data);
+                setTeachers(teachersRes.data.teachers || []);
+            } catch (error) {
+                console.error("Failed to load admin data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Loading Dashboard...</div>;
+
+    // Helper to calculate intervention success rate from metrics or default
+    const interventionStats = metrics?.intervention_analytics || {
+        total: 0,
+        active: 0,
+        resolved: 0,
+        success_rate: 0,
+        recent: []
+    };
+
+    return (
+        <AdminLayout>
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-gray-900">Institutional Overview</h1>
+                    <p className="text-gray-500">Monitor system health, engagement, and teacher effectiveness.</p>
+                </div>
+
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <StatCard
+                        icon={Users}
+                        label="Total Students"
+                        value={metrics?.total_students || 0}
+                        subtext="Active enrollments"
+                        color="blue"
+                    />
+                    <StatCard
+                        icon={School}
+                        label="Active Classrooms"
+                        value={metrics?.active_classrooms || 0}
+                        subtext={`${metrics?.total_teachers || 0} Teachers`}
+                        color="purple"
+                    />
+                    <StatCard
+                        icon={Activity}
+                        label="Avg Engagement"
+                        value={`${metrics?.average_engagement || 0}%`}
+                        subtext="Last 7 days"
+                        color="green"
+                    />
+                    <StatCard
+                        icon={Shield}
+                        label="Intervention Rate"
+                        value={`${interventionStats.success_rate || 0}%`}
+                        subtext={`${interventionStats.resolved} Resolved cases`}
+                        color="orange"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    {/* Intervention Analytics */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <AlertTriangle size={20} className="text-orange-500" />
+                                Intervention Effectiveness
+                            </h2>
+                            <div className="flex gap-2">
+                                <span className="text-xs font-bold text-gray-400 px-2 py-1 bg-gray-50 rounded-lg">Real-time</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="text-sm font-medium text-blue-600 mb-1">Active Cases</div>
+                                <div className="text-2xl font-bold text-blue-800">{interventionStats.active}</div>
+                            </div>
+                            <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                                <div className="text-sm font-medium text-green-600 mb-1">Resolved</div>
+                                <div className="text-2xl font-bold text-green-800">{interventionStats.resolved}</div>
+                            </div>
+                            <div className="p-4 bg-purple-50 rounded-xl border border-purple-100">
+                                <div className="text-sm font-medium text-purple-600 mb-1">Success Rate</div>
+                                <div className="text-2xl font-bold text-purple-800">{interventionStats.success_rate}%</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 mb-3">Recent High-Priority Interventions</h3>
+                            <div className="space-y-3">
+                                {interventionStats.recent && interventionStats.recent.length > 0 ? (
+                                    interventionStats.recent.map((item, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold 
+                                                    ${item.type?.includes('academic') ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                                                    {item.type?.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-gray-800">{item.student_name}</div>
+                                                    <div className="text-xs text-gray-500">By {item.teacher_name} • {item.type}</div>
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${item.status === 'resolved' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                {item.status}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-gray-400 text-sm">No recent interventions recorded</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Alert Summary */}
+                    <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <TrendingUp size={20} className="text-blue-500" />
+                            System Health
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-xl bg-red-50 border border-red-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-red-700">Critical Alerts</span>
+                                    <span className="bg-red-200 text-red-800 px-2 py-0.5 rounded text-xs font-bold">Action Req</span>
+                                </div>
+                                <div className="text-3xl font-bold text-red-800">{metrics?.active_alerts?.CRITICAL || 0}</div>
+                                <div className="text-xs text-red-600 mt-1">Students at immediate drop-out risk</div>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-orange-50 border border-orange-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-orange-700">At Risk</span>
+                                    <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-xs font-bold">Monitor</span>
+                                </div>
+                                <div className="text-3xl font-bold text-orange-800">{metrics?.active_alerts?.AT_RISK || 0}</div>
+                                <div className="text-xs text-orange-600 mt-1">Showing disengagement patterns</div>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-slate-700">Avg Mastery</span>
+                                </div>
+                                <div className="text-3xl font-bold text-slate-800">{metrics?.average_mastery || 0}%</div>
+                                <div className="text-xs text-slate-600 mt-1">Institutional academic performance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Teacher Effectiveness Table */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 className="text-lg font-bold text-gray-800">Teacher Performance Monitor</h2>
+                        <button className="text-blue-600 text-sm font-bold hover:underline">Export Report</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
+                                <tr>
+                                    <th className="px-6 py-4">Teacher Name</th>
+                                    <th className="px-6 py-4">Last Active</th>
+                                    <th className="px-6 py-4 text-center">Classrooms</th>
+                                    <th className="px-6 py-4 text-center">Students</th>
+                                    <th className="px-6 py-4 text-center">Interventions Logged</th>
+                                    <th className="px-6 py-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-sm">
+                                {teachers.map((teacher) => (
+                                    <tr key={teacher.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-800">
+                                            {teacher.name}
+                                            <div className="text-xs text-gray-400 font-normal">{teacher.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={14} className="text-gray-300" />
+                                                {new Date(teacher.last_login).toLocaleDateString()}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-center font-bold text-gray-700">{teacher.class_count}</td>
+                                        <td className="px-6 py-4 text-center text-gray-600">{teacher.student_count}</td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${teacher.intervention_count > 0 ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                {teacher.intervention_count}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded-full flex items-center gap-1 w-fit">
+                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {teachers.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" className="px-6 py-8 text-center text-gray-400">No teachers found in functionality.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </AdminLayout>
+    );
+};
+
+export default AdminDashboard;

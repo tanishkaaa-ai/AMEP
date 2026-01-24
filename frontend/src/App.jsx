@@ -35,6 +35,7 @@ import StudentProfile from './pages/StudentProfile';
 import StudentAttendance from './pages/StudentAttendance';
 import TeacherAttendance from './pages/TeacherAttendance';
 import StudentQuestionBanks from './pages/StudentQuestionBanks';
+import AdminDashboard from './pages/AdminDashboard'; // Import AdminDashboard
 
 function MainLayout({ isConnected }) {
   const location = useLocation();
@@ -43,8 +44,8 @@ function MainLayout({ isConnected }) {
   return (
     <>
       <Toaster position="top-right" />
-      {/* Navigation - Hidden on StartPage, Student Portal, AND Teacher Portal (which has its own layout) */}
-      {!isStartPage && !location.pathname.startsWith('/student') && !location.pathname.startsWith('/teacher') && !location.pathname.startsWith('/classroom') && !location.pathname.startsWith('/soft-skills') && (
+      {/* Navigation - Hidden on StartPage, Student Portal, Teacher Portal AND Admin Portal */}
+      {!isStartPage && !location.pathname.startsWith('/student') && !location.pathname.startsWith('/teacher') && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/classroom') && !location.pathname.startsWith('/soft-skills') && (
         <nav className="navbar">
           <h2>AMEP Platform</h2>
 
@@ -98,6 +99,11 @@ function MainLayout({ isConnected }) {
         <Route path="/student/polls" element={<ProtectedRoute requiredRole="student"><StudentPolls /></ProtectedRoute>} />
         <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
         <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
+
+        {/* Admin Portal Routes */}
+        <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/*" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
       </Routes>
     </>
   );

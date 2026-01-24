@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { GraduationCap, School, User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { GraduationCap, School, User, Lock, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
 
 const StartPage = () => {
     const navigate = useNavigate();
@@ -38,7 +38,9 @@ const StartPage = () => {
             if (result.success) {
                 // Redirect based on backend user role
                 const userRole = result.user?.role || role;
-                if (userRole === 'teacher') {
+                if (userRole === 'admin') {
+                    navigate('/admin');
+                } else if (userRole === 'teacher') {
                     navigate('/teacher');
                 } else {
                     navigate('/student');
@@ -94,19 +96,30 @@ const StartPage = () => {
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-sm">
                     <span className="font-bold text-gray-800 text-lg tracking-wider">AMEP PLATFORM</span>
                 </div>
+
+                {/* Admin Access Link - Styled to match UI */}
+                <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
+                    <button
+                        onClick={() => setRole('admin')}
+                        className="group flex items-center gap-2 px-6 py-2.5 bg-white/80 hover:bg-white backdrop-blur-md border border-white/60 shadow-lg hover:shadow-xl rounded-full text-slate-600 hover:text-slate-800 font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5"
+                    >
+                        <Shield size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+                        <span>Admin Portal</span>
+                    </button>
+                </div>
             </div>
         );
     }
 
     // Login/Register Form
     return (
-        <div className={`min-h-screen flex items-center justify-center relative overflow-hidden ${role === 'student' ? 'bg-orange-50' : 'bg-teal-50'}`}>
+        <div className={`min-h-screen flex items-center justify-center relative overflow-hidden ${role === 'student' ? 'bg-orange-50' : role === 'admin' ? 'bg-slate-50' : 'bg-teal-50'}`}>
 
             {/* Background Shapes */}
             <div className={`absolute top-0 left-0 w-full h-full overflow-hidden -z-10`}>
-                <div className={`absolute -top-20 -left-20 w-96 h-96 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-orange-300' : 'bg-teal-300'}`} />
-                <div className={`absolute top-40 -right-20 w-72 h-72 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-yellow-300' : 'bg-emerald-300'}`} />
-                <div className={`absolute -bottom-20 left-1/3 w-96 h-96 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-red-200' : 'bg-blue-200'}`} />
+                <div className={`absolute -top-20 -left-20 w-96 h-96 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-orange-300' : role === 'admin' ? 'bg-slate-300' : 'bg-teal-300'}`} />
+                <div className={`absolute top-40 -right-20 w-72 h-72 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-yellow-300' : role === 'admin' ? 'bg-gray-300' : 'bg-emerald-300'}`} />
+                <div className={`absolute -bottom-20 left-1/3 w-96 h-96 rounded-full filter blur-3xl opacity-30 ${role === 'student' ? 'bg-red-200' : role === 'admin' ? 'bg-slate-400' : 'bg-blue-200'}`} />
             </div>
 
             <div className="bg-white/80 backdrop-blur-lg border border-white/50 shadow-2xl rounded-2xl p-8 w-full max-w-md relative animate-fade-in-up">
@@ -120,10 +133,10 @@ const StartPage = () => {
                 </button>
 
                 <div className="text-center mb-8 mt-4">
-                    <div className={`mx-auto p-4 rounded-full w-20 h-20 flex items-center justify-center mb-4 shadow-inner ${role === 'student' ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-600'}`}>
-                        {role === 'student' ? <GraduationCap size={40} /> : <School size={40} />}
+                    <div className={`mx-auto p-4 rounded-full w-20 h-20 flex items-center justify-center mb-4 shadow-inner ${role === 'student' ? 'bg-orange-100 text-orange-600' : role === 'admin' ? 'bg-slate-100 text-slate-700' : 'bg-teal-100 text-teal-600'}`}>
+                        {role === 'student' ? <GraduationCap size={40} /> : role === 'admin' ? <Lock size={40} /> : <School size={40} />}
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-800">{isRegistering ? 'Create Account' : `Welcome Back, ${role === 'student' ? 'Student' : 'Teacher'}!`}</h2>
+                    <h2 className="text-3xl font-bold text-gray-800">{isRegistering ? 'Create Account' : `Welcome Back, ${role === 'student' ? 'Student' : role === 'admin' ? 'Administrator' : 'Teacher'}!`}</h2>
                     <p className="text-gray-500 mt-2">{isRegistering ? 'Sign up to get started' : 'Please sign in to continue'}</p>
                 </div>
 

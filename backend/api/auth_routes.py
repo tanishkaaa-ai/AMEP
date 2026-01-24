@@ -66,9 +66,13 @@ def register():
             return jsonify({'error': f'Missing required fields: {missing}'}), 400
 
         # Validate role
-        if data['role'] not in ['student', 'teacher', 'admin']:
+        if data['role'] not in ['student', 'teacher']:
+            if data['role'] == 'admin':
+                logger.info(f"Registration failed | email: {data.get('email')} | error: Admin registration disabled")
+                return jsonify({'error': 'Admin registration is not allowed. Please contact system administrator.'}), 403
+            
             logger.info(f"Registration failed | email: {data.get('email')} | error: Invalid role {data['role']}")
-            return jsonify({'error': 'Invalid role. Must be student, teacher, or admin'}), 400
+            return jsonify({'error': 'Invalid role. Must be student or teacher'}), 400
 
         # Check if user already exists
         existing_email = find_one(USERS, {'email': data['email']})

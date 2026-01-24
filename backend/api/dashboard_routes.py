@@ -26,6 +26,8 @@ import logging
 # Import MongoDB helper functions
 from models.database import (
     db,
+    USERS,
+    TEACHERS,
     CLASSROOMS,
     STUDENTS,
     STUDENT_CONCEPT_MASTERY,
@@ -792,14 +794,55 @@ def get_institutional_metrics():
         all_mastery = find_many(STUDENT_CONCEPT_MASTERY, {})
         avg_mastery = sum(m.get('mastery_score', 0) for m in all_mastery) / len(all_mastery) if all_mastery else 0
 
-        # Count recent interventions
-        recent_interventions = find_many(
-            TEACHER_INTERVENTIONS,
-            {
-                'timestamp': {'$gte': datetime.utcnow() - timedelta(days=30)}
-            }
-        )
+        # Count teachers
+        total_teachers = db[USERS].count_documents({'role': 'teacher'})
 
+        # Intervention Analytics
+        total_interventions = db[TEACHER_INTERVENTIONS].count_documents({})
+        active_interventions = db[TEACHER_INTERVENTIONS].count_documents({'status': 'active'})
+        resolved_interventions_count = db[TEACHER_INTERVENTIONS].count_documents({'status': 'resolved'})
+        
+        # Calculate success rate for resolved interventions
+        successful_outcomes = db[TEACHER_INTERVENTIONS].count_documents({
+            'status': 'resolved', 
+            'outcome': {'$regex': 'success|improvement|effective', '$options': 'i'}
+        })
+        success_rate = (successful_outcomes / resolved_interventions_count * 100) if resolved_interventions_count > 0 else 0
+
+        # Recent interventions
+        recent_intervention_list = []
+        recent_docs = find_many(TEACHER_INTERVENTIONS, {}, sort=[('timestamp', -1)], limit=5)
+        for doc in recent_docs:
+            t = find_one(USERS, {'_id': doc.get('teacher_id')})
+            s = find_one(STUDENTS, {'_id': doc.get('student_id')})
+            recent_intervention_list.append({
+                'id': doc['_id'],
+                'type': doc.get('intervention_type'),
+                'teacher_name': t.get('username', 'Unknown') if t else 'Unknown',
+                'student_name': s.get('name', 'Unknown') if s else 'Unknown',
+                'date': doc.get('timestamp').isoformat() if hasattr(doc.get('timestamp'), 'isoformat') else str(doc.get('timestamp')),
+                'status': doc.get('status')
+            })
+
+        response = {
+            'total_students': len(all_students),
+            'total_teachers': total_teachers,
+            'active_classrooms': len(all_classrooms),
+            'average_engagement': round(avg_engagement, 1),
+            'average_mastery': round(avg_mastery, 1),
+            'active_alerts': alert_breakdown,
+            'intervention_analytics': {
+                'total': total_interventions,
+                'active': active_interventions,
+                'resolved': resolved_interventions_count,
+                'success_rate': round(success_rate, 1),
+                'recent': recent_intervention_list
+            },
+            'timestamp': datetime.utcnow().isoformat()
+        }
+
+        logger.info("Institutional metrics calculated")
+        return jsonify(response), 200
         intervention_outcomes = {
             'improved': len([i for i in recent_interventions if i.get('outcome') == 'improved']),
             'no_change': len([i for i in recent_interventions if i.get('outcome') == 'no_change']),
@@ -1423,6 +1466,52 @@ def get_teacher_overview(teacher_id):
         }), 200
 
     except Exception as e:
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+@dashboard_bp.route('/admin/teachers', methods=['GET'])
+def get_all_teachers_stats():
+    """
+    Get statistics for all teachers (Admin only)
+    GET /api/dashboard/admin/teachers
+    """
+    try:
+        teachers = find_many(TEACHERS, {})
+        teacher_stats = []
+
+        for teacher in teachers:
+            uid = teacher.get('user_id')
+            if not uid:
+                uid = teacher.get('_id') # Fallback
+            
+            user = find_one(USERS, {'_id': uid})
+            classrooms = find_many(CLASSROOMS, {'teacher_id': uid, 'is_active': True})
+            
+            # Count students across all classrooms
+            total_students_set = set()
+            for c in classrooms:
+                memberships = find_many(CLASSROOM_MEMBERSHIPS, {'classroom_id': c['_id'], 'role': 'student'})
+                for m in memberships:
+                     if m.get('student_id'):
+                        total_students_set.add(m['student_id'])
+            
+            # Use bracket notation for collection to ensure valid access
+            interventions_count = db[TEACHER_INTERVENTIONS].count_documents({'teacher_id': uid})
+            
+            teacher_stats.append({
+                'id': uid,
+                'name': f"{teacher.get('first_name','')} {teacher.get('last_name','')}",
+                'email': user.get('email', 'Unknown') if user else 'Unknown',
+                'last_login': user.get('last_login').isoformat() if user and user.get('last_login') else 'Never',
+                'class_count': len(classrooms),
+                'student_count': len(total_students_set),
+                'intervention_count': interventions_count
+            })
+
+        return jsonify({'teachers': teacher_stats}), 200
+    except Exception as e:
+        logger.error(f"Error fetching teacher stats: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 logger.info("Dashboard routes initialized successfully")
