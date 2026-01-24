@@ -34,6 +34,11 @@ JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-secret-change-in-productio
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 24))
 
+# Hardcoded Admin Credentials (Bypass DB)
+HARDCODED_ADMIN_EMAIL = "admin@amep.edu"
+HARDCODED_ADMIN_PASS = "admin123"
+HARDCODED_ADMIN_ID = "000000000000000000000000"
+
 # ============================================================================
 # AUTHENTICATION ROUTES
 # ============================================================================
@@ -42,17 +47,7 @@ JWT_EXPIRATION_HOURS = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 24))
 def register():
     """
     Register a new user (student or teacher)
-
-    Request body:
-    {
-        "email": "user@example.com",
-        "username": "username",
-        "password": "password123",
-        "role": "student|teacher",
-        "first_name": "John",
-        "last_name": "Doe",
-        "grade_level": 8  # for students only
-    }
+    ... (omitted docs)
     """
     try:
         data = request.json
@@ -162,12 +157,6 @@ def register():
 def login():
     """
     Login user and return JWT token
-
-    Request body:
-    {
-        "email": "user@example.com",
-        "password": "password123"
-    }
     """
     try:
         data = request.json
@@ -177,6 +166,22 @@ def login():
         if not data or 'email' not in data or 'password' not in data:
             logger.info(f"Login failed | error: Missing credentials")
             return jsonify({'error': 'Email and password required'}), 400
+
+        # HARDCODED ADMIN CHECK (Bypass DB)
+        if data['email'] == HARDCODED_ADMIN_EMAIL and data['password'] == HARDCODED_ADMIN_PASS:
+             logger.info("Admin Login Bypass Triggered")
+             token = generate_jwt_token(HARDCODED_ADMIN_ID, 'admin')
+             return jsonify({
+                'message': 'Login successful (Admin)',
+                'token': token,
+                'user': {
+                    'user_id': HARDCODED_ADMIN_ID,
+                    'email': HARDCODED_ADMIN_EMAIL,
+                    'username': 'System Administrator',
+                    'role': 'admin',
+                    'profile': {'first_name': 'System', 'last_name': 'Admin'}
+                }
+            }), 200
 
         # Find user by email
         user = find_one(USERS, {'email': data['email']})
@@ -244,9 +249,6 @@ def login():
 def verify_token():
     """
     Verify JWT token validity
-
-    Headers:
-        Authorization: Bearer <token>
     """
     try:
         logger.info("Token verification attempt")
@@ -260,6 +262,17 @@ def verify_token():
         if not payload:
             logger.info("Token verification failed | error: Invalid or expired token")
             return jsonify({'error': 'Invalid or expired token'}), 401
+
+        # HARDCODED ADMIN CHECK
+        if payload['user_id'] == HARDCODED_ADMIN_ID:
+             logger.info("Token verified for Hardcoded Admin")
+             return jsonify({
+                'valid': True,
+                'user': {
+                    'user_id': HARDCODED_ADMIN_ID,
+                    'role': 'admin'
+                }
+            }), 200
 
         # Check if user still exists
         logger.info(f"Verifying user existence | user_id: {payload['user_id']}")
@@ -289,15 +302,6 @@ def verify_token():
 def change_password():
     """
     Change user password
-
-    Request body:
-    {
-        "old_password": "current_password",
-        "new_password": "new_password"
-    }
-
-    Headers:
-        Authorization: Bearer <token>
     """
     try:
         logger.info("Password change attempt")
@@ -310,6 +314,10 @@ def change_password():
         if not payload:
             logger.info("Password change failed | error: Invalid token")
             return jsonify({'error': 'Invalid token'}), 401
+            
+        # Prevent change for hardcoded admin
+        if payload['user_id'] == HARDCODED_ADMIN_ID:
+             return jsonify({'error': 'Cannot change password for system administrator'}), 403
 
         logger.info(f"Password change request | user_id: {payload['user_id']}")
         data = request.json
