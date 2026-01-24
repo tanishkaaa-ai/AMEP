@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TeacherLayout from '../components/TeacherLayout';
 import { classroomAPI } from '../services/api';
-import { ArrowLeft, Loader, Check, X, FileText, User, Calendar, Award } from 'lucide-react';
+import { ArrowLeft, Loader, Check, X, FileText, User, Calendar, Award, PenTool, ExternalLink, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import FileAnnotator from '../components/FileAnnotator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const RubricGrading = ({ onGradeChange, currentGrade, maxPoints }) => {
     const rubric = [
@@ -83,8 +85,6 @@ const RubricGrading = ({ onGradeChange, currentGrade, maxPoints }) => {
     );
 };
 
-import CanvasAnnotation from '../components/CanvasAnnotation';
-
 const TeacherAssignment = () => {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
@@ -96,9 +96,8 @@ const TeacherAssignment = () => {
     const [feedback, setFeedback] = useState('');
     const [gradingLoading, setGradingLoading] = useState(false);
 
-    // Annotation State
-    const [isAnnotating, setIsAnnotating] = useState(false);
-    const [annotationImage, setAnnotationImage] = useState(null);
+    // Preview/Annotation State
+    const [previewFile, setPreviewFile] = useState(null); // { url, type, name }
     const [correctedFileUrl, setCorrectedFileUrl] = useState(null);
 
     useEffect(() => {
@@ -127,21 +126,29 @@ const TeacherAssignment = () => {
         setSelectedSubmission(submission);
         setGrade(submission.grade || '');
         setFeedback(submission.teacher_feedback || '');
-        setCorrectedFileUrl(submission.corrected_file || null); // Load existing correction if any
+        setCorrectedFileUrl(submission.corrected_file || null);
     };
 
-    const handleAnnotateClick = (url) => {
-        setAnnotationImage(url);
-        setIsAnnotating(true);
+    // New File Click Handler
+    const handleFileClick = (e, fileUrl, fileName, fileType) => {
+        e.preventDefault();
+        let type = 'unknown';
+        if (fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) type = 'image';
+        else if (fileUrl.match(/\.pdf$/i)) type = 'pdf';
+
+        setPreviewFile({
+            url: fileUrl,
+            name: fileName || 'Attachment',
+            type: type
+        });
     };
 
-    const handleSaveAnnotation = async (file) => {
+    const handleSaveAnnotationImage = async (file) => {
         try {
             const formData = new FormData();
             formData.append('file', file);
 
             // Upload the annotated file
-            // Assuming we can use the same upload endpoint as students
             const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
             const res = await fetch(`${apiBaseUrl}/api/upload`, {
                 method: 'POST',
@@ -152,8 +159,8 @@ const TeacherAssignment = () => {
             if (!res.ok) throw new Error(data.error || 'Upload failed');
 
             setCorrectedFileUrl(data.file_url);
-            setIsAnnotating(false);
-            toast.success("Annotated file saved! Don't forget to submit the grade.");
+            setPreviewFile(null); // Close preview after save
+            toast.success("Annotated corrections saved!");
 
         } catch (error) {
             console.error("Annotation upload failed", error);
@@ -169,13 +176,12 @@ const TeacherAssignment = () => {
             await classroomAPI.gradeSubmission(selectedSubmission.submission_id, {
                 grade: parseFloat(grade),
                 teacher_feedback: feedback,
-                corrected_file: correctedFileUrl, // Include the annotated file
+                corrected_file: correctedFileUrl,
                 return_to_student: true
             });
 
             toast.success("Grade & Corrections saved!");
 
-            // Update local state
             setSubmissions(prev => prev.map(sub =>
                 sub.submission_id === selectedSubmission.submission_id
                     ? {
@@ -208,39 +214,12 @@ const TeacherAssignment = () => {
         );
     }
 
-    // Annotation Mode Intercept
-    if (isAnnotating && annotationImage) {
-        return (
-            <div className="fixed inset-0 z-50 bg-black">
-                <CanvasAnnotation
-                    imageUrl={annotationImage}
-                    onSave={handleSaveAnnotation}
-                    onCancel={() => setIsAnnotating(false)}
-                />
-            </div>
-        );
-    }
-
-    if (!assignment) {
-        return (
-            <TeacherLayout>
-                <div className="text-center py-20">
-                    <h2 className="text-xl font-bold text-gray-800">Assignment not found</h2>
-                    <button onClick={() => navigate(-1)} className="text-teal-600 hover:underline mt-4">
-                        Go Back
-                    </button>
-                </div>
-            </TeacherLayout>
-        );
-    }
+    if (!assignment) return null;
 
     return (
         <TeacherLayout>
             <div className="space-y-6">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-gray-500 hover:text-teal-600 transition-colors font-medium"
-                >
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-teal-600 font-medium">
                     <ArrowLeft size={18} /> Back to Class
                 </button>
 
@@ -325,9 +304,11 @@ const TeacherAssignment = () => {
 
                                     <div>
                                         <h3 className="text-sm font-bold text-gray-500 mb-2">Submission</h3>
-                                        <div className="bg-gray-50 p-4 rounded-xl text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto mb-4 border border-gray-200">
-                                            {selectedSubmission.submission_text || 'No text content'}
-                                        </div>
+                                        {selectedSubmission.submission_text && (
+                                            <div className="bg-gray-50 p-4 rounded-xl text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto mb-4 border border-gray-200">
+                                                {selectedSubmission.submission_text}
+                                            </div>
+                                        )}
 
                                         {selectedSubmission.attachments && selectedSubmission.attachments.length > 0 && (
                                             <div className="mb-4">
@@ -335,34 +316,19 @@ const TeacherAssignment = () => {
                                                 <div className="space-y-2">
                                                     {selectedSubmission.attachments.map((att, idx) => (
                                                         <div key={idx} className="flex flex-col gap-2">
-                                                            <a
-                                                                href={att.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all group"
+                                                            <button
+                                                                onClick={(e) => handleFileClick(e, att.url, att.name, att.type)}
+                                                                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all group w-full text-left"
                                                             >
                                                                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
                                                                     <FileText size={20} />
                                                                 </div>
                                                                 <div className="flex-1 overflow-hidden">
                                                                     <p className="font-bold text-gray-800 text-sm truncate">{att.name || 'Attached File'}</p>
-                                                                    <p className="text-xs text-gray-500">Click to view</p>
+                                                                    <p className="text-xs text-gray-500">Click to view/annotate</p>
                                                                 </div>
-                                                            </a>
-
-                                                            {/* ANNOTATE BUTTON IF IMAGE */}
-                                                            {att.url && (att.url.match(/\.(jpeg|jpg|png)$/i) || att.type?.includes('image')) && (
-                                                                <div className="mt-2 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                                                                    <p className="text-xs font-bold text-indigo-800 mb-2 uppercase tracking-wide">Digital Correction Available</p>
-                                                                    <button
-                                                                        onClick={() => handleAnnotateClick(att.url)}
-                                                                        className="w-full py-3 bg-indigo-600 text-white font-bold text-sm rounded-lg hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
-                                                                    >
-                                                                        <PenTool size={18} />
-                                                                        Launch Correction Tool
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                                <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500" />
+                                                            </button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -374,7 +340,7 @@ const TeacherAssignment = () => {
                                     {correctedFileUrl && (
                                         <div className="bg-green-50 p-3 rounded-xl border border-green-100">
                                             <div className="flex justify-between items-center mb-2">
-                                                <h4 className="text-xs font-bold text-green-700 uppercase">Values Correction Pending Save</h4>
+                                                <h4 className="text-xs font-bold text-green-700 uppercase">Correction Saved</h4>
                                                 <button onClick={() => setCorrectedFileUrl(null)} className="text-xs text-red-500 hover:underline">Remove</button>
                                             </div>
                                             <a href={correctedFileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 font-bold hover:underline flex items-center gap-2">
@@ -436,6 +402,50 @@ const TeacherAssignment = () => {
                     </div>
                 </div>
             </div>
+
+            {/* File Preview Modal */}
+            <AnimatePresence>
+                {previewFile && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white w-full max-w-6xl h-[85vh] rounded-2xl overflow-hidden flex flex-col relative"
+                        >
+                            <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center">
+                                <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                                    {previewFile.type === 'image' ? 'Annotate Correction' : 'File Preview'}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <a href={previewFile.url} download className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Download">
+                                        <Download size={20} />
+                                    </a>
+                                    <button onClick={() => setPreviewFile(null)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 bg-gray-100 overflow-hidden relative">
+                                {previewFile.type === 'image' ? (
+                                    <FileAnnotator
+                                        fileUrl={previewFile.url}
+                                        onSave={(anns) => console.log('Saved JSON', anns)} // We don't save JSON for this flow yet
+                                        onSaveImage={handleSaveAnnotationImage} // We save flattened image 
+                                    />
+                                ) : (
+                                    <iframe
+                                        src={previewFile.url}
+                                        className="w-full h-full bg-white"
+                                        title="Preview"
+                                    />
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </TeacherLayout>
     );
 };

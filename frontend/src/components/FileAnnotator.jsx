@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Pen, Eraser, Type, Undo, Trash2, Save, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const FileAnnotator = ({ fileUrl, initialAnnotations = [], onSave, readOnly = false }) => {
+const FileAnnotator = ({ fileUrl, initialAnnotations = [], onSave, onSaveImage, readOnly = false }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -168,6 +168,55 @@ const FileAnnotator = ({ fileUrl, initialAnnotations = [], onSave, readOnly = fa
         onSave(updated);
     };
 
+    const handleExportImage = () => {
+        if (!onSaveImage) return;
+        const canvas = canvasRef.current;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Draw background image if available
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = fileUrl;
+        img.onload = () => {
+            // Draw Image
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Note: this assumes canvas matches aspect ratio, which our resize logic in useEffect tries to do but might be loose.
+            // For production, we should map coordinates precisely. 
+            // But for current MVP where canvas size ~ container size ~ image size attempt, this is okay.
+
+            // Draw Annotations
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            annotations.forEach(ann => {
+                if (ann.type === 'path') {
+                    ctx.beginPath();
+                    ctx.strokeStyle = ann.color;
+                    ctx.lineWidth = ann.width;
+                    if (ann.points.length > 0) {
+                        const first = ann.points[0];
+                        ctx.moveTo(first.x * canvas.width, first.y * canvas.height);
+                        for (let i = 1; i < ann.points.length; i++) {
+                            const p = ann.points[i];
+                            ctx.lineTo(p.x * canvas.width, p.y * canvas.height);
+                        }
+                        ctx.stroke();
+                    }
+                } else if (ann.type === 'text') {
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillStyle = ann.color;
+                    ctx.fillText(ann.text, ann.x * canvas.width, ann.y * canvas.height);
+                }
+            });
+
+            tempCanvas.toBlob((blob) => {
+                const file = new File([blob], "annotated_file.jpg", { type: "image/jpeg" });
+                onSaveImage(file);
+            }, 'image/jpeg', 0.8);
+        };
+    };
+
     return (
         <div className="flex flex-col h-full bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
             {/* Toolbar */}
@@ -191,6 +240,11 @@ const FileAnnotator = ({ fileUrl, initialAnnotations = [], onSave, readOnly = fa
                     <button onClick={handleClear} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg" title="Clear All">
                         <Trash2 size={18} />
                     </button>
+                    {onSaveImage && (
+                        <button onClick={handleExportImage} className="ml-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 flex items-center gap-1">
+                            <Save size={14} /> Save Image
+                        </button>
+                    )}
                 </div>
             </div>
 
