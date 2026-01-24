@@ -52,30 +52,46 @@ const TeacherInterventions = () => {
             const mergedList = [];
             const processedInterventionIds = new Set();
 
-            // First, process alerts
+            // First, process alerts and deduplicate them
+            // Key: student_id + reason description (simple check to avoid duplicate rows for same issue)
+            const processedAlerts = new Map();
+
             alerts.forEach(alert => {
-                // Check if there's an active intervention for this student/alert
-                // (Simple matching by student_id for now if alert_id is not strictly linked in response)
-                const relatedIntervention = existingInterventions.find(i =>
-                    i.student_id === alert.student_id && i.status !== 'completed'
-                );
+                // Determine a unique key for the "issue"
+                const reasonDesc = Array.isArray(alert.behaviors) && alert.behaviors.length > 0
+                    ? (typeof alert.behaviors[0] === 'string' ? alert.behaviors[0] : alert.behaviors[0].description)
+                    : 'Unknown Issue';
 
-                if (relatedIntervention) {
-                    processedInterventionIds.add(relatedIntervention.intervention_id);
+                const key = `${alert.student_id}-${reasonDesc}`;
+
+                // If this student already has this exact issue listed, keep only the most recent one (or first one found)
+                if (!processedAlerts.has(key)) {
+                    // Check if there's an active intervention for this student/alert
+                    const relatedIntervention = existingInterventions.find(i =>
+                        i.student_id === alert.student_id && i.status !== 'completed'
+                    );
+
+                    if (relatedIntervention) {
+                        processedInterventionIds.add(relatedIntervention.intervention_id);
+                    }
+
+                    // Add to merged list (via map values later)
+                    processedAlerts.set(key, {
+                        id: alert.alert_id, // Unique Key
+                        type: 'alert',
+                        student_id: alert.student_id,
+                        student_name: alert.student_name,
+                        severity: alert.severity,
+                        reason: alert.behaviors,
+                        date: alert.detected_at,
+                        intervention: relatedIntervention,
+                        status: relatedIntervention ? 'intervention_active' : 'needs_attention'
+                    });
                 }
-
-                mergedList.push({
-                    id: alert.alert_id, // Unique Key
-                    type: 'alert',
-                    student_id: alert.student_id,
-                    student_name: alert.student_name,
-                    severity: alert.severity,
-                    reason: alert.behaviors,
-                    date: alert.detected_at,
-                    intervention: relatedIntervention, // Specific intervention object
-                    status: relatedIntervention ? 'intervention_active' : 'needs_attention'
-                });
             });
+
+            // Add unique alerts to list
+            processedAlerts.forEach(item => mergedList.push(item));
 
             // Then add remaining independent interventions (that aren't linked to current active alerts)
             existingInterventions.forEach(intervention => {
@@ -235,7 +251,7 @@ const TeacherInterventions = () => {
                                                     </div>
                                                 ) : item.status === 'completed' ? (
                                                     <span className="text-gray-400 text-xs font-bold flex items-center justify-end gap-1">
-                                                        <CheckCircle size={14} /> Resolving
+                                                        <CheckCircle size={14} /> Resolved
                                                     </span>
                                                 ) : (
                                                     <button

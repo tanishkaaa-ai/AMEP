@@ -104,6 +104,7 @@ def register_blueprints(app):
     from api.polling_template_crud import poll_template_crud_bp
     from api.upload_routes import upload_bp
     from api.attendance_routes import attendance_bp
+    from api.resource_routes import resource_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     logger.info("Registered: /api/auth")
@@ -146,6 +147,9 @@ def register_blueprints(app):
 
     app.register_blueprint(attendance_bp, url_prefix="/api/attendance")
     logger.info("Registered: /api/attendance")
+
+    app.register_blueprint(resource_bp, url_prefix="/api/resources")
+    logger.info("Registered: /api/resources")
 
     logger.info("All blueprints registered successfully")
 
