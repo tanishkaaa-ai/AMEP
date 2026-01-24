@@ -88,9 +88,12 @@ const ClassCard = ({ cls, onDelete }) => {
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-50 flex gap-2">
-                    <button className="flex-1 py-2 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                    <NavLink
+                        to={`/classroom/${cls.classroom_id}?tab=grades`}
+                        className="flex-1 py-2 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+                    >
                         Gradebook
-                    </button>
+                    </NavLink>
                     <NavLink
                         to={`/classroom/${cls.classroom_id}`}
                         className="flex-1 py-2 text-sm font-bold text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors flex items-center justify-center gap-1"
