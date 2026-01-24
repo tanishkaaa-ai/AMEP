@@ -565,6 +565,59 @@ def get_classroom_polls(classroom_id):
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
+
+@live_polling_bp.route('/student/<student_id>/active', methods=['GET'])
+def get_student_active_polls(student_id):
+    """Get all active polls for classrooms the student is in"""
+    try:
+        logger.info(f"Get student active polls | student_id: {student_id}")
+
+        # 1. Get student's classrooms
+        memberships = find_many(
+            CLASSROOM_MEMBERSHIPS,
+            {'student_id': student_id, 'is_active': True}
+        )
+        classroom_ids = [m['classroom_id'] for m in memberships]
+
+        if not classroom_ids:
+             return jsonify([]), 200
+
+        # 2. Get active polls for these classrooms
+        query = {
+            'classroom_id': {'$in': classroom_ids},
+            'is_active': True
+        }
+        
+        polls = find_many(LIVE_POLLS, query, sort=[('created_at', -1)])
+        
+        formatted_polls = []
+        for poll in polls:
+             # Check if responded
+             response = find_one(POLL_RESPONSES, {
+                'poll_id': poll['_id'],
+                'student_id': student_id
+             })
+             
+             poll_data = {
+                 'poll_id': poll['_id'],
+                 'question': poll.get('question'),
+                 'poll_type': poll.get('poll_type'),
+                 'options': poll.get('options', []),
+                 'is_active': True,
+                 'classroom_id': poll.get('classroom_id'),
+                 'has_responded': bool(response),
+                 'user_response': response.get('response') if response else None,
+                 'created_at': poll.get('created_at').isoformat() if poll.get('created_at') else None
+             }
+             formatted_polls.append(poll_data)
+             
+        return jsonify(formatted_polls), 200
+        
+    except Exception as e:
+        logger.info(f"Student active polls exception | error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+
 # ============================================================================
 # WEBSOCKET EVENT HANDLERS
 # ============================================================================

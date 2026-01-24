@@ -3,31 +3,42 @@ import DashboardLayout from '../components/DashboardLayout';
 import { CheckCircle, Clock, BarChart2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { pollsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudentPolls = () => {
+    const { user, getUserId } = useAuth();
     const [activePoll, setActivePoll] = useState(null);
     const [hasResponded, setHasResponded] = useState(false);
     const [selectedOption, setSelectedOption] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [studentId] = useState('student_456'); // Mock Student ID
-    const [classroomId] = useState('class_101'); // Mock Classroom ID
 
     // Polling for active polls
     useEffect(() => {
+        const studentId = getUserId();
+        if (!studentId) return;
+
         const checkPolls = async () => {
             try {
-                // Get active polls for this classroom
-                const res = await pollsAPI.getClassPolls(classroomId);
-                const active = res.data.find(p => p.is_active);
+                // Get active polls for ALL classrooms this student is in
+                const res = await pollsAPI.getStudentActivePolls(studentId);
+                const polls = res.data || [];
 
-                if (active) {
-                    // If we found a new active poll that is different from current
-                    if (active.poll_id !== activePoll?.poll_id) {
-                        // Fetch full details including options
-                        const fullPollRes = await pollsAPI.getPoll(active.poll_id);
-                        setActivePoll(fullPollRes.data);
-                        setHasResponded(false); // Reset for new poll
-                        setSelectedOption(null);
+                // For now, take the most recent active poll
+                // Future improvement: Show a list if multiple
+                const latestActive = polls.length > 0 ? polls[0] : null;
+
+                if (latestActive) {
+                    // Only update if it's different or if we transitioned from no poll
+                    if (latestActive.poll_id !== activePoll?.poll_id) {
+                        setActivePoll(latestActive);
+                        // Check if backend already told us we responded
+                        if (latestActive.has_responded) {
+                            setHasResponded(true);
+                            setSelectedOption(latestActive.user_response);
+                        } else {
+                            setHasResponded(false);
+                            setSelectedOption(null);
+                        }
                     }
                 } else {
                     setActivePoll(null);
@@ -41,10 +52,11 @@ const StudentPolls = () => {
         checkPolls();
         const intervalId = setInterval(checkPolls, 3000);
         return () => clearInterval(intervalId);
-    }, [activePoll?.poll_id, classroomId]);
+    }, [activePoll?.poll_id, getUserId]);
 
     const submitResponse = async (option) => {
         if (!activePoll) return;
+        const studentId = getUserId();
 
         try {
             setLoading(true);
