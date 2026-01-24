@@ -77,7 +77,7 @@ function MainLayout({ isConnected }) {
 
         <Route path="/polling" element={<ProtectedRoute requiredRole="teacher"><LivePolling /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute requiredRole="teacher"><PBLWorkspace /></ProtectedRoute>} />
-        <Route path="/soft-skills" element={<ProtectedRoute requiredRole="teacher"><SoftSkillsRubric /></ProtectedRoute>} />
+        <Route path="/teacher/soft-skills" element={<ProtectedRoute requiredRole="teacher"><SoftSkillsRubric /></ProtectedRoute>} />
         <Route path="/templates" element={<ProtectedRoute requiredRole="teacher"><TemplateLibrary /></ProtectedRoute>} />
 
         {/* Student Portal Routes */}

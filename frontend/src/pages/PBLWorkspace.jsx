@@ -16,8 +16,35 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, te
     deadline: '',
   });
   const [loading, setLoading] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  useEffect(() => {
+    if (initialData) return; // If already pre-filled, skip fetching suggestions
+
+    const fetchTemplates = async () => {
+      try {
+        // Fetch popular templates as suggestions
+        const res = await templatesAPI.getPopular(3);
+        setTemplates(res.data || []);
+      } catch (e) {
+        console.warn("Failed to fetch template suggestions", e);
+      }
+    };
+    fetchTemplates();
+  }, [initialData]);
 
   if (!isOpen) return null;
+
+  const handleTemplateSelect = (template) => {
+    setFormData(prev => ({
+      ...prev,
+      title: template.title,
+      description: template.description
+    }));
+    setShowTemplates(false);
+    toast.success(`Loaded template: ${template.title}`);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,23 +57,13 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, te
         stage: 'QUESTIONING',
         project_type: 'team'
       };
-      console.info('[PBL] Creating project:', {
-        title: data.title,
-        classroom_id: classroomId,
-        teacher_id: teacherId,
-        deadline: data.deadline
-      });
+
       const response = await projectsAPI.createProject(data);
-      console.info('[PBL] Project created successfully:', response.data);
       toast.success('Project created successfully!');
       onProjectCreated();
       onClose();
     } catch (error) {
-      console.error("[PBL] Failed to create project:", {
-        error: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+      console.error("Failed to create project", error);
       toast.error("Failed to create project.");
     } finally {
       setLoading(false);
@@ -67,6 +84,31 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, classroomId, te
             <X size={20} />
           </button>
         </div>
+
+        {/* Template Suggestion Bar */}
+        {!initialData && templates.length > 0 && (
+          <div className="px-6 py-2 bg-teal-50 border-b border-teal-100">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-bold text-teal-700 uppercase">Quick Start with Templates</span>
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="text-xs text-teal-600 hover:text-teal-800 underline"
+              >
+                {showTemplates ? 'Hide' : 'View All'}
+              </button>
+            </div>
+            {(showTemplates ? templates : templates.slice(0, 1)).map(t => (
+              <button
+                key={t.template_id}
+                onClick={() => handleTemplateSelect(t)}
+                className="w-full text-left p-2 mb-1 bg-white hover:bg-teal-100 border border-teal-200 rounded-lg transition-colors flex items-center justify-between group"
+              >
+                <span className="text-sm font-bold text-gray-700 group-hover:text-teal-800 truncate">{t.title}</span>
+                <span className="text-[10px] bg-teal-200 text-teal-800 px-1.5 py-0.5 rounded">Select</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>

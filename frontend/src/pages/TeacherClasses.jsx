@@ -251,7 +251,20 @@ const TeacherClasses = () => {
             const userId = getUserId();
             if (userId) {
                 const response = await classroomAPI.getTeacherClasses(userId);
-                setClasses(response.data);
+                const classesData = response.data;
+
+                // Fetch real-time student counts to ensure accuracy
+                const classesWithCounts = await Promise.all(classesData.map(async (cls) => {
+                    try {
+                        const studentsRes = await classroomAPI.getClassroomStudents(cls.classroom_id);
+                        return { ...cls, student_count: studentsRes.data.length };
+                    } catch (e) {
+                        console.warn(`Failed to fetch students for class ${cls.classroom_id}`, e);
+                        return cls;
+                    }
+                }));
+
+                setClasses(classesWithCounts);
             }
         } catch (err) {
             console.error('Error fetching classes:', err);

@@ -74,7 +74,7 @@ const TeacherLayout = ({ children }) => {
         { icon: MapIcon, text: 'Projects (PBL)', to: '/teacher/projects' },
         { icon: Award, text: 'Grading & APPROVALS', to: '/teacher/grading' }, // Combined
         { icon: BookOpen, text: 'Practice Manager', to: '/teacher/practice-manager' },
-        { icon: Users, text: 'Soft Skills', to: '/soft-skills' }, // Added
+        { icon: Users, text: 'Soft Skills', to: '/teacher/soft-skills' }, // Added
         { icon: Library, text: 'Templates', to: '/teacher/templates' },
     ];
 

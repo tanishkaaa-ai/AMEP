@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
 import CreateInterventionModal from '../components/CreateInterventionModal';
+import AttentionHeatmap from '../components/AttentionHeatmap';
 import { useAuth } from '../contexts/AuthContext';
 import { classroomAPI, dashboardAPI, projectsAPI } from '../services/api';
 import {
@@ -48,6 +49,8 @@ const TeacherAnalytics = () => {
     const [softSkillsData, setSoftSkillsData] = useState(null);
     const [attentionMap, setAttentionMap] = useState(null);
     const [institutionalMetrics, setInstitutionalMetrics] = useState(null);
+    const [unifiedMetrics, setUnifiedMetrics] = useState(null);
+    const [unifiedTrends, setUnifiedTrends] = useState(null);
     const [dateRange, setDateRange] = useState(30);
 
     // Intervention State
@@ -103,6 +106,18 @@ const TeacherAnalytics = () => {
                 } catch (e) {
                     console.warn("Institutional metrics fetch failed", e);
                 }
+
+                // Fetch Unified Metrics separately (not dependent on class, system-wide)
+                try {
+                    const [unifiedRes, unifiedTrendsRes] = await Promise.all([
+                        dashboardAPI.getUnifiedMetrics(),
+                        dashboardAPI.getUnifiedTrends(dateRange)
+                    ]);
+                    setUnifiedMetrics(unifiedRes.data);
+                    setUnifiedTrends(unifiedTrendsRes.data);
+                } catch (e) {
+                    console.warn("Unified metrics fetch failed", e);
+                }
             } catch (error) {
                 console.error("Overall analytics error", error);
             } finally {
@@ -114,7 +129,6 @@ const TeacherAnalytics = () => {
             fetchAnalytics();
         }
     }, [selectedClassId, dateRange]);
-
 
     const handleClassChange = (e) => {
         setSelectedClassId(e.target.value);
@@ -322,37 +336,11 @@ const TeacherAnalytics = () => {
                         </div>
 
                         {/* Attention Map Section */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 col-span-1 lg:col-span-2 mt-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h3 className="font-bold text-gray-800 text-lg">Real-time Attention Map</h3>
-                                    <p className="text-gray-500 text-xs">Visualizing student engagement states</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                {attentionMap?.attention_map?.map((student) => (
-                                    <div
-                                        key={student.student_id}
-                                        className="p-3 rounded-lg border flex flex-col items-center justify-center text-center transition-all hover:scale-105 shadow-sm"
-                                        style={{
-                                            backgroundColor: student.color + '20', // 20% opacity using hex
-                                            borderColor: student.color
-                                        }}
-                                        title={`Score: ${student.engagement_score} | Level: ${student.engagement_level}`}
-                                    >
-                                        <div className="font-bold text-gray-800 text-sm truncate w-full">{student.student_name}</div>
-                                        <div className="text-xs font-semibold mt-1" style={{ color: student.color }}>
-                                            {student.engagement_level}
-                                        </div>
-                                    </div>
-                                ))}
-                                {(!attentionMap?.attention_map || attentionMap.attention_map.length === 0) && (
-                                    <div className="col-span-full text-center text-gray-400 py-8">
-                                        No attention data available
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        {/* Attention Map Section */}
+                        <AttentionHeatmap
+                            attentionMap={attentionMap}
+                            loading={!attentionMap && loading}
+                        />
 
                         {/* Institutional Metrics (Admin/Principal View) */}
                         {institutionalMetrics && (
@@ -376,6 +364,50 @@ const TeacherAnalytics = () => {
                                     <div className="bg-white p-4 rounded-xl shadow-sm">
                                         <p className="text-xs text-gray-500 uppercase">Total Students</p>
                                         <p className="text-2xl font-bold text-gray-800">{institutionalMetrics.total_students || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Platform Health & Unified Metrics (New Section) */}
+                        {unifiedMetrics && (
+                            <div className="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-700 mt-8 text-white">
+                                <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2">
+                                    <BarChart2 className="text-teal-400" /> Platform Health & Unified Metrics
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                        <p className="text-xs text-slate-400 uppercase">System Mastery Rate</p>
+                                        <div className="flex items-end gap-2 mt-1">
+                                            <p className="text-3xl font-bold text-teal-400">{unifiedMetrics.mastery_rate}%</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                        <p className="text-xs text-slate-400 uppercase">Teacher Adoption</p>
+                                        <div className="flex items-end gap-2 mt-1">
+                                            <p className="text-3xl font-bold text-blue-400">{unifiedMetrics.teacher_adoption_rate}%</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                        <p className="text-xs text-slate-400 uppercase">Admin Confidence</p>
+                                        <div className="flex items-end gap-2 mt-1">
+                                            <p className="text-3xl font-bold text-purple-400">{unifiedMetrics.admin_confidence_score}</p>
+                                            <span className="text-xs text-slate-500 mb-1">/ 100</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 relative overflow-hidden">
+                                        <p className="text-xs text-slate-400 uppercase">Engagement Trend</p>
+                                        <div className="mt-2 h-10 flex items-end gap-1">
+                                            {unifiedTrends?.trends?.engagement_score?.slice(-10).map((t, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="flex-1 bg-green-500/50 rounded-t-sm"
+                                                    style={{ height: `${t.value}%` }}
+                                                    title={`${t.date}: ${t.value}%`}
+                                                />
+                                            ))}
+                                            {!unifiedTrends?.has_data && <span className="text-xs text-slate-600">No trend data</span>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
