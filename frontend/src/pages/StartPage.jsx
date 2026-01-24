@@ -91,9 +91,7 @@ const StartPage = () => {
                             <span className="font-bold text-xl text-gray-800 tracking-tight">AMEP<span className="text-orange-500">Platform</span></span>
                         </div>
                         <nav className="hidden md:flex items-center gap-8 text-gray-600 font-medium text-sm">
-                            <a href="#" className="hover:text-orange-500 transition-colors">Features</a>
-                            <a href="#" className="hover:text-orange-500 transition-colors">Solutions</a>
-                            <a href="#" className="hover:text-orange-500 transition-colors">About</a>
+                            {/* Placeholders removed as per user request */}
                         </nav>
                         <button
                             onClick={() => setView('role_selection')}
@@ -125,10 +123,6 @@ const StartPage = () => {
                                 >
                                     Get Started Free
                                     <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
-                                </button>
-                                <button className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                                    <Clock size={20} className="text-gray-400" />
-                                    Watch Demo
                                 </button>
                             </div>
 
