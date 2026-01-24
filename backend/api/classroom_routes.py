@@ -22,7 +22,9 @@ from models.database import (
     update_one,
     delete_one,
     aggregate,
-    count_documents
+    aggregate,
+    count_documents,
+    STUDENT_CONCEPT_MASTERY
 )
 
 # Import logging
@@ -481,11 +483,19 @@ def get_classroom_students(classroom_id):
         for membership in memberships:
             student = find_one(STUDENTS, {'_id': membership['student_id']})
             if student:
+                # Calculate overall mastery for the student
+                mastery_records = find_many(STUDENT_CONCEPT_MASTERY, {'student_id': student['_id']})
+                overall_mastery = 0
+                if mastery_records:
+                    total_score = sum(record.get('mastery_score', 0) for record in mastery_records)
+                    overall_mastery = round(total_score / len(mastery_records), 1)
+
                 formatted_students.append({
                     'student_id': student['_id'],
                     'name': f"{student.get('first_name', '')} {student.get('last_name', '')}",
                     'grade_level': student.get('grade_level'),
-                    'joined_at': membership.get('joined_at').isoformat() if membership.get('joined_at') else None
+                    'joined_at': membership.get('joined_at').isoformat() if membership.get('joined_at') else None,
+                    'overall_mastery': overall_mastery
                 })
 
         logger.info(f"Classroom students retrieved | classroom_id: {classroom_id} | count: {len(formatted_students)}")

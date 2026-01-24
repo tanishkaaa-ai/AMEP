@@ -384,7 +384,17 @@ const TeacherClassDetails = () => {
                                                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full text-white flex items-center justify-center font-bold">
                                                     {student.name.charAt(0)}
                                                 </div>
-                                                <span className="font-bold text-gray-700">{student.name}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-gray-700">{student.name}</span>
+                                                    {student.overall_mastery !== undefined && (
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full w-fit ${student.overall_mastery >= 80 ? 'bg-green-100 text-green-700' :
+                                                                student.overall_mastery >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                                                                    'bg-red-100 text-red-700'
+                                                            }`}>
+                                                            Mastery: {student.overall_mastery}%
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <button className="text-gray-400 hover:text-gray-600"><MoreVertical size={16} /></button>
                                         </div>
