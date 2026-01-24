@@ -44,8 +44,14 @@ def get_project_milestones(project_id):
                 'submission_notes': milestone.get('submission_notes', ''),
                 'report_url': milestone.get('report_url'),
                 'zip_url': milestone.get('zip_url'),
-                'submitted_at': milestone.get('submitted_at').isoformat() if milestone.get('submitted_at') else None
+                'submitted_at': milestone.get('submitted_at').isoformat() if milestone.get('submitted_at') else None,
+                'is_rejected': not milestone.get('pending_approval') and not milestone.get('is_completed') and milestone.get('rejected_at') is not None,
+                'teacher_feedback': milestone.get('teacher_feedback'),
+                'rejection_reason': milestone.get('rejection_reason'),
+                'rejected_at': (milestone.get('rejected_at').isoformat() if hasattr(milestone.get('rejected_at'), 'isoformat') else milestone.get('rejected_at')) if milestone.get('rejected_at') else None
             })
+        
+        logger.info(f"[GET_PROJECT_MILESTONES] Milestones retrieved | project_id: {project_id} | count: {len(result)}")
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
