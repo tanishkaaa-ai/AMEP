@@ -58,9 +58,9 @@ const StudentSoftSkillsProfile = ({ studentId }) => {
                     <motion.div key={dimension} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }}>
                         <div className="flex justify-between mb-1.5">
                             <span className="text-sm font-bold text-gray-700 capitalize">
-                                {dimension.replace(/_/g, ' ')}
+                                {scoreData.dimension_name || dimension.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-sm font-bold text-gray-900">{score.toFixed(1)}</span>
+                            <span className="text-sm font-bold text-gray-900">{typeof scoreData === 'number' ? scoreData.toFixed(1) : scoreData.average_rating?.toFixed(1) || '0.0'}</span>
                         </div>
                         <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${(score / 5) * 100}%` }} transition={{ duration: 1, delay: idx * 0.1, ease: "circOut" }}

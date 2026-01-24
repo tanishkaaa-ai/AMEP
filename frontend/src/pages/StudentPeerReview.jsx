@@ -6,11 +6,36 @@ import { toast } from 'react-hot-toast';
 import { User, Users, Star, Award, Zap, Layout, Target, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const RatingSlider = ({ dimension, skill, value, onChange }) => (
+    <div className="mb-4">
+        <div className="flex justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700 capitalize">
+                {skill.replace(/_/g, ' ')}
+            </label>
+            <span className="text-sm font-bold text-blue-600">{value}</span>
+        </div>
+        <input
+            type="range"
+            min="1"
+            max="5"
+            step="0.5"
+            value={value}
+            onChange={(e) => onChange(dimension, skill, parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>Poor</span>
+            <span>Excellent</span>
+        </div>
+    </div>
+);
+
 const StudentPeerReview = () => {
     const { getUserId } = useAuth();
+    const [completedReviews, setCompletedReviews] = useState([]);
     const [teamMembers, setTeamMembers] = useState([]);
-    const [team, setTeam] = useState(null);
     const [selectedReviewee, setSelectedReviewee] = useState(null);
+    const [team, setTeam] = useState(null);
     const [loading, setLoading] = useState(true);
     const [ratings, setRatings] = useState({
         team_dynamics: { communication: 3, active_listening: 3, conflict_resolution: 3, collaboration: 3 },
@@ -20,7 +45,7 @@ const StudentPeerReview = () => {
     });
 
     useEffect(() => {
-        const fetchTeamMembers = async () => {
+        const fetchTeamData = async () => {
             try {
                 const userId = getUserId();
                 const teamsRes = await projectsAPI.getStudentTeams(userId);
@@ -33,7 +58,7 @@ const StudentPeerReview = () => {
                 }
             } catch (error) {
                 console.error("Failed to load team data", error);
-                toast.error("Failed to load team members");
+                // toast.error("Failed to load team data");
             } finally {
                 setLoading(false);
             }
@@ -48,7 +73,7 @@ const StudentPeerReview = () => {
         }
         try {
             await projectsAPI.submitPeerReview(team.team_id || team._id, {
-                reviewer_id: getUserId(),
+                reviewer_id: userId,
                 reviewee_id: selectedReviewee,
                 review_type: 'mid_project',
                 ratings

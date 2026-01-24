@@ -729,6 +729,17 @@ def submit_peer_review(team_id):
         # Normalize review_type
         review_type = data['review_type'].replace('_', '-')
 
+        # Check for existing review
+        existing_review = find_one(PEER_REVIEWS, {
+            'team_id': team_id,
+            'reviewer_id': data['reviewer_id'],
+            'reviewee_id': data['reviewee_id'],
+            'review_type': review_type
+        })
+        
+        if existing_review:
+            return jsonify({'error': 'You have already submitted a review for this team member for this stage.'}), 400
+
         # Process and validate ratings
         raw_ratings = data['ratings']
         processed_ratings = {}
@@ -797,6 +808,9 @@ def submit_peer_review(team_id):
             'error': 'Internal server error',
             'detail': str(e)
         }), 500
+
+
+
 
 
 @pbl_workflow_bp.route('/students/<student_id>/soft-skills', methods=['GET'])
