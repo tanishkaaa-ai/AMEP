@@ -192,4 +192,17 @@ export const dashboardAPI = {
   getUnifiedTrends: (days) => api.get('/dashboard/unified/trends', { params: { days } }),
 };
 
+export const attendanceAPI = {
+  // Student endpoints
+  bindIP: () => api.post('/attendance/bind-ip'),
+  checkSession: (classroomId) => api.get(`/attendance/check-session/${classroomId}`),
+  markAttendance: (data) => api.post('/attendance/mark', data),
+
+  // Teacher endpoints
+  openSession: (data) => api.post('/attendance/sessions/open', data),
+  closeSession: (sessionId) => api.post(`/attendance/sessions/${sessionId}/close`),
+  getSessionRecords: (sessionId) => api.get(`/attendance/sessions/${sessionId}/records`),
+  getClassroomSessions: (classroomId, params) => api.get(`/attendance/classrooms/${classroomId}/sessions`, { params }),
+};
+
 export default api;
