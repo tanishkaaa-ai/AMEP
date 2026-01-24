@@ -680,7 +680,7 @@ def get_team_tasks(team_id):
                 'title': task.get('title'),
                 'description': task.get('description'),
                 'assigned_to': task.get('assigned_to'),
-                'assigned_to_name': student.get('name', 'Unknown') if student else 'Unknown',
+                'assignee_name': f"{student.get('first_name', '')} {student.get('last_name', '')}".strip() or student.get('name', 'Unknown') if student else 'Unassigned',
                 'due_date': (task.get('due_date').isoformat() if hasattr(task.get('due_date'), 'isoformat') else task.get('due_date')) if task.get('due_date') else None,
                 'priority': task.get('priority'),
                 'status': task.get('status'),
