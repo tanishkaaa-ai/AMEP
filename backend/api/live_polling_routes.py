@@ -126,6 +126,25 @@ def create_poll():
         if data.get('poll_type', 'understanding') not in valid_types:
             return jsonify({'error': f'poll_type must be one of: {valid_types}'}), 400
 
+        # Check for existing active poll in this classroom
+        if data.get('classroom_id'):
+            existing_active = find_one(LIVE_POLLS, {
+                'classroom_id': data['classroom_id'],
+                'is_active': True
+            })
+            if existing_active:
+                logger.info(f"Auto-closing existing active poll {existing_active['_id']} for classroom {data['classroom_id']}")
+                update_one(
+                    LIVE_POLLS, 
+                    {'_id': existing_active['_id']},
+                    {
+                        '$set': {
+                            'is_active': False,
+                            'closed_at': datetime.utcnow()
+                        }
+                    }
+                )
+
         # Auto-generate options for common types
         poll_type = data.get('poll_type', 'understanding')
         options = data.get('options', [])

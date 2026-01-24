@@ -763,8 +763,8 @@ const PBLWorkspace = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items - center gap - 2 px - 6 py - 4 font - bold transition - all duration - 300 whitespace - nowrap border - b - 2 ${activeTab === tab.id
-                      ? 'border-teal-600 text-teal-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-teal-600 text-teal-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     } `}
                 >
                   <tab.icon size={18} />
