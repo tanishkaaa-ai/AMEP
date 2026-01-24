@@ -227,6 +227,11 @@ const StudentDashboard = () => {
                                 />
                             </div>
                         </div>
+
+                        <Link to="/student/interest-path" className="absolute bottom-8 right-8 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white font-bold py-3 px-6 rounded-2xl transition-all flex items-center gap-2 shadow-lg hover:scale-105">
+                            <Compass size={20} />
+                            <span>Discover Your Path</span>
+                        </Link>
                     </div>
 
                     {/* Background Decorations */}

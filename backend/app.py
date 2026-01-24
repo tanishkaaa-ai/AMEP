@@ -105,6 +105,7 @@ def register_blueprints(app):
     from api.upload_routes import upload_bp
     from api.attendance_routes import attendance_bp
     from api.resource_routes import resource_bp
+    from api.student_interest_routes import interest_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     logger.info("Registered: /api/auth")
@@ -150,6 +151,9 @@ def register_blueprints(app):
 
     app.register_blueprint(resource_bp, url_prefix="/api/resources")
     logger.info("Registered: /api/resources")
+
+    app.register_blueprint(interest_bp, url_prefix="/api/interest")
+    logger.info("Registered: /api/interest")
 
     logger.info("All blueprints registered successfully")
 

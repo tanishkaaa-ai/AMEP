@@ -35,6 +35,7 @@ import StudentProfile from './pages/StudentProfile';
 import StudentAttendance from './pages/StudentAttendance';
 import TeacherAttendance from './pages/TeacherAttendance';
 import StudentQuestionBanks from './pages/StudentQuestionBanks';
+import InterestPath from './pages/InterestPath';
 import AdminDashboard from './pages/AdminDashboard'; // Import AdminDashboard
 
 function MainLayout({ isConnected }) {
@@ -99,6 +100,7 @@ function MainLayout({ isConnected }) {
         <Route path="/student/polls" element={<ProtectedRoute requiredRole="student"><StudentPolls /></ProtectedRoute>} />
         <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
         <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
+        <Route path="/student/interest-path" element={<ProtectedRoute requiredRole="student"><InterestPath /></ProtectedRoute>} />
 
         {/* Admin Portal Routes */}
         <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />

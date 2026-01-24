@@ -59,6 +59,13 @@ const StudentProjectMilestones = () => {
 
                     // Merge Logic: Overlay progress status onto project milestones
                     const mergedMilestones = projectMilestones.map((m, index) => {
+                        if (m.is_rejected) {
+                            console.info('[STUDENT_MILESTONES] Found rejected milestone:', {
+                                id: m.milestone_id,
+                                reason: m.rejection_reason,
+                                feedback_length: m.teacher_feedback?.length
+                            });
+                        }
                         // Default state if no progress tracking
                         let isCompleted = false;
                         let isPending = false;
@@ -92,7 +99,11 @@ const StudentProjectMilestones = () => {
                             ...m,
                             is_completed: isCompleted,
                             pending_approval: isPending,
-                            is_locked: isLocked
+                            is_locked: isLocked,
+                            is_rejected: m.is_rejected,
+                            teacher_feedback: m.teacher_feedback,
+                            rejection_reason: m.rejection_reason,
+                            rejected_at: m.rejected_at
                         };
                     });
 
@@ -192,6 +203,7 @@ const StudentProjectMilestones = () => {
                         return {
                             ...m,
                             pending_approval: true,
+                            is_rejected: false, // Clear rejection status on new submission
                             is_locked: false // Ensure it stays visible/accessible
                         };
                     }
@@ -251,7 +263,8 @@ const StudentProjectMilestones = () => {
                                 className={`border rounded-2xl p-6 shadow-sm transition-all
                                     ${milestone.is_completed ? 'bg-green-50 border-green-200' :
                                         milestone.pending_approval ? 'bg-yellow-50 border-yellow-200' :
-                                            'bg-white border-gray-100 opacity-90'}`}
+                                            milestone.is_rejected ? 'bg-red-50 border-red-200' :
+                                                'bg-white border-gray-100 opacity-90'}`}
                             >
                                 <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
                                     <div className="flex-1">
@@ -259,31 +272,43 @@ const StudentProjectMilestones = () => {
                                             <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border-2
                                                 ${milestone.is_completed ? 'bg-green-100 border-green-500 text-green-700' :
                                                     milestone.pending_approval ? 'bg-yellow-100 border-yellow-500 text-yellow-700' :
-                                                        'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                                                        milestone.is_rejected ? 'bg-red-100 border-red-500 text-red-700' :
+                                                            'bg-gray-100 border-gray-300 text-gray-400'}`}>
                                                 {index + 1}
                                             </span>
                                             <h3 className="font-bold text-xl text-gray-800">{milestone.title}</h3>
 
                                             {milestone.is_completed && <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-1"><CheckCircle size={12} /> Completed</span>}
                                             {milestone.pending_approval && <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold flex items-center gap-1"><Clock size={12} /> Pending Approval</span>}
-                                            {!milestone.is_completed && !milestone.pending_approval && <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold flex items-center gap-1"><Lock size={12} /> In Progress</span>}
+                                            {milestone.is_rejected && <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold flex items-center gap-1"><AlertTriangle size={12} /> Needs Revision</span>}
+                                            {!milestone.is_completed && !milestone.pending_approval && !milestone.is_rejected && <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold flex items-center gap-1"><Lock size={12} /> In Progress</span>}
                                         </div>
 
                                         <div className="pl-11">
                                             {milestone.due_date && <p className="text-sm text-gray-500 flex items-center gap-2 mb-2"><Clock size={14} /> Due: {new Date(milestone.due_date).toLocaleDateString()}</p>}
                                             {milestone.description && <p className="text-gray-600 mb-2">{milestone.description}</p>}
+
+                                            {milestone.is_rejected && milestone.teacher_feedback && (
+                                                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
+                                                    <p className="font-bold flex items-center gap-2 mb-1">
+                                                        <AlertTriangle size={14} />
+                                                        Teacher Feedback:
+                                                    </p>
+                                                    <p>{milestone.teacher_feedback}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className="pl-11 md:pl-0">
-                                        {!milestone.is_completed && !milestone.pending_approval && (
+                                        {(!milestone.is_completed && !milestone.pending_approval) || milestone.is_rejected ? (
                                             <button
                                                 onClick={() => setSubmittingId(milestone.milestone_id)}
                                                 className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
                                             >
-                                                <Send size={16} /> Submit Work
+                                                <Send size={16} /> {milestone.is_rejected ? 'Resubmit Work' : 'Submit Work'}
                                             </button>
-                                        )}
+                                        ) : null}
                                         {milestone.pending_approval && (
                                             <span className="text-sm font-medium text-yellow-600 italic">Waiting for teacher review...</span>
                                         )}

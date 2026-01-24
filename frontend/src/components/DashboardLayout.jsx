@@ -15,7 +15,8 @@ import {
     Users,
     Trophy,
     Settings,
-    UserCheck
+    UserCheck,
+    Compass
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -72,6 +73,7 @@ const DashboardLayout = ({ children }) => {
         { icon: Users, text: 'Peer Review', to: '/student/peer-review' },
         { icon: Radio, text: 'Live Polls', to: '/student/polls' },
         { icon: UserCheck, text: 'Attendance', to: '/student/attendance' },
+        { icon: Compass, text: 'Interest Path', to: '/student/interest-path' },
         { icon: Trophy, text: 'Achievements', to: '/student/achievements' },
     ];
 
