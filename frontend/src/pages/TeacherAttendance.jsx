@@ -44,7 +44,13 @@ const TeacherAttendance = () => {
   const loadClassrooms = async () => {
     try {
       const response = await classroomAPI.getTeacherClasses(user.user_id);
+      console.log('Classrooms loaded:', response.data);
       setClassrooms(response.data || []);
+
+      // Auto-select first classroom if available
+      if (response.data && response.data.length > 0) {
+        setSelectedClassroom(response.data[0]);
+      }
     } catch (error) {
       console.error('Error loading classrooms:', error);
       toast.error('Failed to load classrooms');
@@ -53,7 +59,8 @@ const TeacherAttendance = () => {
 
   const loadSessions = async () => {
     try {
-      const response = await attendanceAPI.getClassroomSessions(selectedClassroom._id, { limit: 10 });
+      const classroomId = selectedClassroom.classroom_id || selectedClassroom._id;
+      const response = await attendanceAPI.getClassroomSessions(classroomId, { limit: 10 });
       setSessions(response.data || []);
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -62,7 +69,8 @@ const TeacherAttendance = () => {
 
   const checkActiveSession = async () => {
     try {
-      const response = await attendanceAPI.getClassroomSessions(selectedClassroom._id, { limit: 1 });
+      const classroomId = selectedClassroom.classroom_id || selectedClassroom._id;
+      const response = await attendanceAPI.getClassroomSessions(classroomId, { limit: 1 });
       const latestSession = response.data?.[0];
       if (latestSession && latestSession.is_open) {
         setActiveSession(latestSession);
@@ -111,8 +119,9 @@ const TeacherAttendance = () => {
       toast.dismiss();
       toast.loading('Opening attendance session...');
 
+      const classroomId = selectedClassroom.classroom_id || selectedClassroom._id;
       const response = await attendanceAPI.openSession({
-        classroom_id: selectedClassroom._id,
+        classroom_id: classroomId,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         radius: parseInt(sessionForm.radius),
@@ -177,21 +186,34 @@ const TeacherAttendance = () => {
         {/* Classroom Selection */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Select Classroom</h2>
-          <select
-            value={selectedClassroom?._id || ''}
-            onChange={(e) => {
-              const classroom = classrooms.find(c => c._id === e.target.value);
-              setSelectedClassroom(classroom);
-            }}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Select a Classroom --</option>
-            {classrooms.map(classroom => (
-              <option key={classroom._id} value={classroom._id}>
-                {classroom.name || classroom.classroom_name || `Classroom ${classroom._id}`}
-              </option>
-            ))}
-          </select>
+
+          {classrooms.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No classrooms found. Create a classroom first.</p>
+            </div>
+          ) : (
+            <select
+              value={selectedClassroom?.classroom_id || selectedClassroom?._id || ''}
+              onChange={(e) => {
+                const classroom = classrooms.find(c =>
+                  (c.classroom_id === e.target.value) || (c._id === e.target.value)
+                );
+                setSelectedClassroom(classroom);
+              }}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- Select a Classroom --</option>
+              {classrooms.map(classroom => {
+                const id = classroom.classroom_id || classroom._id;
+                const name = classroom.class_name || classroom.classroom_name || classroom.name || `Classroom ${id}`;
+                return (
+                  <option key={id} value={id}>
+                    {name} {classroom.section && `(${classroom.section})`}
+                  </option>
+                );
+              })}
+            </select>
+          )}
         </div>
 
         {selectedClassroom && !activeSession && (
