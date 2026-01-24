@@ -65,19 +65,19 @@ const StudentSoftSkillsProfile = ({ studentId }) => {
 
             {/* 4D Dimensions */}
             <div className="grid grid-cols-1 gap-4 mb-8">
-                {Object.entries(skills.dimension_scores).map(([dimension, score]) => (
+                {Object.entries(skills.dimension_scores).map(([dimension, scoreData]) => (
                     <div key={dimension} className="">
                         <div className="flex justify-between mb-1">
                             <span className="text-sm font-bold text-gray-700 capitalize">
-                                {dimension.replace(/_/g, ' ')}
+                                {scoreData.dimension_name || dimension.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-sm font-bold text-gray-900">{score.toFixed(1)}</span>
+                            <span className="text-sm font-bold text-gray-900">{typeof scoreData === 'number' ? scoreData.toFixed(1) : scoreData.average_rating?.toFixed(1) || '0.0'}</span>
                         </div>
                         <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-1000 ease-out
-                    ${score >= 4.0 ? 'bg-green-500' : score >= 3.0 ? 'bg-blue-500' : 'bg-orange-400'}`}
-                                style={{ width: `${(score / 5) * 100}%` }}
+                    ${(typeof scoreData === 'number' ? scoreData : scoreData.average_rating) >= 4.0 ? 'bg-green-500' : (typeof scoreData === 'number' ? scoreData : scoreData.average_rating) >= 3.0 ? 'bg-blue-500' : 'bg-orange-400'}`}
+                                style={{ width: `${((typeof scoreData === 'number' ? scoreData : scoreData.average_rating) / 5) * 100}%` }}
                             />
                         </div>
                     </div>
