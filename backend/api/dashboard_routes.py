@@ -845,41 +845,51 @@ def get_institutional_metrics():
         recent_intervention_list = []
         recent_docs = find_many(TEACHER_INTERVENTIONS, {}, sort=[('timestamp', -1)], limit=5)
         for doc in recent_docs:
-            # Resolve Teacher ID
-            teacher_id = doc.get('teacher_id')
-            t_query = {'_id': teacher_id}
-            if isinstance(teacher_id, str) and len(teacher_id) == 24:
-                try:
-                    t_query = {'$or': [{'user_id': teacher_id}, {'_id': ObjectId(teacher_id)}, {'_id': teacher_id}]}
-                except:
-                    t_query = {'$or': [{'user_id': teacher_id}, {'_id': teacher_id}]}
-            
-            # Teachers are in USERS collection but might be referenced by user_id or _id
-            # Also check if it's in TEACHERS collection separately if USERS fails, but typically teacher_id in interventions refers to USERS _id or user_id
-            t = find_one(USERS, t_query)
-            if not t:
-                # Try finding by user_id field
-                t = find_one(USERS, {'user_id': teacher_id})
+            try:
+                # Resolve Teacher ID
+                teacher_id = doc.get('teacher_id')
+                t_query = {'_id': teacher_id}
+                if isinstance(teacher_id, str) and len(teacher_id) == 24:
+                    try:
+                        t_query = {'$or': [{'user_id': teacher_id}, {'_id': ObjectId(teacher_id)}, {'_id': teacher_id}]}
+                    except:
+                        t_query = {'$or': [{'user_id': teacher_id}, {'_id': teacher_id}]}
+                
+                # Teachers are in USERS collection but might be referenced by user_id or _id
+                # Also check if it's in TEACHERS collection separately if USERS fails, but typically teacher_id in interventions refers to USERS _id or user_id
+                t = find_one(USERS, t_query)
+                if not t:
+                    # Try finding by user_id field
+                    t = find_one(USERS, {'user_id': teacher_id})
 
-            # Resolve Student ID
-            student_id = doc.get('student_id')
-            s_query = {'_id': student_id}
-            if isinstance(student_id, str) and len(student_id) == 24:
-                try:
-                    s_query = {'$or': [{'user_id': student_id}, {'_id': ObjectId(student_id)}, {'_id': student_id}]}
-                except:
-                    pass
-            
-            s = find_one(STUDENTS, s_query)
+                # Resolve Student ID
+                student_id = doc.get('student_id')
+                s_query = {'_id': student_id}
+                if isinstance(student_id, str) and len(student_id) == 24:
+                    try:
+                        s_query = {'$or': [{'user_id': student_id}, {'_id': ObjectId(student_id)}, {'_id': student_id}]}
+                    except:
+                        pass
+                
+                s = find_one(STUDENTS, s_query)
 
-            recent_intervention_list.append({
-                'id': doc['_id'],
-                'type': doc.get('intervention_type'),
-                'teacher_name': t.get('username') or t.get('email') or 'Unknown',
-                'student_name': s.get('name') or f"{s.get('first_name', '')} {s.get('last_name', '')}".strip() or 'Unknown',
-                'date': doc.get('timestamp').isoformat() if hasattr(doc.get('timestamp'), 'isoformat') else str(doc.get('timestamp')),
-                'status': doc.get('status')
-            })
+                # Safe timestamp handling
+                ts = doc.get('timestamp')
+                ts_str = str(ts)
+                if hasattr(ts, 'isoformat'):
+                    ts_str = ts.isoformat()
+
+                recent_intervention_list.append({
+                    'id': str(doc.get('_id')),
+                    'type': doc.get('intervention_type', 'Unknown'),
+                    'teacher_name': (t.get('username') or t.get('email') or 'Unknown') if t else 'Unknown',
+                    'student_name': (s.get('name') or f"{s.get('first_name', '')} {s.get('last_name', '')}".strip() or 'Unknown') if s else 'Unknown',
+                    'date': ts_str,
+                    'status': doc.get('status', 'active')
+                })
+            except Exception as inner_e:
+                logger.warning(f"Skipping malformed intervention record: {doc.get('_id')} | error: {str(inner_e)}")
+                continue
 
         response = {
             'total_students': len(all_students),
@@ -918,34 +928,6 @@ def get_institutional_metrics():
         }
 
         logger.info("Institutional metrics calculated")
-        return jsonify(response), 200
-        intervention_outcomes = {
-            'improved': len([i for i in recent_interventions if i.get('outcome') == 'improved']),
-            'no_change': len([i for i in recent_interventions if i.get('outcome') == 'no_change']),
-            'declined': len([i for i in recent_interventions if i.get('outcome') == 'declined']),
-            'pending': len([i for i in recent_interventions if i.get('status') == 'active'])
-        }
-
-        response = {
-            'institution_summary': {
-                'total_classrooms': len(all_classrooms),
-                'total_students': len(all_students),
-                'average_engagement': round(avg_engagement, 1),
-                'average_mastery': round(avg_mastery, 1)
-            },
-            'engagement_alerts': {
-                'total_active': len(active_alerts),
-                'breakdown': alert_breakdown
-            },
-            'interventions_30_days': {
-                'total': len(recent_interventions),
-                'outcomes': intervention_outcomes
-            },
-            'timestamp': datetime.utcnow().isoformat()
-        }
-
-        logger.info("Institutional metrics calculated successfully")
-
         return jsonify(response), 200
 
     except Exception as e:

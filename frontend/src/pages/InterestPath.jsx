@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardLayout from '../components/DashboardLayout';
 import { dashboardAPI } from '../services/api'; import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Compass, BookOpen, Clock, Award, Briefcase, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -52,8 +53,8 @@ const InterestPath = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-            <div className="max-w-7xl mx-auto">
+        <DashboardLayout>
+            <div className="space-y-8">
                 <header className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                         <Compass className="text-blue-600" size={32} />
@@ -168,9 +169,8 @@ const InterestPath = () => {
                         ))}
                     </div>
                 </div>
-
             </div>
-        </div>
+        </DashboardLayout>
     );
 };
 

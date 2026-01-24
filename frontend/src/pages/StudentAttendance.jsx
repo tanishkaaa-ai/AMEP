@@ -3,6 +3,7 @@ import { attendanceAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Clock, MapPin, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import DashboardLayout from '../components/DashboardLayout';
 
 const StudentAttendance = () => {
   const { user } = useAuth();
@@ -473,9 +474,11 @@ const StudentAttendance = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {renderStep()}
-    </div>
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto">
+        {renderStep()}
+      </div>
+    </DashboardLayout>
   );
 };
 

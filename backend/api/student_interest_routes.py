@@ -79,28 +79,50 @@ def get_interest_path():
         avg_mastery = {}
         for subj, total in subject_scores.items():
             avg_mastery[subj] = total / subject_counts[subj]
+            
+        logger.info(f"Mastery calculated | subjects: {list(avg_mastery.keys())} | scores: {avg_mastery}")
 
         # 2. Project Engagement (Project Counts)
         # ------------------------------------------------
         # Find teams student is in
         memberships = find_many(TEAM_MEMBERSHIPS, {'student_id': student_id})
         team_ids = [m['team_id'] for m in memberships]
-        
-        # Find projects for these teams (assuming 1 project per team context usually)
-        # Actually need to link Team -> Project. TEAMS collection has project_id?
-        # Let's check TEAMS collection schema quickly or assume standard link.
-        # Based on previous file reads, TEAMS has project_id.
+        logger.info(f"Student memberships found | count: {len(memberships)} | team_ids: {team_ids}")
         
         project_counts = {}
         if team_ids:
-            teams = list(db['teams'].find({'_id': {'$in': [ObjectId(tid) for tid in team_ids]}}))
+            # properly use ObjectId for queries if IDs are strings
+            t_oids = []
+            for tid in team_ids:
+                try: t_oids.append(ObjectId(tid))
+                except: pass
+            
+            teams = find_many(TEAMS, {'_id': {'$in': t_oids}}) if t_oids else []
+            if not t_oids and team_ids:
+                 # Try finding by string IDs if ObjectId conversion failed/not used
+                 teams = find_many(TEAMS, {'_id': {'$in': team_ids}})
+
             project_ids = [t['project_id'] for t in teams if 'project_id' in t]
+            logger.info(f"Teams found | count: {len(teams)} | project_ids: {project_ids}")
             
             if project_ids:
-                projects = list(db[PROJECTS].find({'_id': {'$in': [ObjectId(pid) for pid in project_ids]}}))
+                p_oids = []
+                for pid in project_ids:
+                    try: p_oids.append(ObjectId(pid) if isinstance(pid, str) else pid)
+                    except: pass
+
+                projects = find_many(PROJECTS, {'_id': {'$in': p_oids}})
+                
                 for p in projects:
-                    subj = p.get('subject', 'General') # Assuming subject field exists or use description
+                    subj = p.get('subject', 'General') 
+                    # If subject is missing, maybe infer from title or tags?
+                    if not p.get('subject') and 'title' in p:
+                         # Simple heuristic or default
+                         pass
+                    
                     project_counts[subj] = project_counts.get(subj, 0) + 1
+                
+                logger.info(f"Projects count by subject: {project_counts}")
 
         # 3. Calculate Weighted Interest Score
         # ------------------------------------------------
