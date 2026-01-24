@@ -286,7 +286,11 @@ def get_project(project_id):
                     'submission_notes': m.get('submission_notes'),
                     'report_url': m.get('report_url'),
                     'zip_url': m.get('zip_url'),
-                    'submitted_at': (m.get('submitted_at').isoformat() if hasattr(m.get('submitted_at'), 'isoformat') else m.get('submitted_at')) if m.get('submitted_at') else None
+                    'submitted_at': (m.get('submitted_at').isoformat() if hasattr(m.get('submitted_at'), 'isoformat') else m.get('submitted_at')) if m.get('submitted_at') else None,
+                    'is_rejected': not m.get('pending_approval') and not m.get('is_completed') and m.get('rejected_at') is not None,
+                    'teacher_feedback': m.get('teacher_feedback'),
+                    'rejection_reason': m.get('rejection_reason'),
+                    'rejected_at': (m.get('rejected_at').isoformat() if hasattr(m.get('rejected_at'), 'isoformat') else m.get('rejected_at')) if m.get('rejected_at') else None
                 }
                 for m in milestones
             ],
@@ -1621,7 +1625,7 @@ def reject_milestone(project_id, milestone_id):
         if not milestone:
             return jsonify({'error': 'Milestone not found'}), 404
 
-        update_one(
+        result = update_one(
             PROJECT_MILESTONES,
             {'_id': milestone_id},
             {'$set': {
@@ -1633,7 +1637,8 @@ def reject_milestone(project_id, milestone_id):
             }}
         )
 
-        logger.info(f"Milestone rejected | milestone_id: {milestone_id} | teacher_id: {teacher_id}")
+        logger.info(f"[MILESTONE_REJECTION] Milestone rejected | milestone_id: {milestone_id} | teacher_id: {teacher_id}")
+        logger.info(f"[MILESTONE_REJECTION] Feedback recorded | milestone_id: {milestone_id} | feedback_length: {len(data.get('feedback', ''))}")
 
         return jsonify({
             'message': 'Milestone rejected',
@@ -1691,11 +1696,17 @@ def get_team_progress(team_id):
                 'order': idx + 1,
                 'is_completed': milestone.get('is_completed', False),
                 'pending_approval': milestone.get('pending_approval', False),
-                'due_date': milestone.get('due_date').isoformat() if milestone.get('due_date') else None
+                'due_date': milestone.get('due_date').isoformat() if milestone.get('due_date') else None,
+                'is_rejected': not milestone.get('pending_approval') and not milestone.get('is_completed') and milestone.get('rejected_at') is not None,
+                'teacher_feedback': milestone.get('teacher_feedback'),
+                'rejection_reason': milestone.get('rejection_reason'),
+                'rejected_at': (milestone.get('rejected_at').isoformat() if hasattr(milestone.get('rejected_at'), 'isoformat') else milestone.get('rejected_at')) if milestone.get('rejected_at') else None
             }
 
             if idx <= progress.get('current_milestone_index', 0):
                 unlocked_data.append(milestone_data)
+                if milestone_data.get('is_rejected'):
+                    logger.info(f"[GET_TEAM_PROGRESS] Including rejected milestone | milestone_id: {milestone.get('_id')} | has_feedback: {bool(milestone_data.get('teacher_feedback'))}")
             else:
                 locked_data.append(milestone_data)
 
