@@ -205,4 +205,13 @@ export const attendanceAPI = {
   getClassroomSessions: (classroomId, params) => api.get(`/attendance/classrooms/${classroomId}/sessions`, { params }),
 };
 
+export const resourcesAPI = {
+  uploadFile: (formData) => api.post('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  generateQuestions: (data) => api.post('/resources/generate-questions', data),
+  getQuestionBanks: (params) => api.get('/resources/question-banks', { params }),
+  getQuestionBankDetail: (id) => api.get(`/resources/question-banks/${id}`)
+};
+
 export default api;

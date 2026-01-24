@@ -34,6 +34,7 @@ import StudentAchievements from './pages/StudentAchievements';
 import StudentProfile from './pages/StudentProfile';
 import StudentAttendance from './pages/StudentAttendance';
 import TeacherAttendance from './pages/TeacherAttendance';
+import StudentQuestionBanks from './pages/StudentQuestionBanks';
 
 function MainLayout({ isConnected }) {
   const location = useLocation();
@@ -85,6 +86,7 @@ function MainLayout({ isConnected }) {
 
         {/* Student Portal Routes */}
         <Route path="/student" element={<ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/student/question-banks" element={<ProtectedRoute requiredRole="student"><StudentQuestionBanks /></ProtectedRoute>} />
         <Route path="/student/classes" element={<ProtectedRoute requiredRole="student"><StudentClasses /></ProtectedRoute>} />
         <Route path="/student/assignment/:assignmentId" element={<ProtectedRoute requiredRole="student"><StudentAssignment /></ProtectedRoute>} />
         <Route path="/student/practice" element={<ProtectedRoute requiredRole="student"><StudentPractice /></ProtectedRoute>} />

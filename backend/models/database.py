@@ -125,6 +125,7 @@ TEAM_PROGRESS = 'team_progress'
 INTERVENTIONS = 'interventions'
 TEMPLATE_USAGE = 'template_usage'
 TEMPLATE_RATINGS = 'template_ratings'
+QUESTION_BANKS = 'question_banks'
 
 # ============================================================================
 # INITIALIZE COLLECTIONS & INDEXES
@@ -379,6 +380,12 @@ def init_db(app=None):
     db[TEMPLATE_RATINGS].create_index([('template_id', ASCENDING)])
     db[TEMPLATE_RATINGS].create_index([('user_id', ASCENDING)])
     print(f"[OK] {TEMPLATE_RATINGS} collection initialized")
+
+    # Question Banks collection
+    db[QUESTION_BANKS].create_index([('teacher_id', ASCENDING)])
+    db[QUESTION_BANKS].create_index([('resource_url', ASCENDING)])
+    db[QUESTION_BANKS].create_index([('created_at', DESCENDING)])
+    print(f"[OK] {QUESTION_BANKS} collection initialized")
 
     print("="*60)
     print("[OK] All MongoDB collections and indexes created successfully")
