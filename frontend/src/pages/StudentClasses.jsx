@@ -17,12 +17,8 @@ const StudentClasses = () => {
     const [loading, setLoading] = useState(true);
     const [streamLoading, setStreamLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    // Poll State
     const [activePoll, setActivePoll] = useState(null);
     const [pollSubmitted, setPollSubmitted] = useState(false);
-
-    // Join Class State
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [joinCode, setJoinCode] = useState('');
     const [joinLoading, setJoinLoading] = useState(false);
@@ -35,9 +31,7 @@ const StudentClasses = () => {
             setLoading(true);
             const response = await classroomAPI.getStudentClasses(STUDENT_ID);
             setClasses(response.data);
-            if (response.data.length > 0 && !selectedClass) {
-                setSelectedClass(response.data[0]);
-            }
+            if (response.data.length > 0 && !selectedClass) setSelectedClass(response.data[0]);
         } catch (err) {
             console.error("Error fetching classes:", err);
             setError("Failed to load your classes.");
@@ -46,17 +40,14 @@ const StudentClasses = () => {
         }
     };
 
-    // Fetch classes on mount
     useEffect(() => {
-        if (STUDENT_ID) {
-            fetchClasses();
-        } else {
+        if (STUDENT_ID) fetchClasses();
+        else {
             setLoading(false);
             setError("Please log in to view your classes.");
         }
     }, [STUDENT_ID]);
 
-    // Fetch stream and active poll when selected class changes
     useEffect(() => {
         if (!selectedClass) return;
 
@@ -74,21 +65,10 @@ const StudentClasses = () => {
 
         const fetchActivePoll = async () => {
             try {
-                // Fetch all polls for class, look for active one
-                // Optimally we'd have an endpoint just for 'active poll', but filtering is fine for now
-                const res = await pollsAPI.getClassPolls(selectedClass.classroom_id, {
-                    student_id: STUDENT_ID,
-                    active_only: true
-                });
+                const res = await pollsAPI.getClassPolls(selectedClass.classroom_id, { student_id: STUDENT_ID, active_only: true });
                 const active = res.data.find(p => p.is_active);
-
-                // Reset submission state if poll changes
-                if (active?.poll_id !== activePoll?.poll_id) {
-                    setPollSubmitted(active?.has_responded || false);
-                } else if (active?.has_responded && !pollSubmitted) {
-                    // Update state if we learned we responded (e.g. from background refresh)
-                    setPollSubmitted(true);
-                }
+                if (active?.poll_id !== activePoll?.poll_id) setPollSubmitted(active?.has_responded || false);
+                else if (active?.has_responded && !pollSubmitted) setPollSubmitted(true);
                 setActivePoll(active || null);
             } catch (err) {
                 console.error("Error fetching polls:", err);
@@ -97,19 +77,14 @@ const StudentClasses = () => {
 
         fetchStream();
         fetchActivePoll();
-
-        // Poll for poll updates every 10s
         const pollInterval = setInterval(fetchActivePoll, 10000);
         return () => clearInterval(pollInterval);
-    }, [selectedClass, location.key]); // Add location.key to force refresh on navigation back
+    }, [selectedClass, location.key]);
 
     const handleSubmitPoll = async (option) => {
         if (!activePoll) return;
         try {
-            await pollsAPI.respondToPoll(activePoll.poll_id, {
-                student_id: STUDENT_ID,
-                response: option
-            });
+            await pollsAPI.respondToPoll(activePoll.poll_id, { student_id: STUDENT_ID, response: option });
             setPollSubmitted(true);
             toast.success("Poll response submitted!");
         } catch (err) {
@@ -123,31 +98,16 @@ const StudentClasses = () => {
         }
     };
 
-    const handleStartAssignment = (assignmentId) => {
-        navigate(`/student/assignment/${assignmentId}`);
-    };
-
-    const handleViewDetails = (postId) => {
-        navigate(`/student/assignment/${postId}`);
-    };
-
     const handleJoinClass = async (e) => {
         e.preventDefault();
         if (!joinCode.trim()) return;
-
         setJoinLoading(true);
         setJoinError(null);
-
         try {
-            await classroomAPI.joinClass({
-                student_id: STUDENT_ID,
-                join_code: joinCode.trim()
-            });
-
+            await classroomAPI.joinClass({ student_id: STUDENT_ID, join_code: joinCode.trim() });
             toast.success("Successfully joined the class!");
             setShowJoinModal(false);
             setJoinCode('');
-            // Refresh classes
             fetchClasses();
         } catch (err) {
             console.error("Join class error:", err);
@@ -160,10 +120,10 @@ const StudentClasses = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
                     <Loader2 className="animate-spin text-orange-500 mb-4" size={48} />
                     <p className="text-gray-500 font-medium">Loading your classes...</p>
-                </div>
+                </motion.div>
             </DashboardLayout>
         );
     }
@@ -171,77 +131,59 @@ const StudentClasses = () => {
     if (error) {
         return (
             <DashboardLayout>
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-center">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-center">
                     <div className="bg-red-100 p-4 rounded-full text-red-500 mb-4">
                         <AlertCircle size={32} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800">Oops!</h3>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">Oops!</h3>
                     <p className="text-gray-500 mb-6">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-6 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors"
-                    >
+                    <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 active:scale-95 transition-all shadow-sm">
                         Retry
                     </button>
-                </div>
+                </motion.div>
             </DashboardLayout>
         );
     }
 
     return (
         <DashboardLayout>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-8rem)]">
-
-                {/* Class List (Sidebar-ish) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
                 <div className="lg:col-span-1 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                             <Book className="text-orange-500" /> My Classes
                         </h2>
-                        <button
-                            onClick={() => setShowJoinModal(true)}
-                            className="bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors shadow-md"
-                            title="Join a Class"
-                        >
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowJoinModal(true)}
+                            className="bg-orange-500 text-white p-2.5 rounded-xl hover:bg-orange-600 transition-colors shadow-sm" title="Join a Class">
                             <Plus size={20} />
-                        </button>
+                        </motion.button>
                     </div>
 
-                    <div className="overflow-y-auto pr-2 flex-1 space-y-4">
+                    <div className="overflow-y-auto pr-2 flex-1 space-y-3">
                         {classes.length === 0 ? (
-                            <div className="text-gray-400 italic p-8 border-2 border-dashed border-gray-200 rounded-xl text-center flex flex-col items-center">
+                            <div className="text-gray-400 italic p-8 border-2 border-dashed border-gray-200 rounded-2xl text-center flex flex-col items-center">
                                 <Book size={48} className="mb-4 opacity-20" />
-                                <p>You haven't joined any classes yet.</p>
-                                <button
-                                    onClick={() => setShowJoinModal(true)}
-                                    className="mt-4 text-orange-500 font-bold hover:underline"
-                                >
+                                <p className="mb-2">You haven't joined any classes yet</p>
+                                <button onClick={() => setShowJoinModal(true)} className="mt-2 text-orange-500 font-bold hover:underline">
                                     Join your first class
                                 </button>
                             </div>
                         ) : (
                             classes.map((cls) => (
-                                <motion.div
-                                    key={cls.classroom_id}
-                                    onClick={() => setSelectedClass(cls)}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className={`p-4 rounded-xl cursor-pointer border-2 transition-all duration-300 ease-out hover:-translate-y-1 ${selectedClass?.classroom_id === cls.classroom_id
-                                        ? 'border-orange-400 bg-white shadow-md -rotate-1 ring-2 ring-orange-100 ring-offset-2'
-                                        : 'border-transparent bg-white/60 hover:bg-white hover:shadow-sm'
-                                        }`}
-                                >
+                                <motion.div key={cls.classroom_id} onClick={() => setSelectedClass(cls)} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}
+                                    className={`p-4 rounded-2xl cursor-pointer border-2 transition-all ${selectedClass?.classroom_id === cls.classroom_id
+                                        ? 'border-orange-400 bg-white shadow-md ring-2 ring-orange-100'
+                                        : 'border-transparent bg-white/60 hover:bg-white hover:shadow-sm'}`}>
                                     <div className="flex items-start justify-between mb-2">
-                                        <div className={`p-2 rounded-lg ${cls.theme_color ? '' : 'bg-teal-100 text-teal-700'} font-bold text-xs uppercase tracking-wider`}
+                                        <div className={`p-2 rounded-lg font-bold text-xs uppercase tracking-wider ${cls.theme_color ? '' : 'bg-teal-100 text-teal-700'}`}
                                             style={cls.theme_color ? { backgroundColor: `${cls.theme_color}20`, color: cls.theme_color } : {}}>
                                             {cls.class_name.split(' ')[0]}
                                         </div>
                                         <ChevronRight className={`transition-transform ${selectedClass?.classroom_id === cls.classroom_id ? 'rotate-90 text-orange-500' : 'text-gray-300'}`} size={20} />
                                     </div>
-                                    <h3 className="font-bold text-gray-800 text-lg">{cls.class_name}</h3>
-                                    <div className="flex items-center gap-3 mt-3 text-sm text-gray-500">
-                                        <span className="flex items-center gap-1"><User size={14} /> {cls.teacher_name}</span>
-                                        {/* <span className="flex items-center gap-1"><Clock size={14} /> {cls.time}</span> */}
+                                    <h3 className="font-bold text-gray-800 text-lg mb-2">{cls.class_name}</h3>
+                                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                                        <span className="flex items-center gap-1.5"><User size={14} /> {cls.teacher_name}</span>
                                     </div>
                                 </motion.div>
                             ))
@@ -249,59 +191,47 @@ const StudentClasses = () => {
                     </div>
                 </div>
 
-                {/* Class Stream (Main Content) */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden flex flex-col">
                     {selectedClass ? (
                         <>
-                            {/* Header */}
                             <div className="p-6 bg-gradient-to-r from-slate-50 to-orange-50 border-b border-orange-100">
                                 <h1 className="text-2xl font-extrabold text-gray-800">{selectedClass.class_name}</h1>
                                 <p className="text-gray-500 flex items-center gap-2 mt-1">
-                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">Active</span>
+                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>
                                     • Instructor: {selectedClass.teacher_name}
                                 </p>
                             </div>
 
-                            {/* Feed */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-                                {/* Active Poll Card */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
                                 {activePoll && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="bg-teal-50 border border-teal-200 rounded-xl p-6 shadow-sm relative overflow-hidden"
-                                    >
-                                        <div className="absolute top-0 right-0 p-2">
+                                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+                                        className="bg-teal-50 border border-teal-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-3 right-3">
                                             <span className="flex h-3 w-3 relative">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
                                             </span>
                                         </div>
-
-                                        <div className="flex items-center gap-2 mb-3 text-teal-800 font-bold">
+                                        <div className="flex items-center gap-2 mb-4 text-teal-800 font-bold">
                                             <MessageSquare size={20} />
                                             <h3>Live Poll: {activePoll.question}</h3>
                                         </div>
-
                                         {!pollSubmitted ? (
-                                            <div className="space-y-3 mt-4">
+                                            <div className="space-y-2">
                                                 {activePoll.options?.map((option, idx) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => handleSubmitPoll(option)}
-                                                        className="w-full text-left p-3 bg-white border border-teal-100 hover:border-teal-300 hover:bg-teal-50 rounded-lg transition-all text-gray-700 font-medium"
-                                                    >
+                                                    <motion.button key={idx} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }} onClick={() => handleSubmitPoll(option)}
+                                                        className="w-full text-left p-3 bg-white border border-teal-100 hover:border-teal-300 hover:bg-teal-50 rounded-xl transition-all text-gray-700 font-medium shadow-sm">
                                                         {option}
-                                                    </button>
+                                                    </motion.button>
                                                 )) || <p className="text-gray-500 italic text-center">Loading options...</p>}
                                             </div>
                                         ) : (
-                                            <div className="mt-4 p-4 bg-teal-100 rounded-lg text-center text-teal-800 font-bold">
+                                            <div className="p-4 bg-teal-100 rounded-xl text-center text-teal-800 font-bold">
                                                 <span className="flex items-center justify-center gap-2">
                                                     <div className="bg-teal-600 text-white rounded-full p-1"><User size={12} /></div>
                                                     Response Submitted!
                                                 </span>
-                                                <p className="text-xs font-normal mt-1 opacity-80">Wait for the teacher to reveal results.</p>
+                                                <p className="text-xs font-normal mt-2 opacity-80">Wait for the teacher to reveal results</p>
                                             </div>
                                         )}
                                     </motion.div>
@@ -313,12 +243,8 @@ const StudentClasses = () => {
                                     </div>
                                 ) : stream.length > 0 ? (
                                     stream.map((post) => (
-                                        <motion.div
-                                            key={post.post_id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 group hover:border-orange-200 transition-colors"
-                                        >
+                                        <motion.div key={post.post_id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }}
+                                            className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-orange-200 hover:shadow-md transition-all group">
                                             <div className="flex items-center gap-3 mb-3">
                                                 <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold uppercase">
                                                     {post.author.author_name[0]}
@@ -328,7 +254,7 @@ const StudentClasses = () => {
                                                     <p className="text-xs text-gray-400">{new Date(post.created_at).toLocaleDateString()} {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                 </div>
                                                 {post.post_type === 'assignment' && (
-                                                    <span className="ml-auto bg-blue-100 text-blue-600 text-xs font-bold px-2 py-1 rounded-lg uppercase">
+                                                    <span className="ml-auto bg-blue-100 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-lg uppercase">
                                                         Assignment
                                                     </span>
                                                 )}
@@ -337,9 +263,8 @@ const StudentClasses = () => {
                                             <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{post.content || post.title}</p>
                                             {post.content && post.title && post.title !== post.content && <h4 className='font-bold mb-2'>{post.title}</h4>}
 
-
                                             {post.post_type === 'assignment' && post.assignment_details && (
-                                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between mb-4">
+                                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center justify-between mb-4">
                                                     <span className="text-sm text-blue-800 font-medium flex items-center gap-2">
                                                         <Clock size={16} /> Due: {post.assignment_details.due_date ? new Date(post.assignment_details.due_date).toLocaleDateString() : 'No Due Date'}
                                                     </span>
@@ -354,18 +279,13 @@ const StudentClasses = () => {
                                                                     Submitted
                                                                 </span>
                                                             )}
-                                                            <button
-                                                                onClick={() => handleStartAssignment(post.post_id)}
-                                                                className="text-blue-600 text-xs font-bold hover:underline"
-                                                            >
+                                                            <button onClick={() => navigate(`/student/assignment/${post.post_id}`)} className="text-blue-600 text-xs font-bold hover:underline">
                                                                 View
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <button
-                                                            onClick={() => handleStartAssignment(post.post_id)}
-                                                            className="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                                        >
+                                                        <button onClick={() => navigate(`/student/assignment/${post.post_id}`)}
+                                                            className="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
                                                             Start Now
                                                         </button>
                                                     )}
@@ -373,14 +293,12 @@ const StudentClasses = () => {
                                             )}
 
                                             <div className="flex items-center gap-4 pt-3 border-t border-gray-50 text-gray-400 text-sm">
-                                                <button className="flex items-center gap-1 hover:text-orange-500 transition-colors">
+                                                <button className="flex items-center gap-1.5 hover:text-orange-500 transition-colors">
                                                     <MessageSquare size={16} /> {post.comment_count} Comments
                                                 </button>
                                                 {post.post_type === 'assignment' && (
-                                                    <button
-                                                        onClick={() => handleViewDetails(post.post_id)}
-                                                        className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer"
-                                                    >
+                                                    <button onClick={() => navigate(`/student/assignment/${post.post_id}`)}
+                                                        className="flex items-center gap-1.5 hover:text-blue-500 transition-colors cursor-pointer">
                                                         <FileText size={16} /> View Details
                                                     </button>
                                                 )}
@@ -400,9 +318,7 @@ const StudentClasses = () => {
                                     </div>
                                 )}
 
-                                <div className="text-center py-8 text-gray-400 text-sm">
-                                    — You're all caught up! —
-                                </div>
+                                <div className="text-center py-8 text-gray-400 text-sm">— You're all caught up! —</div>
                             </div>
                         </>
                     ) : (
@@ -412,81 +328,48 @@ const StudentClasses = () => {
                         </div>
                     )}
                 </div>
-
             </div>
 
-            {/* Join Class Modal */}
             <AnimatePresence>
                 {showJoinModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-                        onClick={() => setShowJoinModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden"
-                        >
-                            <button
-                                onClick={() => setShowJoinModal(false)}
-                                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
-                            >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowJoinModal(false)}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden">
+                            <button onClick={() => setShowJoinModal(false)}
+                                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
                                 <X size={20} />
                             </button>
 
                             <div className="mb-6">
                                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Join a Class</h3>
-                                <p className="text-gray-500">
-                                    Ask your teacher for the class code, then enter it here.
-                                </p>
+                                <p className="text-gray-500">Ask your teacher for the class code, then enter it here</p>
                             </div>
 
                             <form onSubmit={handleJoinClass}>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                                            Class Code
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={joinCode}
-                                            onChange={(e) => setJoinCode(e.target.value)}
-                                            placeholder="e.g. AB12CD"
-                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none text-lg font-mono tracking-wider uppercase transition-colors"
-                                            maxLength={6}
-                                        />
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Class Code</label>
+                                        <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="e.g. AB12CD" maxLength={6}
+                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none text-lg font-mono tracking-wider uppercase transition-all" />
                                     </div>
 
                                     {joinError && (
-                                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
+                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                                            className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
                                             <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                             {joinError}
-                                        </div>
+                                        </motion.div>
                                     )}
 
                                     <div className="flex gap-3 mt-8">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowJoinModal(false)}
-                                            className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
-                                        >
+                                        <button type="button" onClick={() => setShowJoinModal(false)}
+                                            className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-bold rounded-xl transition-all">
                                             Cancel
                                         </button>
-                                        <button
-                                            type="submit"
-                                            disabled={!joinCode.trim() || joinLoading}
-                                            className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {joinLoading ? (
-                                                <Loader2 size={20} className="animate-spin" />
-                                            ) : (
-                                                'Join Class'
-                                            )}
+                                        <button type="submit" disabled={!joinCode.trim() || joinLoading}
+                                            className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                                            {joinLoading ? <Loader2 size={20} className="animate-spin" /> : 'Join Class'}
                                         </button>
                                     </div>
                                 </div>
@@ -495,7 +378,7 @@ const StudentClasses = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </DashboardLayout >
+        </DashboardLayout>
     );
 };
 

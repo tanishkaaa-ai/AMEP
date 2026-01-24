@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { CheckCircle, Clock, BarChart2 } from 'lucide-react';
+import { CheckCircle, Clock, BarChart2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { pollsAPI } from '../services/api';
 
@@ -9,35 +9,24 @@ const StudentPolls = () => {
     const [hasResponded, setHasResponded] = useState(false);
     const [selectedOption, setSelectedOption] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [studentId] = useState('student_456'); // Mock Student ID
-    const [classroomId] = useState('class_101'); // Mock Classroom ID
+    const [studentId] = useState('student_456');
+    const [classroomId] = useState('class_101');
 
-    // Polling for active polls
     useEffect(() => {
         const checkPolls = async () => {
             try {
-                // Get active polls for this classroom
                 const res = await pollsAPI.getClassPolls(classroomId);
                 const active = res.data.find(p => p.is_active);
-
-                if (active) {
-                    // If we found a new active poll that is different from current
-                    if (active.poll_id !== activePoll?.poll_id) {
-                        // Fetch full details including options
-                        const fullPollRes = await pollsAPI.getPoll(active.poll_id);
-                        setActivePoll(fullPollRes.data);
-                        setHasResponded(false); // Reset for new poll
-                        setSelectedOption(null);
-                    }
-                } else {
-                    setActivePoll(null);
-                }
+                if (active && active.poll_id !== activePoll?.poll_id) {
+                    const fullPollRes = await pollsAPI.getPoll(active.poll_id);
+                    setActivePoll(fullPollRes.data);
+                    setHasResponded(false);
+                    setSelectedOption(null);
+                } else if (!active) setActivePoll(null);
             } catch (error) {
-                console.error("Error checking for polls:", error);
+                console.error("Error checking polls:", error);
             }
         };
-
-        // Check immediately then every 3s
         checkPolls();
         const intervalId = setInterval(checkPolls, 3000);
         return () => clearInterval(intervalId);
@@ -45,20 +34,13 @@ const StudentPolls = () => {
 
     const submitResponse = async (option) => {
         if (!activePoll) return;
-
         try {
             setLoading(true);
-            setSelectedOption(option);
-
-            await pollsAPI.respondToPoll(activePoll.poll_id, {
-                student_id: studentId,
-                response: option
-            });
-
+            await pollsAPI.respondToPoll(activePoll.poll_id, { student_id: studentId, response: option });
             setHasResponded(true);
+            setSelectedOption(option);
         } catch (error) {
-            console.error("Failed to submit vote:", error);
-            alert("Failed to submit response. You may have already voted.");
+            console.error("Poll response error:", error);
         } finally {
             setLoading(false);
         }
@@ -66,73 +48,51 @@ const StudentPolls = () => {
 
     return (
         <DashboardLayout>
-            <div className="max-w-2xl mx-auto py-10">
-                <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-extrabold text-gray-900">Live Session</h1>
-                    <p className="text-gray-500 mt-2">Real-time feedback & anonymous polling.</p>
-                </div>
+            <div className="max-w-3xl mx-auto p-6">
+                <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-extrabold text-gray-800 mb-6 flex items-center gap-2">
+                    <BarChart2 className="text-blue-600" /> Live Polls
+                </motion.h1>
 
                 {activePoll ? (
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white rounded-3xl shadow-lg border border-orange-100 p-8 relative overflow-hidden"
-                    >
-                        <div className="inline-flex items-center gap-2 bg-red-100 text-red-600 px-4 py-1 rounded-full text-sm font-bold animate-pulse mb-6">
-                            <span className="w-2 h-2 bg-red-600 rounded-full" /> LIVE POLL ACTIVE
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                        <div className="flex items-center gap-2 mb-4 text-blue-600">
+                            <span className="flex h-3 w-3 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                            </span>
+                            <span className="text-sm font-bold uppercase tracking-wider">Live Poll</span>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 relative z-10">{activePoll.question}</h2>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">{activePoll.question}</h2>
 
-                        {!hasResponded ? (
-                            <div className="space-y-4 relative z-10">
-                                {activePoll.options.map((option, idx) => (
-                                    <motion.button
-                                        key={idx}
-                                        whileHover={{ scale: 1.02, backgroundColor: '#fff7ed' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => submitResponse(option)}
-                                        disabled={loading}
-                                        className="w-full p-5 text-left border-2 border-gray-100 rounded-2xl hover:border-orange-300 transition-all font-medium text-gray-700 flex items-center justify-between group disabled:opacity-50"
-                                    >
-                                        <span>{option}</span>
-                                        <span className="w-6 h-6 rounded-full border-2 border-gray-200 group-hover:border-orange-400 flex items-center justify-center">
-                                            <span className="w-3 h-3 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </span>
-                                    </motion.button>
-                                ))}
+                        {hasResponded ? (
+                            <div className="p-6 bg-green-50 rounded-xl text-center border border-green-100">
+                                <CheckCircle className="mx-auto mb-3 text-green-500" size={48} />
+                                <h3 className="font-bold text-green-800 text-lg mb-1">Response Submitted!</h3>
+                                <p className="text-green-600 text-sm">You voted for: <span className="font-bold">{selectedOption}</span></p>
+                                <p className="text-xs text-green-400 mt-2">Wait for teacher to reveal results</p>
                             </div>
                         ) : (
-                            <div className="text-center py-10 relative z-10">
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"
-                                >
-                                    <CheckCircle size={40} />
-                                </motion.div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-2">Response Submitted!</h3>
-                                <p className="text-gray-500 max-w-sm mx-auto">
-                                    You selected <span className="font-bold text-gray-800">"{selectedOption}"</span>.
-                                    Waiting for teacher to close the poll...
-                                </p>
-                                <div className="mt-8 flex justify-center">
-                                    <BarChart2 className="animate-pulse text-orange-400" size={32} />
-                                </div>
+                            <div className="space-y-3">
+                                {(activePoll.options || []).map((option, idx) => (
+                                    <motion.button key={idx} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }} onClick={() => submitResponse(option)} disabled={loading}
+                                        className="w-full text-left p-4 bg-gray-50 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl transition-all text-gray-800 font-bold disabled:opacity-50 shadow-sm">
+                                        {option}
+                                    </motion.button>
+                                ))}
                             </div>
                         )}
                     </motion.div>
                 ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center"
-                    >
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-400">
-                            <Clock size={32} />
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                        className="bg-gray-50 rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
+                        <Clock size={48} className="mx-auto mb-4 text-gray-300" />
+                        <h3 className="font-bold text-gray-800 text-lg mb-2">No Active Polls</h3>
+                        <p className="text-gray-500">Waiting for your teacher to start a poll...</p>
+                        <div className="mt-6 flex justify-center">
+                            <Loader2 className="animate-spin text-gray-300" size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-700 mb-2">No Active Poll</h3>
-                        <p className="text-gray-500">Sit tight! When your teacher launches a question, it will appear here automatically.</p>
                     </motion.div>
                 )}
             </div>
