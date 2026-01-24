@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { GraduationCap, School, User, Lock, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
+import { GraduationCap, School, User, Lock, Eye, EyeOff, ArrowRight, Shield, BarChart3, Clock, CheckCircle, ChevronRight, PenTool } from 'lucide-react';
 
 const StartPage = () => {
     const navigate = useNavigate();
     const { login, register } = useAuth(); // Use AuthContext
+
+    // View State: 'landing' | 'role_selection' | 'auth'
+    const [view, setView] = useState('landing');
     const [role, setRole] = useState(null); // 'student' | 'teacher' | null
     const [isRegistering, setIsRegistering] = useState(false);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -21,6 +25,16 @@ const StartPage = () => {
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleRoleSelect = (selectedRole) => {
+        if (selectedRole === 'admin') {
+            setRole('admin');
+            setView('auth');
+        } else {
+            setRole(selectedRole);
+            setView('auth');
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -56,14 +70,144 @@ const StartPage = () => {
         }
     };
 
-    // Dual Pathway Pre-selection
-    if (!role) {
+    // --- LANDING VIEW ---
+    if (view === 'landing') {
         return (
-            <div className="flex h-screen w-full overflow-hidden">
+            <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
+                {/* Background Blobs */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+                    <div className="absolute -top-20 -left-20 w-[600px] h-[600px] rounded-full filter blur-3xl opacity-20 bg-orange-300 animate-pulse" />
+                    <div className="absolute top-40 -right-20 w-[500px] h-[500px] rounded-full filter blur-3xl opacity-20 bg-teal-300 animate-pulse delay-700" />
+                    <div className="absolute -bottom-20 left-1/3 w-[600px] h-[600px] rounded-full filter blur-3xl opacity-20 bg-blue-300 animate-pulse delay-1000" />
+                </div>
+
+                <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col min-h-screen">
+                    {/* Header */}
+                    <header className="flex justify-between items-center mb-16">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-gradient-to-br from-orange-500 to-yellow-400 p-2 rounded-lg shadow-md">
+                                <School className="text-white" size={24} />
+                            </div>
+                            <span className="font-bold text-xl text-gray-800 tracking-tight">AMEP<span className="text-orange-500">Platform</span></span>
+                        </div>
+                        <nav className="hidden md:flex items-center gap-8 text-gray-600 font-medium text-sm">
+                            <a href="#" className="hover:text-orange-500 transition-colors">Features</a>
+                            <a href="#" className="hover:text-orange-500 transition-colors">Solutions</a>
+                            <a href="#" className="hover:text-orange-500 transition-colors">About</a>
+                        </nav>
+                        <button
+                            onClick={() => setView('role_selection')}
+                            className="bg-gray-900 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        >
+                            Log In
+                        </button>
+                    </header>
+
+                    {/* Hero Section */}
+                    <main className="flex-1 flex flex-col md:flex-row items-center gap-12 mb-20">
+                        <div className="md:w-1/2 space-y-8">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-xs font-bold uppercase tracking-wider border border-orange-100 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                New: Digital Correction
+                            </div>
+                            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-tight">
+                                Empowering <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-500">Next-Gen</span> Education
+                            </h1>
+                            <p className="text-xl text-gray-500 leading-relaxed max-w-lg">
+                                Experience the future of learning with effortless attendance, digital corrections, and insight-driven analytics.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                                <button
+                                    onClick={() => setView('role_selection')}
+                                    className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full font-bold text-lg shadow-orange-200 shadow-xl hover:shadow-2xl hover:brightness-110 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 group"
+                                >
+                                    Get Started Free
+                                    <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                                </button>
+                                <button className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                                    <Clock size={20} className="text-gray-400" />
+                                    Watch Demo
+                                </button>
+                            </div>
+
+                            <div className="pt-8 flex items-center gap-4 text-sm text-gray-400 font-medium">
+                                <div className="flex -space-x-2">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs">
+                                            <User size={12} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <p>Trusted by 500+ Educators</p>
+                            </div>
+                        </div>
+
+                        {/* Feature Cards / Visual */}
+                        <div className="md:w-1/2 relative">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-4 mt-8">
+                                    <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 transform hover:scale-105 transition-transform duration-300">
+                                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4">
+                                            <BarChart3 size={24} />
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 text-lg mb-1">Deep Analytics</h3>
+                                        <p className="text-gray-500 text-sm">Real-time insights into student performance.</p>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 transform hover:scale-105 transition-transform duration-300">
+                                        <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600 mb-4">
+                                            <CheckCircle size={24} />
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 text-lg mb-1">Smart Attendance</h3>
+                                        <p className="text-gray-500 text-sm">Geo-fenced verification for accuracy.</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 transform hover:scale-105 transition-transform duration-300">
+                                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-4">
+                                            <PenTool size={24} />
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 text-lg mb-1">Digital Grading</h3>
+                                        <p className="text-gray-500 text-sm">Annotate submissions directly on screen.</p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-2xl shadow-xl text-white transform hover:scale-105 transition-transform duration-300 flex flex-col justify-between h-48">
+                                        <div>
+                                            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-sm">
+                                                <Shield size={24} />
+                                            </div>
+                                            <h3 className="font-bold text-white text-lg">Secure Platform</h3>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-gray-300 font-medium">
+                                            Powered by AI <ChevronRight size={14} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
+    // --- ROLE SELECTION VIEW ---
+    if (view === 'role_selection') {
+        return (
+            <div className="flex h-screen w-full overflow-hidden animate-fade-in relative">
+
+                {/* Back to Home Button */}
+                <button
+                    onClick={() => setView('landing')}
+                    className="absolute top-6 left-6 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-lg font-bold text-gray-600 hover:text-gray-900 transition-all text-sm flex items-center gap-2"
+                >
+                    <ArrowRight size={16} className="rotate-180" /> Back to Home
+                </button>
+
                 {/* Student Side */}
                 <div
                     className="w-1/2 bg-gradient-to-br from-orange-400 to-yellow-300 flex flex-col items-center justify-center p-10 cursor-pointer transition-all hover:w-[55%] duration-500 relative group"
-                    onClick={() => setRole('student')}
+                    onClick={() => handleRoleSelect('student')}
                 >
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="bg-white p-6 rounded-full shadow-lg mb-6 transform group-hover:scale-110 transition-transform">
@@ -79,7 +223,7 @@ const StartPage = () => {
                 {/* Teacher Side */}
                 <div
                     className="w-1/2 bg-gradient-to-br from-teal-600 to-emerald-500 flex flex-col items-center justify-center p-10 cursor-pointer transition-all hover:w-[55%] duration-500 relative group"
-                    onClick={() => setRole('teacher')}
+                    onClick={() => handleRoleSelect('teacher')}
                 >
                     <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="bg-white p-6 rounded-full shadow-lg mb-6 transform group-hover:scale-110 transition-transform">
@@ -97,10 +241,10 @@ const StartPage = () => {
                     <span className="font-bold text-gray-800 text-lg tracking-wider">AMEP PLATFORM</span>
                 </div>
 
-                {/* Admin Access Link - Styled to match UI */}
+                {/* Admin Access Link */}
                 <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
                     <button
-                        onClick={() => setRole('admin')}
+                        onClick={() => handleRoleSelect('admin')}
                         className="group flex items-center gap-2 px-6 py-2.5 bg-white/80 hover:bg-white backdrop-blur-md border border-white/60 shadow-lg hover:shadow-xl rounded-full text-slate-600 hover:text-slate-800 font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5"
                     >
                         <Shield size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
@@ -111,7 +255,7 @@ const StartPage = () => {
         );
     }
 
-    // Login/Register Form
+    // --- AUTH FORM VIEW ---
     return (
         <div className={`min-h-screen flex items-center justify-center relative overflow-hidden ${role === 'student' ? 'bg-orange-50' : role === 'admin' ? 'bg-slate-50' : 'bg-teal-50'}`}>
 
@@ -126,7 +270,7 @@ const StartPage = () => {
 
                 {/* Back Button */}
                 <button
-                    onClick={() => setRole(null)}
+                    onClick={() => setView('role_selection')}
                     className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium flex items-center gap-1"
                 >
                     ← Back
