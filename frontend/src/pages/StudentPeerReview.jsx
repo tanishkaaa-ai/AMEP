@@ -9,10 +9,10 @@ import { motion } from 'framer-motion';
 const RatingSlider = ({ dimension, skill, value, onChange }) => (
     <div className="mb-4">
         <div className="flex justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700 capitalize">
+            <label className="text-sm font-medium text-[#EAE0CF]/80 capitalize">
                 {skill.replace(/_/g, ' ')}
             </label>
-            <span className="text-sm font-bold text-blue-600">{value}</span>
+            <span className="text-sm font-bold text-[#EAE0CF]">{value}</span>
         </div>
         <input
             type="range"
@@ -21,9 +21,9 @@ const RatingSlider = ({ dimension, skill, value, onChange }) => (
             step="0.5"
             value={value}
             onChange={(e) => onChange(dimension, skill, parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            className="w-full h-2 bg-[#1a2c3d] rounded-lg appearance-none cursor-pointer accent-[#547792]"
         />
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
+        <div className="flex justify-between text-xs text-[#EAE0CF]/40 mt-1">
             <span>Poor</span>
             <span>Excellent</span>
         </div>
@@ -127,9 +127,9 @@ const StudentPeerReview = () => {
 
     return (
         <DashboardLayout>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg">
-                    <User size={20} className="text-blue-500" />
+            <div className="bg-[#213448] rounded-2xl shadow-sm border border-[#EAE0CF]/20 p-6 mb-8">
+                <h2 className="font-bold text-[#EAE0CF] mb-4 flex items-center gap-2 text-lg">
+                    <User size={20} className="text-[#EAE0CF]" />
                     Select Team Member to Review
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -143,25 +143,25 @@ const StudentPeerReview = () => {
                                 onClick={() => !isCompleted && setSelectedReviewee(member.student_id)}
                                 disabled={isCompleted}
                                 className={`p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden ${selectedReviewee === member.student_id
-                                    ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200'
+                                    ? 'border-[#EAE0CF] bg-[#1a2c3d] shadow-md ring-2 ring-[#EAE0CF]/20'
                                     : isCompleted
-                                        ? 'border-green-200 bg-green-50 cursor-default opacity-80'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        ? 'border-green-900/30 bg-green-900/10 cursor-default opacity-60 grayscale'
+                                        : 'border-[#EAE0CF]/10 bg-[#1a2c3d] hover:border-[#EAE0CF]/30 hover:bg-[#1a2c3d]/80'
                                     }`}
                             >
                                 {isCompleted && (
-                                    <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-bl-lg z-10">
+                                    <div className="absolute top-0 right-0 bg-green-900/60 text-green-300 text-[10px] uppercase font-bold px-2 py-1 rounded-bl-lg z-10 backdrop-blur-sm">
                                         Done
                                     </div>
                                 )}
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mb-0 ${isCompleted ? 'bg-green-200 text-green-700' : 'bg-blue-100 text-blue-600'
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mb-0 ${isCompleted ? 'bg-green-900/20 text-green-400' : 'bg-[#547792] text-[#EAE0CF] border border-[#EAE0CF]/20'
                                         }`}>
                                         {member.student_name ? member.student_name[0] : '?'}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-gray-800">{member.student_name || 'Unknown Student'}</p>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{member.role || 'Member'}</p>
+                                        <p className="font-bold text-[#EAE0CF]">{member.student_name || 'Unknown Student'}</p>
+                                        <p className="text-xs text-[#EAE0CF]/60 uppercase tracking-wider font-bold">{member.role || 'Member'}</p>
                                     </div>
                                 </div>
                             </motion.button>
@@ -179,9 +179,9 @@ const StudentPeerReview = () => {
                     >
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Team Dynamics */}
-                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-indigo-600">
-                                    <Users size={24} /> Team Dynamics
+                            <div className="bg-[#213448] rounded-2xl p-6 shadow-sm border border-[#EAE0CF]/20">
+                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-[#EAE0CF]">
+                                    <Users size={24} className="text-[#547792]" /> Team Dynamics
                                 </h2>
                                 {Object.keys(ratings.team_dynamics).map((skill) => (
                                     <RatingSlider
@@ -198,9 +198,9 @@ const StudentPeerReview = () => {
                             </div>
 
                             {/* Team Structure */}
-                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-teal-600">
-                                    <Layout size={24} /> Team Structure
+                            <div className="bg-[#213448] rounded-2xl p-6 shadow-sm border border-[#EAE0CF]/20">
+                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-[#EAE0CF]">
+                                    <Layout size={24} className="text-[#547792]" /> Team Structure
                                 </h2>
                                 {Object.keys(ratings.team_structure).map((skill) => (
                                     <RatingSlider
@@ -217,9 +217,9 @@ const StudentPeerReview = () => {
                             </div>
 
                             {/* Team Motivation */}
-                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-orange-600">
-                                    <Zap size={24} /> Team Motivation
+                            <div className="bg-[#213448] rounded-2xl p-6 shadow-sm border border-[#EAE0CF]/20">
+                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-[#EAE0CF]">
+                                    <Zap size={24} className="text-orange-400" /> Team Motivation
                                 </h2>
                                 {Object.keys(ratings.team_motivation).map((skill) => (
                                     <RatingSlider
@@ -235,9 +235,9 @@ const StudentPeerReview = () => {
                                 ))}
                             </div>
 
-                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-purple-600">
-                                    <Award size={24} /> Team Excellence
+                            <div className="bg-[#213448] rounded-2xl p-6 shadow-sm border border-[#EAE0CF]/20">
+                                <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-[#EAE0CF]">
+                                    <Award size={24} className="text-purple-400" /> Team Excellence
                                 </h2>
                                 {Object.keys(ratings.team_excellence).map((skill) => (
                                     <RatingSlider
@@ -256,7 +256,7 @@ const StudentPeerReview = () => {
 
                         <button
                             onClick={handleSubmitReview}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all text-lg flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-[#EAE0CF] text-[#213448] font-bold rounded-xl shadow-lg hover:bg-white hover:scale-[1.01] transition-all text-lg flex items-center justify-center gap-2"
                         >
                             <Star fill="currentColor" /> Submit Peer Review
                         </button>
