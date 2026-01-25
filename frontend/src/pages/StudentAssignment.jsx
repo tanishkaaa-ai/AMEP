@@ -139,7 +139,7 @@ const StudentAssignment = () => {
 
     return (
         <DashboardLayout>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <button
                     onClick={() => navigate(-1)}
                     className="flex items-center text-[#EAE0CF]/60 hover:text-[#EAE0CF] mb-6 transition-colors font-medium"
@@ -167,8 +167,8 @@ const StudentAssignment = () => {
                         </div>
                     </div>
 
-                    <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-6">
+                    <div className="p-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div className="lg:col-span-3 space-y-6">
                             <div>
                                 <h3 className="font-bold text-lg text-[#EAE0CF] mb-3">Instructions</h3>
                                 <div className="prose text-[#EAE0CF]/80">
@@ -177,7 +177,7 @@ const StudentAssignment = () => {
                             </div>
                         </div>
 
-                        <div className="bg-[#213448]/30 p-6 rounded-xl h-fit border border-[#EAE0CF]/10">
+                        <div className="lg:col-span-2 bg-[#213448]/30 p-6 rounded-xl h-fit border border-[#EAE0CF]/10">
                             <h3 className="font-bold text-lg text-[#EAE0CF] mb-4">Your Work</h3>
 
                             {submitted ? (
