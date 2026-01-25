@@ -720,6 +720,7 @@ def submit_peer_review(team_id):
     """
     try:
         data = request.json
+        logger.info(f"[SUBMIT_PEER_REVIEW] Input received | team_id: {team_id} | reviewer: {data.get('reviewer_id')} | reviewee: {data.get('reviewee_id')} | type: {data.get('review_type')}")
 
         required = ['reviewer_id', 'reviewee_id', 'review_type', 'ratings']
         for field in required:
