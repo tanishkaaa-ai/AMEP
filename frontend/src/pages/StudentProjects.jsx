@@ -33,16 +33,16 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
 
     return (
         <div
-            className="flex flex-col h-full bg-slate-50 rounded-2xl p-4 border border-slate-200 transition-colors hover:bg-slate-100"
+            className="flex flex-col h-full bg-[#1a2c3d] rounded-2xl p-4 border border-[#EAE0CF]/10 transition-colors hover:bg-[#1a2c3d]/80"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
             <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                <h3 className="font-bold text-[#EAE0CF] flex items-center gap-2">
                     <Icon size={18} className={color} /> {title}
-                    <span className="bg-white px-2 py-0.5 rounded-full text-xs border border-gray-200">{columnTasks.length}</span>
+                    <span className="bg-[#213448] px-2 py-0.5 rounded-full text-xs border border-[#EAE0CF]/20 text-[#EAE0CF]">{columnTasks.length}</span>
                 </h3>
-                <button className="text-gray-400 hover:text-gray-600"><MoreHorizontal size={18} /></button>
+                <button className="text-[#EAE0CF]/40 hover:text-[#EAE0CF]"><MoreHorizontal size={18} /></button>
             </div>
 
             <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1 pb-10">
@@ -52,8 +52,8 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
                         layoutId={task.task_id || task._id}
                         draggable={true}
                         onDragStart={(e) => handleDragStart(e, task)}
-                        whileHover={{ y: -2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                        className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 group relative cursor-grab active:cursor-grabbing hover:border-blue-300 transition-colors"
+                        whileHover={{ y: -2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)' }}
+                        className="bg-[#213448] p-4 rounded-xl shadow-sm border border-[#EAE0CF]/10 group relative cursor-grab active:cursor-grabbing hover:border-[#547792] transition-colors"
                     >
                         {/* Always Visible Move Button */}
                         {status !== 'completed' && (
@@ -63,8 +63,8 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
                                         e.stopPropagation();
                                         onMoveTask(task, status === 'todo' ? 'in_progress' : 'completed');
                                     }}
-                                    className={`p-1.5 rounded-full text-white shadow-md transition-transform hover:scale-110 flex items-center justify-center
-                                        ${status === 'todo' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'}`}
+                                    className={`p-1.5 rounded-full text-[#EAE0CF] shadow-md transition-transform hover:scale-110 flex items-center justify-center
+                                        ${status === 'todo' ? 'bg-[#547792] hover:bg-[#4a6b8a]' : 'bg-green-600 hover:bg-green-700'}`}
                                     title={status === 'todo' ? "Start Task" : "Complete Task"}
                                 >
                                     {status === 'todo' ? <ArrowRightCircle size={16} /> : <CheckCircle2 size={16} />}
@@ -74,32 +74,32 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
 
                         <div className="flex justify-between items-start mb-2 pr-8">
                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-opacity-20 
-                ${task.priority === 'high' ? 'bg-red-500 text-red-700' : 'bg-blue-500 text-blue-700'}`}>
+                ${task.priority === 'high' ? 'bg-red-900/40 text-red-300' : 'bg-[#547792]/40 text-[#EAE0CF]'}`}>
                                 {task.priority || 'medium'}
                             </span>
                         </div>
-                        <h4 className="font-bold text-gray-800 text-sm mb-2">{task.title}</h4>
+                        <h4 className="font-bold text-[#EAE0CF] text-sm mb-2">{task.title}</h4>
 
                         {/* Description / Summary Preview */}
                         {(task.description || task.completion_summary) && (
-                            <p className="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed">
+                            <p className="text-xs text-[#EAE0CF]/60 mb-3 line-clamp-2 leading-relaxed">
                                 {status === 'completed'
                                     ? (task.completion_summary || task.description || 'No summary provided')
                                     : (task.description || 'No description provided')}
                             </p>
                         )}
 
-                        <div className="flex items-center justify-between border-t border-gray-50 pt-3">
+                        <div className="flex items-center justify-between border-t border-[#EAE0CF]/10 pt-3">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-orange-600">
+                                <div className="w-6 h-6 rounded-full bg-[#1a2c3d] border-2 border-[#EAE0CF]/10 flex items-center justify-center text-[10px] font-bold text-[#EAE0CF]">
                                     {(task.assignee_name && task.assignee_name[0]) || '?'}
                                 </div>
-                                <span className="text-xs font-bold text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap max-w-[80px]">
+                                <span className="text-xs font-bold text-[#EAE0CF]/60 overflow-hidden text-ellipsis whitespace-nowrap max-w-[80px]">
                                     {task.assignee_name || 'Unassigned'}
                                 </span>
                             </div>
                             {task.tentative_completion_date && status === 'in_progress' && (
-                                <div className="flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                <div className="flex items-center gap-1 text-[10px] text-[#547792] bg-[#547792]/10 px-2 py-0.5 rounded-full border border-[#547792]/20">
                                     <Clock size={10} />
                                     {new Date(task.tentative_completion_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </div>
@@ -108,7 +108,7 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
                     </motion.div>
                 ))}
                 {columnTasks.length === 0 && (
-                    <div className="h-32 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-sm italic">
+                    <div className="h-32 border-2 border-dashed border-[#EAE0CF]/10 rounded-xl flex items-center justify-center text-[#EAE0CF]/20 text-sm italic">
                         Drop tasks here
                     </div>
                 )}
@@ -117,7 +117,7 @@ const StatusColumn = ({ title, status, tasks, icon: Icon, color, onAddTask, onMo
             {status === 'todo' && (
                 <button
                     onClick={() => onAddTask(status)}
-                    className="mt-3 w-full py-2 flex items-center justify-center gap-2 text-gray-500 hover:bg-white hover:shadow-sm rounded-lg transition-all text-sm font-bold"
+                    className="mt-3 w-full py-2 flex items-center justify-center gap-2 text-[#EAE0CF]/60 hover:bg-[#213448] hover:text-[#EAE0CF] hover:shadow-sm rounded-lg transition-all text-sm font-bold border border-transparent hover:border-[#EAE0CF]/10"
                 >
                     <Plus size={16} /> Add Task
                 </button>
@@ -163,21 +163,21 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl w-full max-w-md shadow-xl p-6"
+                className="bg-[#213448] rounded-2xl w-full max-w-md shadow-xl p-6 border border-[#EAE0CF]/20"
             >
-                <h3 className="font-bold text-xl text-gray-800 mb-4">Upload Project Deliverable</h3>
+                <h3 className="font-bold text-xl text-[#EAE0CF] mb-4">Upload Project Deliverable</h3>
 
                 <div className="space-y-4 mb-6">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Deliverable Type</label>
+                        <label className="block text-sm font-bold text-[#EAE0CF]/80 mb-1">Deliverable Type</label>
                         <select
                             value={deliverableType}
                             onChange={(e) => setDeliverableType(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full bg-[#1a2c3d] border border-[#EAE0CF]/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#547792] text-[#EAE0CF]"
                         >
                             <option value="final_report">Final Report</option>
                             <option value="prototype">Prototype / Demo</option>
@@ -188,16 +188,16 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                        <label className="block text-sm font-bold text-[#EAE0CF]/80 mb-1">Description</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Briefly describe what you are uploading..."
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full bg-[#1a2c3d] border border-[#EAE0CF]/20 rounded-lg px-3 py-2 text-sm h-20 focus:outline-none focus:ring-2 focus:ring-[#547792] text-[#EAE0CF] placeholder-[#EAE0CF]/30"
                         />
                     </div>
 
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="border-2 border-dashed border-[#EAE0CF]/20 rounded-xl p-6 text-center bg-[#1a2c3d]/50 hover:bg-[#1a2c3d] transition-colors">
                         <input
                             type="file"
                             id="file-upload"
@@ -206,15 +206,15 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
                         />
                         <label htmlFor="file-upload" className="cursor-pointer block">
                             {file ? (
-                                <div className="text-blue-600 font-bold flex items-center justify-center gap-2">
+                                <div className="text-[#547792] font-bold flex items-center justify-center gap-2">
                                     <CheckCircle size={20} /> {file.name}
                                 </div>
                             ) : (
                                 <>
-                                    <div className="mx-auto w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2">
+                                    <div className="mx-auto w-10 h-10 bg-[#213448] rounded-full flex items-center justify-center text-[#547792] mb-2 border border-[#EAE0CF]/10">
                                         <Plus size={20} />
                                     </div>
-                                    <span className="text-gray-500 font-medium text-sm">Click to select file</span>
+                                    <span className="text-[#EAE0CF]/60 font-medium text-sm">Click to select file</span>
                                 </>
                             )}
                         </label>
@@ -222,11 +222,11 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
                 </div>
 
                 <div className="flex gap-2">
-                    <button onClick={onClose} className="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-50">Cancel</button>
+                    <button onClick={onClose} className="flex-1 py-3 text-[#EAE0CF]/60 font-bold rounded-xl hover:bg-[#1a2c3d] hover:text-[#EAE0CF]">Cancel</button>
                     <button
                         onClick={handleUpload}
                         disabled={!file || uploading}
-                        className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="flex-1 py-3 bg-[#EAE0CF] text-[#213448] font-bold rounded-xl hover:bg-white disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {uploading ? <Loader2 className="animate-spin" /> : 'Upload'}
                     </button>
@@ -238,21 +238,21 @@ const UploadModal = ({ onClose, projectId, teamId, studentId }) => {
 
 const AchievementsModal = ({ onClose, achievements = [] }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+                className="bg-[#213448] rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border border-[#EAE0CF]/20"
             >
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-yellow-50 to-orange-50">
-                    <h3 className="font-bold text-xl text-yellow-800 flex items-center gap-2">
-                        <Trophy className="text-yellow-600" /> Team Achievements
+                <div className="p-6 border-b border-[#EAE0CF]/10 flex justify-between items-center bg-[#1a2c3d]">
+                    <h3 className="font-bold text-xl text-[#EAE0CF] flex items-center gap-2">
+                        <Trophy className="text-yellow-500" /> Team Achievements
                     </h3>
-                    <button onClick={onClose}><AlertCircle className="rotate-45" size={24} /></button>
+                    <button onClick={onClose}><AlertCircle className="rotate-45 text-[#EAE0CF]/60 hover:text-[#EAE0CF]" size={24} /></button>
                 </div>
-                <div className="p-8 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-8 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4 custom-scrollbar">
                     {achievements.length === 0 ? (
-                        <div className="col-span-2 text-center py-12 text-gray-400">
+                        <div className="col-span-2 text-center py-12 text-[#EAE0CF]/30">
                             <Trophy size={48} className="mx-auto mb-4 opacity-20" />
                             <p>No achievements unlocked yet. Keep working!</p>
                         </div>
@@ -262,17 +262,17 @@ const AchievementsModal = ({ onClose, achievements = [] }) => {
                                 key={achievement.achievement_id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white border-2 border-yellow-100 rounded-xl p-4 flex items-center gap-4 shadow-sm"
+                                className="bg-[#1a2c3d] border-2 border-yellow-500/20 rounded-xl p-4 flex items-center gap-4 shadow-sm"
                             >
-                                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-2xl">
+                                <div className="w-12 h-12 rounded-full bg-yellow-900/30 flex items-center justify-center text-2xl text-yellow-400">
                                     {achievement.icon || '🏆'}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-gray-800">{achievement.name}</h4>
-                                    <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider flex items-center gap-1">
+                                    <h4 className="font-bold text-[#EAE0CF]">{achievement.name}</h4>
+                                    <div className="text-xs font-bold text-yellow-500 uppercase tracking-wider flex items-center gap-1">
                                         <Zap size={10} /> {achievement.xp} XP
                                     </div>
-                                    <div className="text-xs text-gray-400 mt-1">
+                                    <div className="text-xs text-[#EAE0CF]/40 mt-1">
                                         Unlocked {new Date(achievement.earned_at).toLocaleDateString()}
                                     </div>
                                 </div>
@@ -280,8 +280,8 @@ const AchievementsModal = ({ onClose, achievements = [] }) => {
                         ))
                     )}
                 </div>
-                <div className="p-6 border-t border-gray-100 flex justify-end">
-                    <button onClick={onClose} className="px-6 py-2 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600">Close</button>
+                <div className="p-6 border-t border-[#EAE0CF]/10 flex justify-end bg-[#1a2c3d]">
+                    <button onClick={onClose} className="px-6 py-2 bg-[#EAE0CF] text-[#213448] rounded-xl font-bold hover:bg-white transition-colors">Close</button>
                 </div>
             </motion.div>
         </div>
@@ -490,14 +490,14 @@ const StudentProjects = () => {
                     <div className="flex-1 mr-8">
                         {teams.length > 1 ? (
                             <div className="relative">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Switch Project</label>
+                                <label className="text-xs font-bold text-[#EAE0CF]/60 uppercase tracking-wider mb-1 block">Switch Project</label>
                                 <button
                                     onClick={() => setShowProjectMenu(!showProjectMenu)}
-                                    className="group flex items-center gap-2 text-3xl font-extrabold text-gray-800 hover:text-blue-600 transition-colors focus:outline-none"
+                                    className="group flex items-center gap-2 text-3xl font-extrabold text-[#EAE0CF] hover:text-[#547792] transition-colors focus:outline-none"
                                 >
-                                    <Map className="text-blue-500" />
+                                    <Map className="text-[#547792]" />
                                     {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
-                                    <ChevronDown size={24} className={`text-gray-400 transition-transform duration-200 ${showProjectMenu ? 'rotate-180' : ''} group-hover:text-blue-500`} />
+                                    <ChevronDown size={24} className={`text-[#EAE0CF]/40 transition-transform duration-200 ${showProjectMenu ? 'rotate-180' : ''} group-hover:text-[#547792]`} />
                                 </button>
 
                                 {showProjectMenu && (
@@ -507,9 +507,9 @@ const StudentProjects = () => {
                                             initial={{ opacity: 0, y: -10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -10 }}
-                                            className="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-20"
+                                            className="absolute top-full left-0 mt-2 w-80 bg-[#1a2c3d] rounded-2xl shadow-xl border border-[#EAE0CF]/10 p-2 z-20"
                                         >
-                                            <div className="text-xs font-bold text-gray-400 px-3 py-2 uppercase tracking-wider border-b border-gray-50 mb-1">Select Project</div>
+                                            <div className="text-xs font-bold text-[#EAE0CF]/40 px-3 py-2 uppercase tracking-wider border-b border-[#EAE0CF]/5 mb-1">Select Project</div>
                                             <div className="max-h-60 overflow-y-auto custom-scrollbar">
                                                 {teams.map(t => (
                                                     <button
@@ -519,8 +519,8 @@ const StudentProjects = () => {
                                                             setShowProjectMenu(false);
                                                         }}
                                                         className={`w-full text-left p-3 rounded-xl transition-colors flex flex-col mb-1 ${(activeTeam.team_id || activeTeam._id) === (t.team_id || t._id)
-                                                            ? 'bg-blue-50 text-blue-700'
-                                                            : 'hover:bg-gray-50 text-gray-700'
+                                                            ? 'bg-[#547792]/20 text-[#547792]'
+                                                            : 'hover:bg-[#213448] text-[#EAE0CF]/80'
                                                             }`}
                                                     >
                                                         <span className="font-bold text-sm block truncate">{t.project_title || t.project_name || 'Project'}</span>
@@ -533,14 +533,14 @@ const StudentProjects = () => {
                                 )}
                             </div>
                         ) : (
-                            <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
-                                <Map className="text-blue-500" /> {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
+                            <h1 className="text-3xl font-extrabold text-[#EAE0CF] flex items-center gap-2">
+                                <Map className="text-[#547792]" /> {activeTeam.project_title || activeTeam.project_name || 'Project Workspace'}
                             </h1>
                         )}
 
-                        <p className="text-gray-500 mt-1 flex items-center gap-2">
-                            <span className="text-xs font-bold bg-gray-100 px-2 py-1 rounded-md text-gray-500">CURRENT TEAM</span>
-                            <span className="font-bold text-gray-700">{activeTeam.team_name}</span>
+                        <p className="text-[#EAE0CF]/60 mt-1 flex items-center gap-2">
+                            <span className="text-xs font-bold bg-[#1a2c3d] px-2 py-1 rounded-md text-[#EAE0CF]/50">CURRENT TEAM</span>
+                            <span className="font-bold text-[#EAE0CF]/90">{activeTeam.team_name}</span>
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -550,13 +550,13 @@ const StudentProjects = () => {
                                 activeTeam.members.map((member, index) => {
                                     const name = member.student_name || member.name || member.username || 'User';
                                     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                                    const colors = ['bg-red-100 text-red-600', 'bg-blue-100 text-blue-600', 'bg-green-100 text-green-600', 'bg-purple-100 text-purple-600', 'bg-yellow-100 text-yellow-600'];
+                                    const colors = ['bg-red-900/30 text-red-300', 'bg-blue-900/30 text-blue-300', 'bg-green-900/30 text-green-300', 'bg-purple-900/30 text-purple-300', 'bg-yellow-900/30 text-yellow-300'];
                                     const colorClass = colors[index % colors.length];
 
                                     return (
                                         <div
                                             key={member.student_id || member.user_id || index}
-                                            className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold ${colorClass}`}
+                                            className={`w-10 h-10 rounded-full border-2 border-[#213448] flex items-center justify-center text-xs font-bold ${colorClass}`}
                                             title={name}
                                         >
                                             {initials}
@@ -564,14 +564,14 @@ const StudentProjects = () => {
                                     );
                                 })
                             ) : (
-                                <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-400" title="No members">
+                                <div className="w-10 h-10 rounded-full border-2 border-[#213448] bg-[#1a2c3d] flex items-center justify-center text-xs font-bold text-[#EAE0CF]/30" title="No members">
                                     --
                                 </div>
                             )}
                         </div>
                         <button
                             onClick={() => setShowAchievements(true)}
-                            className="bg-white border-2 border-yellow-200 text-yellow-700 px-4 py-2 rounded-xl font-bold hover:bg-yellow-50 transition-colors flex items-center gap-2"
+                            className="bg-[#1a2c3d] border-2 border-yellow-500/20 text-yellow-500 px-4 py-2 rounded-xl font-bold hover:bg-yellow-900/20 transition-colors flex items-center gap-2"
                         >
                             <Trophy size={18} />
                             {teamProgress ? `Lvl ${teamProgress.current_level}` : 'Achievements'}
@@ -583,19 +583,19 @@ const StudentProjects = () => {
                                     selectedProjectId: activeTeam.project_id
                                 }
                             })}
-                            className="bg-white border-2 border-blue-200 text-blue-700 px-4 py-2 rounded-xl font-bold hover:bg-blue-50 transition-colors flex items-center gap-2"
+                            className="bg-[#1a2c3d] border-2 border-[#547792]/20 text-[#547792] px-4 py-2 rounded-xl font-bold hover:bg-[#547792]/10 transition-colors flex items-center gap-2"
                         >
                             <Target size={18} /> Milestones
                         </button>
                         <button
                             onClick={() => setShowUpload(true)}
-                            className="bg-white border-2 border-gray-200 text-gray-600 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                            className="bg-[#1a2c3d] border-2 border-[#EAE0CF]/20 text-[#EAE0CF]/70 px-4 py-2 rounded-xl font-bold hover:bg-[#EAE0CF]/5 transition-colors"
                         >
                             Upload
                         </button>
                         <button
                             onClick={() => navigate('/student/peer-review')}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors"
+                            className="bg-[#547792] text-[#EAE0CF] px-4 py-2 rounded-xl font-bold hover:bg-[#547792]/80 transition-colors"
                         >
                             Review
                         </button>
@@ -604,26 +604,26 @@ const StudentProjects = () => {
 
                 {/* Team XP Progress Bar */}
                 {teamProgress && (
-                    <div className="mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 font-bold text-xl border-4 border-white shadow-sm">
+                    <div className="mb-6 bg-[#213448] p-4 rounded-2xl shadow-sm border border-[#EAE0CF]/10 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-yellow-900/30 flex items-center justify-center text-yellow-400 font-bold text-xl border-4 border-[#1a2c3d] shadow-sm">
                             {teamProgress.current_level}
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                                <span className="text-gray-500">Team Experience</span>
-                                <span className="text-yellow-600">{teamProgress.total_xp} XP</span>
+                                <span className="text-[#EAE0CF]/60">Team Experience</span>
+                                <span className="text-yellow-500">{teamProgress.total_xp} XP</span>
                             </div>
-                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-3 bg-[#1a2c3d] rounded-full overflow-hidden border border-[#EAE0CF]/5">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min((teamProgress.completion_percentage || 0), 100)}%` }} // Using completion % as proxy for level progress for MVP
-                                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-500"
+                                    className="h-full bg-gradient-to-r from-yellow-500 to-orange-600"
                                 />
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Next Level</div>
-                            <div className="font-bold text-gray-700">1000 XP</div>
+                            <div className="text-xs font-bold text-[#EAE0CF]/40 uppercase tracking-wider">Next Level</div>
+                            <div className="font-bold text-[#EAE0CF]/80">1000 XP</div>
                         </div>
                     </div>
                 )}
@@ -635,7 +635,7 @@ const StudentProjects = () => {
                         status="todo"
                         tasks={tasks}
                         icon={Circle}
-                        color="text-gray-400"
+                        color="text-[#EAE0CF]/60"
                         onAddTask={handleAddTask}
                         onMoveTask={handleMoveTask}
                         onDropTask={handleDropTask}
@@ -645,7 +645,7 @@ const StudentProjects = () => {
                         status="in_progress" // Backend likely uses 'in_progress' or 'doing'
                         tasks={tasks}
                         icon={Clock}
-                        color="text-blue-500"
+                        color="text-[#547792]"
                         onAddTask={handleAddTask}
                         onMoveTask={handleMoveTask}
                         onDropTask={handleDropTask}
@@ -655,7 +655,7 @@ const StudentProjects = () => {
                         status="completed" // Backend likely uses 'completed' or 'done'
                         tasks={tasks}
                         icon={CheckCircle}
-                        color="text-green-500"
+                        color="text-green-400"
                         onAddTask={handleAddTask}
                         onMoveTask={handleMoveTask}
                         onDropTask={handleDropTask}
