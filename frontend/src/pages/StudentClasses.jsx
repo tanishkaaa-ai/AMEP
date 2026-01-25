@@ -161,8 +161,8 @@ const StudentClasses = () => {
         return (
             <DashboardLayout>
                 <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
-                    <Loader2 className="animate-spin text-orange-500 mb-4" size={48} />
-                    <p className="text-gray-500 font-medium">Loading your classes...</p>
+                    <Loader2 className="animate-spin text-[#213448] mb-4" size={48} />
+                    <p className="text-[#213448] font-medium">Loading your classes...</p>
                 </div>
             </DashboardLayout>
         );
@@ -175,11 +175,11 @@ const StudentClasses = () => {
                     <div className="bg-red-100 p-4 rounded-full text-red-500 mb-4">
                         <AlertCircle size={32} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800">Oops!</h3>
-                    <p className="text-gray-500 mb-6">{error}</p>
+                    <h3 className="text-lg font-bold text-[#213448]">Oops!</h3>
+                    <p className="text-[#213448]/70 mb-6">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-6 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors"
+                        className="px-6 py-2 bg-[#213448] text-[#EAE0CF] font-bold rounded-lg hover:bg-[#547792] transition-colors"
                     >
                         Retry
                     </button>
@@ -195,26 +195,26 @@ const StudentClasses = () => {
                 {/* Class List (Sidebar-ish) */}
                 <div className="lg:col-span-1 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <Book className="text-orange-500" /> My Classes
+                        <h2 className="text-2xl font-bold text-[#213448] flex items-center gap-2">
+                            <Book className="text-[#213448]" /> My Classes
                         </h2>
                         <button
                             onClick={() => setShowJoinModal(true)}
-                            className="bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors shadow-md"
+                            className="bg-[#213448] text-[#EAE0CF] p-2 rounded-lg hover:bg-[#547792] transition-colors shadow-md border border-[#EAE0CF]/20"
                             title="Join a Class"
                         >
                             <Plus size={20} />
                         </button>
                     </div>
 
-                    <div className="overflow-y-auto pr-2 flex-1 space-y-4">
+                    <div className="overflow-y-auto pr-2 flex-1 space-y-4 custom-scrollbar">
                         {classes.length === 0 ? (
-                            <div className="text-gray-400 italic p-8 border-2 border-dashed border-gray-200 rounded-xl text-center flex flex-col items-center">
+                            <div className="text-[#213448]/50 italic p-8 border-2 border-dashed border-[#213448]/20 rounded-xl text-center flex flex-col items-center">
                                 <Book size={48} className="mb-4 opacity-20" />
                                 <p>You haven't joined any classes yet.</p>
                                 <button
                                     onClick={() => setShowJoinModal(true)}
-                                    className="mt-4 text-orange-500 font-bold hover:underline"
+                                    className="mt-4 text-[#213448] font-bold hover:underline"
                                 >
                                     Join your first class
                                 </button>
@@ -226,22 +226,20 @@ const StudentClasses = () => {
                                     onClick={() => setSelectedClass(cls)}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className={`p-4 rounded-xl cursor-pointer border-2 transition-all duration-300 ease-out hover:-translate-y-1 ${selectedClass?.classroom_id === cls.classroom_id
-                                        ? 'border-orange-400 bg-white shadow-md -rotate-1 ring-2 ring-orange-100 ring-offset-2'
-                                        : 'border-transparent bg-white/60 hover:bg-white hover:shadow-sm'
+                                    className={`p-4 rounded-xl cursor-pointer border transition-all duration-300 ease-out hover:-translate-y-1 ${selectedClass?.classroom_id === cls.classroom_id
+                                        ? 'border-[#EAE0CF]/20 bg-[#213448] shadow-md -rotate-1 ring-2 ring-[#213448]/20 ring-offset-2'
+                                        : 'border-transparent bg-[#547792] hover:bg-[#547792]/80 hover:shadow-sm'
                                         }`}
                                 >
                                     <div className="flex items-start justify-between mb-2">
-                                        <div className={`p-2 rounded-lg ${cls.theme_color ? '' : 'bg-teal-100 text-teal-700'} font-bold text-xs uppercase tracking-wider`}
-                                            style={cls.theme_color ? { backgroundColor: `${cls.theme_color}20`, color: cls.theme_color } : {}}>
+                                        <div className={`p-2 rounded-lg font-bold text-xs uppercase tracking-wider ${selectedClass?.classroom_id === cls.classroom_id ? 'bg-[#EAE0CF]/20 text-[#EAE0CF]' : 'bg-[#213448]/20 text-[#EAE0CF]'}`}>
                                             {cls.class_name.split(' ')[0]}
                                         </div>
-                                        <ChevronRight className={`transition-transform ${selectedClass?.classroom_id === cls.classroom_id ? 'rotate-90 text-orange-500' : 'text-gray-300'}`} size={20} />
+                                        <ChevronRight className={`transition-transform ${selectedClass?.classroom_id === cls.classroom_id ? 'rotate-90 text-[#EAE0CF]' : 'text-[#EAE0CF]/50'}`} size={20} />
                                     </div>
-                                    <h3 className="font-bold text-gray-800 text-lg">{cls.class_name}</h3>
-                                    <div className="flex items-center gap-3 mt-3 text-sm text-gray-500">
+                                    <h3 className={`font-bold text-lg ${selectedClass?.classroom_id === cls.classroom_id ? 'text-[#EAE0CF]' : 'text-white'}`}>{cls.class_name}</h3>
+                                    <div className={`flex items-center gap-3 mt-3 text-sm ${selectedClass?.classroom_id === cls.classroom_id ? 'text-[#EAE0CF]/70' : 'text-[#EAE0CF]/60'}`}>
                                         <span className="flex items-center gap-1"><User size={14} /> {cls.teacher_name}</span>
-                                        {/* <span className="flex items-center gap-1"><Clock size={14} /> {cls.time}</span> */}
                                     </div>
                                 </motion.div>
                             ))
@@ -250,35 +248,35 @@ const StudentClasses = () => {
                 </div>
 
                 {/* Class Stream (Main Content) */}
-                <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden flex flex-col">
+                <div className="lg:col-span-2 bg-[#213448] rounded-3xl shadow-sm border border-[#EAE0CF]/20 overflow-hidden flex flex-col">
                     {selectedClass ? (
                         <>
                             {/* Header */}
-                            <div className="p-6 bg-gradient-to-r from-slate-50 to-orange-50 border-b border-orange-100">
-                                <h1 className="text-2xl font-extrabold text-gray-800">{selectedClass.class_name}</h1>
-                                <p className="text-gray-500 flex items-center gap-2 mt-1">
-                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">Active</span>
+                            <div className="p-6 bg-[#213448] border-b border-[#EAE0CF]/10">
+                                <h1 className="text-2xl font-extrabold text-[#EAE0CF]">{selectedClass.class_name}</h1>
+                                <p className="text-[#EAE0CF]/60 flex items-center gap-2 mt-1">
+                                    <span className="bg-[#91ADC8]/20 text-[#91ADC8] px-2 py-0.5 rounded text-xs font-bold border border-[#91ADC8]/30">Active</span>
                                     • Instructor: {selectedClass.teacher_name}
                                 </p>
                             </div>
 
                             {/* Feed */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#1a2c3d]/50">
                                 {/* Active Poll Card */}
                                 {activePoll && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="bg-teal-50 border border-teal-200 rounded-xl p-6 shadow-sm relative overflow-hidden"
+                                        className="bg-[#547792]/30 border border-[#91ADC8]/30 rounded-xl p-6 shadow-sm relative overflow-hidden"
                                     >
                                         <div className="absolute top-0 right-0 p-2">
                                             <span className="flex h-3 w-3 relative">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#91ADC8] opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#91ADC8]"></span>
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center gap-2 mb-3 text-teal-800 font-bold">
+                                        <div className="flex items-center gap-2 mb-3 text-[#EAE0CF] font-bold">
                                             <MessageSquare size={20} />
                                             <h3>Live Poll: {activePoll.question}</h3>
                                         </div>
@@ -289,19 +287,19 @@ const StudentClasses = () => {
                                                     <button
                                                         key={idx}
                                                         onClick={() => handleSubmitPoll(option)}
-                                                        className="w-full text-left p-3 bg-white border border-teal-100 hover:border-teal-300 hover:bg-teal-50 rounded-lg transition-all text-gray-700 font-medium"
+                                                        className="w-full text-left p-3 bg-[#213448] border border-[#EAE0CF]/10 hover:border-[#EAE0CF]/30 hover:bg-[#2a4055] rounded-lg transition-all text-[#EAE0CF] font-medium"
                                                     >
                                                         {option}
                                                     </button>
-                                                )) || <p className="text-gray-500 italic text-center">Loading options...</p>}
+                                                )) || <p className="text-[#EAE0CF]/50 italic text-center">Loading options...</p>}
                                             </div>
                                         ) : (
-                                            <div className="mt-4 p-4 bg-teal-100 rounded-lg text-center text-teal-800 font-bold">
+                                            <div className="mt-4 p-4 bg-[#213448]/50 rounded-lg text-center text-[#EAE0CF] font-bold border border-[#EAE0CF]/10">
                                                 <span className="flex items-center justify-center gap-2">
-                                                    <div className="bg-teal-600 text-white rounded-full p-1"><User size={12} /></div>
+                                                    <div className="bg-[#91ADC8] text-[#213448] rounded-full p-1"><User size={12} /></div>
                                                     Response Submitted!
                                                 </span>
-                                                <p className="text-xs font-normal mt-1 opacity-80">Wait for the teacher to reveal results.</p>
+                                                <p className="text-xs font-normal mt-1 opacity-60">Wait for the teacher to reveal results.</p>
                                             </div>
                                         )}
                                     </motion.div>
@@ -309,7 +307,7 @@ const StudentClasses = () => {
 
                                 {streamLoading ? (
                                     <div className="flex justify-center p-12">
-                                        <Loader2 className="animate-spin text-orange-400" size={32} />
+                                        <Loader2 className="animate-spin text-[#EAE0CF]" size={32} />
                                     </div>
                                 ) : stream.length > 0 ? (
                                     stream.map((post) => (
@@ -317,46 +315,46 @@ const StudentClasses = () => {
                                             key={post.post_id}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 group hover:border-orange-200 transition-colors"
+                                            className="bg-[#547792] p-5 rounded-xl shadow-sm border border-[#EAE0CF]/10 group hover:border-[#EAE0CF]/30 transition-colors"
                                         >
                                             <div className="flex items-center gap-3 mb-3">
-                                                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold uppercase">
+                                                <div className="w-10 h-10 rounded-full bg-[#213448] flex items-center justify-center text-[#EAE0CF] font-bold uppercase border border-[#EAE0CF]/10">
                                                     {post.author.author_name[0]}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-gray-800 text-sm">{post.author.author_name}</p>
-                                                    <p className="text-xs text-gray-400">{new Date(post.created_at).toLocaleDateString()} {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    <p className="font-bold text-white text-sm">{post.author.author_name}</p>
+                                                    <p className="text-xs text-[#EAE0CF]/60">{new Date(post.created_at).toLocaleDateString()} {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                 </div>
                                                 {post.post_type === 'assignment' && (
-                                                    <span className="ml-auto bg-blue-100 text-blue-600 text-xs font-bold px-2 py-1 rounded-lg uppercase">
+                                                    <span className="ml-auto bg-[#213448] text-[#91ADC8] text-xs font-bold px-2 py-1 rounded-lg uppercase border border-[#91ADC8]/20">
                                                         Assignment
                                                     </span>
                                                 )}
                                             </div>
 
-                                            <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{post.content || post.title}</p>
-                                            {post.content && post.title && post.title !== post.content && <h4 className='font-bold mb-2'>{post.title}</h4>}
+                                            <p className="text-[#EAE0CF]/90 mb-4 leading-relaxed whitespace-pre-wrap">{post.content || post.title}</p>
+                                            {post.content && post.title && post.title !== post.content && <h4 className='font-bold mb-2 text-white'>{post.title}</h4>}
 
 
                                             {post.post_type === 'assignment' && post.assignment_details && (
-                                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between mb-4">
-                                                    <span className="text-sm text-blue-800 font-medium flex items-center gap-2">
+                                                <div className="bg-[#213448]/40 border border-[#EAE0CF]/10 p-3 rounded-lg flex items-center justify-between mb-4">
+                                                    <span className="text-sm text-[#EAE0CF]/80 font-medium flex items-center gap-2">
                                                         <Clock size={16} /> Due: {post.assignment_details.due_date ? new Date(post.assignment_details.due_date).toLocaleDateString() : 'No Due Date'}
                                                     </span>
                                                     {post.current_user_submission && ['turned_in', 'graded', 'returned'].includes(post.current_user_submission.status) ? (
                                                         <div className="flex items-center gap-2">
                                                             {post.current_user_submission.grade !== undefined && post.current_user_submission.grade !== null ? (
-                                                                <span className="font-bold text-green-600 bg-green-100 px-3 py-1 rounded-lg">
+                                                                <span className="font-bold text-green-300 bg-green-900/30 px-3 py-1 rounded-lg border border-green-500/30">
                                                                     {post.current_user_submission.grade}/{post.assignment_details.points || 100}
                                                                 </span>
                                                             ) : (
-                                                                <span className="text-green-600 font-bold text-sm bg-green-100 px-3 py-1 rounded-lg">
+                                                                <span className="text-green-300 font-bold text-sm bg-green-900/30 px-3 py-1 rounded-lg border border-green-500/30">
                                                                     Submitted
                                                                 </span>
                                                             )}
                                                             <button
                                                                 onClick={() => handleStartAssignment(post.post_id)}
-                                                                className="text-blue-600 text-xs font-bold hover:underline"
+                                                                className="text-[#91ADC8] text-xs font-bold hover:underline hover:text-white"
                                                             >
                                                                 View
                                                             </button>
@@ -364,7 +362,7 @@ const StudentClasses = () => {
                                                     ) : (
                                                         <button
                                                             onClick={() => handleStartAssignment(post.post_id)}
-                                                            className="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                                            className="bg-[#EAE0CF] text-[#213448] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white transition-colors"
                                                         >
                                                             Start Now
                                                         </button>
@@ -372,14 +370,14 @@ const StudentClasses = () => {
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center gap-4 pt-3 border-t border-gray-50 text-gray-400 text-sm">
-                                                <button className="flex items-center gap-1 hover:text-orange-500 transition-colors">
+                                            <div className="flex items-center gap-4 pt-3 border-t border-[#EAE0CF]/10 text-[#EAE0CF]/50 text-sm">
+                                                <button className="flex items-center gap-1 hover:text-[#EAE0CF] transition-colors">
                                                     <MessageSquare size={16} /> {post.comment_count} Comments
                                                 </button>
                                                 {post.post_type === 'assignment' && (
                                                     <button
                                                         onClick={() => handleViewDetails(post.post_id)}
-                                                        className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer"
+                                                        className="flex items-center gap-1 hover:text-[#91ADC8] transition-colors cursor-pointer"
                                                     >
                                                         <FileText size={16} /> View Details
                                                     </button>
@@ -388,26 +386,26 @@ const StudentClasses = () => {
                                         </motion.div>
                                     ))
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200">
-                                        <div className="bg-white p-4 rounded-full shadow-sm mb-4 relative">
-                                            <Book size={32} className="text-gray-300" />
-                                            <div className="absolute -bottom-1 -right-1 bg-green-100 p-1 rounded-full">
-                                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                                    <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-[#213448]/30 rounded-2xl border-2 border-dashed border-[#EAE0CF]/10">
+                                        <div className="bg-[#547792] p-4 rounded-full shadow-sm mb-4 relative">
+                                            <Book size={32} className="text-[#EAE0CF]" />
+                                            <div className="absolute -bottom-1 -right-1 bg-green-900/50 p-1 rounded-full border border-green-500/30">
+                                                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
                                             </div>
                                         </div>
-                                        <h3 className="font-bold text-gray-800 text-lg">All caught up in {selectedClass.class_name}!</h3>
-                                        <p className="text-gray-500 max-w-xs mt-2">No new assignments or announcements. Enjoy the downtime ☕</p>
+                                        <h3 className="font-bold text-[#EAE0CF] text-lg">All caught up in {selectedClass.class_name}!</h3>
+                                        <p className="text-[#EAE0CF]/50 max-w-xs mt-2">No new assignments or announcements. Enjoy the downtime ☕</p>
                                     </div>
                                 )}
 
-                                <div className="text-center py-8 text-gray-400 text-sm">
+                                <div className="text-center py-8 text-[#EAE0CF]/30 text-sm">
                                     — You're all caught up! —
                                 </div>
                             </div>
                         </>
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-400 flex-col">
-                            <Book size={48} className="mb-4 opacity-20" />
+                        <div className="flex items-center justify-center h-full text-[#EAE0CF]/30 flex-col">
+                            <Book size={48} className="mb-4 opacity-50" />
                             <p>Select a class to view its stream</p>
                         </div>
                     )}
@@ -422,7 +420,7 @@ const StudentClasses = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                         onClick={() => setShowJoinModal(false)}
                     >
                         <motion.div
@@ -430,18 +428,18 @@ const StudentClasses = () => {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden"
+                            className="bg-[#213448] rounded-3xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden border border-[#EAE0CF]/20"
                         >
                             <button
                                 onClick={() => setShowJoinModal(false)}
-                                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                                className="absolute top-4 right-4 p-2 hover:bg-[#547792] rounded-full text-[#EAE0CF]/50 hover:text-[#EAE0CF] transition-colors"
                             >
                                 <X size={20} />
                             </button>
 
                             <div className="mb-6">
-                                <h3 className="text-2xl font-bold text-gray-800 mb-2">Join a Class</h3>
-                                <p className="text-gray-500">
+                                <h3 className="text-2xl font-bold text-[#EAE0CF] mb-2">Join a Class</h3>
+                                <p className="text-[#EAE0CF]/60">
                                     Ask your teacher for the class code, then enter it here.
                                 </p>
                             </div>
@@ -449,7 +447,7 @@ const StudentClasses = () => {
                             <form onSubmit={handleJoinClass}>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        <label className="block text-sm font-bold text-[#EAE0CF]/80 mb-2">
                                             Class Code
                                         </label>
                                         <input
@@ -457,13 +455,13 @@ const StudentClasses = () => {
                                             value={joinCode}
                                             onChange={(e) => setJoinCode(e.target.value)}
                                             placeholder="e.g. AB12CD"
-                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none text-lg font-mono tracking-wider uppercase transition-colors"
+                                            className="w-full px-4 py-3 bg-[#1a2c3d] border-2 border-[#EAE0CF]/10 rounded-xl focus:border-[#EAE0CF] focus:outline-none text-lg font-mono tracking-wider uppercase transition-colors text-[#EAE0CF] placeholder-[#EAE0CF]/20"
                                             maxLength={6}
                                         />
                                     </div>
 
                                     {joinError && (
-                                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
+                                        <div className="p-3 bg-red-900/30 text-red-300 rounded-lg text-sm flex items-start gap-2 border border-red-500/30">
                                             <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                             {joinError}
                                         </div>
@@ -473,14 +471,14 @@ const StudentClasses = () => {
                                         <button
                                             type="button"
                                             onClick={() => setShowJoinModal(false)}
-                                            className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                                            className="flex-1 px-4 py-3 bg-[#547792]/50 hover:bg-[#547792] text-[#EAE0CF] font-bold rounded-xl transition-colors border border-[#EAE0CF]/10"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={!joinCode.trim() || joinLoading}
-                                            className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 px-4 py-3 bg-[#EAE0CF] hover:bg-white active:bg-gray-100 text-[#213448] font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {joinLoading ? (
                                                 <Loader2 size={20} className="animate-spin" />
