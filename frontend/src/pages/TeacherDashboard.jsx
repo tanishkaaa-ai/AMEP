@@ -29,19 +29,19 @@ import BulkReportModal from '../components/BulkReportModal';
 const StatCard = ({ icon: Icon, label, value, trend, color, subtext }) => (
   <motion.div
     whileHover={{ y: -2 }}
-    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
+    className="bg-[#F4FFFD] p-6 rounded-2xl border-2 border-[#065F46]/20 shadow-sm"
   >
     <div className="flex items-start justify-between mb-4">
       <div className={`p-3 rounded-lg ${color}`}>
         <Icon size={24} />
       </div>
       {trend && (
-        <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+        <span className="flex items-center gap-1 text-xs font-bold text-[#065F46] bg-[#AED6CF]/30 px-2 py-1 rounded-full">
           <TrendingUp size={12} /> {trend}
         </span>
       )}
     </div>
-    <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{value}</h3>
+    <h3 className="text-3xl font-extrabold text-[#065F46] mb-1">{value}</h3>
     <p className="text-sm font-medium text-gray-500">{label}</p>
     {subtext && <p className="text-xs text-gray-400 mt-2">{subtext}</p>}
   </motion.div>
@@ -80,8 +80,8 @@ const TeacherAchievementsModal = ({ isOpen, onClose, teacherId }) => {
       >
         <div className="flex justify-between items-center mb-6 shrink-0">
           <div>
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Trophy className="text-yellow-500" /> Student Achievements
+            <h3 className="text-2xl font-bold text-[#065F46] flex items-center gap-2">
+              <Trophy className="text-[#065F46]" /> Student Achievements
             </h3>
             <p className="text-gray-500 text-sm">External awards from all your classes</p>
           </div>
@@ -93,20 +93,20 @@ const TeacherAchievementsModal = ({ isOpen, onClose, teacherId }) => {
         <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">
           {loading ? (
             <div className="py-20 flex justify-center">
-              <Loader className="animate-spin text-teal-600" size={40} />
+              <Loader className="animate-spin text-[#065F46]" size={40} />
             </div>
           ) : achievements.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {achievements.map((achievement) => (
-                <div key={achievement._id} className="bg-gray-50 p-5 rounded-xl border border-gray-100 relative group hover:border-teal-200 transition-colors">
+                <div key={achievement._id} className="bg-gray-50 p-5 rounded-xl border border-gray-100 relative group hover:border-[#AED6CF] transition-colors">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-yellow-500 shadow-sm shrink-0 border border-gray-100">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#065F46] shadow-sm shrink-0 border border-gray-100">
                       <Trophy size={24} />
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <h4 className="font-bold text-gray-800 text-lg leading-tight">{achievement.title}</h4>
-                        <span className="text-xs font-bold bg-teal-100 text-teal-700 px-2 py-1 rounded ml-2 whitespace-nowrap">
+                        <h4 className="font-bold text-[#065F46] text-lg leading-tight">{achievement.title}</h4>
+                        <span className="text-xs font-bold bg-[#AED6CF]/30 text-[#065F46] px-2 py-1 rounded ml-2 whitespace-nowrap">
                           {achievement.category}
                         </span>
                       </div>
@@ -126,7 +126,7 @@ const TeacherAchievementsModal = ({ isOpen, onClose, teacherId }) => {
                           <Calendar size={12} /> {achievement.date ? new Date(achievement.date).toLocaleDateString() : 'No Date'}
                         </span>
                         {achievement.proof_link && (
-                          <a href={achievement.proof_link} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-blue-50 text-blue-600 rounded flex items-center gap-1 hover:underline">
+                          <a href={achievement.proof_link} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-[#AED6CF]/30 text-[#065F46] rounded flex items-center gap-1 hover:underline">
                             <LinkIcon size={12} /> View Proof
                           </a>
                         )}
@@ -320,7 +320,7 @@ const TeacherDashboard = () => {
     return (
       <TeacherLayout>
         <div className="flex items-center justify-center h-screen">
-          <Loader className="animate-spin text-teal-600" size={40} />
+          <Loader className="animate-spin text-[#065F46]" size={40} />
         </div>
       </TeacherLayout>
     );
@@ -333,22 +333,22 @@ const TeacherDashboard = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Administrator Dashboard</h1>
-            <p className="text-gray-500 mt-1">{new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}, {user?.first_name || 'Professor'}. Here's what's happening today.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#065F46]">Administrator Dashboard</h1>
+            <p className="text-[#065F46]/70 mt-1">{new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}, {user?.first_name || 'Professor'}. Here's what's happening today.</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#AED6CF] text-[#065F46] font-bold rounded-xl hover:bg-[#AED6CF]/20 transition-colors shadow-sm">
               <Plus size={18} /> New Assignment
             </button>
             <button
               onClick={() => setAchievementsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200"
+              className="flex items-center gap-2 px-4 py-2 bg-[#065F46] text-[#EAE0CF] font-bold rounded-xl hover:bg-[#065F46]/90 transition-colors shadow-lg"
             >
               <Trophy size={18} /> Student Achievements
             </button>
             <button
               onClick={() => setReportModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+              className="flex items-center gap-2 px-4 py-2 bg-[#AED6CF] text-[#065F46] font-bold rounded-xl hover:bg-[#AED6CF]/80 transition-colors shadow-lg"
             >
               <Megaphone size={18} /> Weekly Reports
             </button>
@@ -362,62 +362,62 @@ const TeacherDashboard = () => {
             label="Total Students"
             value={stats.totalStudents}
             trend="+5%"
-            color="bg-blue-50 text-blue-600"
+            color="bg-[#AED6CF]/30 text-[#065F46]"
           />
           <StatCard
             icon={LineChart}
             label="Avg. Engagement"
             value={`${stats.avgEngagement}%`}
             trend="+12%"
-            color="bg-purple-50 text-purple-600"
+            color="bg-[#AED6CF]/30 text-[#065F46]"
             subtext="Based on real-time analysis"
           />
           <StatCard
             icon={Lightbulb}
             label="Mastery Index"
             value={`${stats.masteryIndex}/10`}
-            color="bg-teal-50 text-teal-600"
+            color="bg-[#AED6CF]/30 text-[#065F46]"
             subtext="Class average across modules"
           />
           <motion.div
             whileHover={{ y: -2 }}
-            className="bg-red-50 p-6 rounded-2xl border-2 border-red-200 shadow-md transform rotate-1"
+            className="bg-[#FFE4E6] p-6 rounded-2xl border-2 border-[#FECDD3] shadow-md transform rotate-1"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-lg bg-white text-red-600 shadow-sm">
+              <div className="p-3 rounded-lg bg-[#FFF1F2] text-[#E11D48] shadow-sm">
                 <Megaphone size={24} />
               </div>
             </div>
-            <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{atRiskStudents.length}</h3>
-            <p className="text-sm font-medium text-red-600">Attention Needed</p>
-            <p className="text-xs text-red-400 mt-2">Students flagged by AI</p>
+            <h3 className="text-3xl font-extrabold text-[#881337] mb-1">{atRiskStudents.length}</h3>
+            <p className="text-sm font-medium text-[#E11D48]">Attention Needed</p>
+            <p className="text-xs text-[#E11D48] mt-2">Students flagged by AI</p>
           </motion.div>
         </div>
 
         {/* School-Wide Performance Section (New) */}
         {institutionalStats && (
-          <div className="bg-indigo-900 rounded-2xl p-6 shadow-md text-white overflow-hidden relative border border-indigo-800">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[80px] opacity-20 pointer-events-none" />
+          <div className="bg-[#065F46] rounded-2xl p-6 shadow-md text-[#EAE0CF] overflow-hidden relative border-2 border-[#AED6CF]/20">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#AED6CF] rounded-full blur-[80px] opacity-10 pointer-events-none" />
             <div className="relative z-10">
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <GraduationCap className="text-indigo-300" /> School-Wide Performance
+                <GraduationCap className="text-[#AED6CF]" /> School-Wide Performance
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
-                  <p className="text-xs text-indigo-200 uppercase font-bold">Total Students</p>
-                  <p className="text-2xl font-bold mt-1">{institutionalStats.total_students}</p>
+                <div className="bg-[#AED6CF]/10 p-4 rounded-xl backdrop-blur-sm border border-[#AED6CF]/10">
+                  <p className="text-xs text-[#AED6CF] uppercase font-bold">Total Students</p>
+                  <p className="text-2xl font-bold mt-1 text-white">{institutionalStats.total_students}</p>
                 </div>
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
-                  <p className="text-xs text-indigo-200 uppercase font-bold">Avg Mastery</p>
-                  <p className="text-2xl font-bold mt-1 text-green-300">{institutionalStats.average_mastery?.toFixed(1)}%</p>
+                <div className="bg-[#AED6CF]/10 p-4 rounded-xl backdrop-blur-sm border border-[#AED6CF]/10">
+                  <p className="text-xs text-[#AED6CF] uppercase font-bold">Avg Mastery</p>
+                  <p className="text-2xl font-bold mt-1 text-white">{institutionalStats.average_mastery?.toFixed(1)}%</p>
                 </div>
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
-                  <p className="text-xs text-indigo-200 uppercase font-bold">Avg Engagement</p>
-                  <p className="text-2xl font-bold mt-1 text-blue-300">{institutionalStats.average_engagement?.toFixed(1)}%</p>
+                <div className="bg-[#AED6CF]/10 p-4 rounded-xl backdrop-blur-sm border border-[#AED6CF]/10">
+                  <p className="text-xs text-[#AED6CF] uppercase font-bold">Avg Engagement</p>
+                  <p className="text-2xl font-bold mt-1 text-white">{institutionalStats.average_engagement?.toFixed(1)}%</p>
                 </div>
-                <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
-                  <p className="text-xs text-indigo-200 uppercase font-bold">Total Classrooms</p>
-                  <p className="text-2xl font-bold mt-1">{institutionalStats.total_classrooms}</p>
+                <div className="bg-[#AED6CF]/10 p-4 rounded-xl backdrop-blur-sm border border-[#AED6CF]/10">
+                  <p className="text-xs text-[#AED6CF] uppercase font-bold">Total Classrooms</p>
+                  <p className="text-2xl font-bold mt-1 text-white">{institutionalStats.total_classrooms}</p>
                 </div>
               </div>
             </div>
@@ -429,9 +429,9 @@ const TeacherDashboard = () => {
           {/* Main Content: Class Schedule / Overview */}
           <div className="lg:col-span-2 space-y-6">
             {/* ... (Existing Today's Classes code) ... */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="font-bold text-lg text-gray-800">Today's Classes</h2>
+            <div className="bg-[#F4FFFD] rounded-2xl shadow-sm border-2 border-[#065F46]/20 overflow-hidden">
+              <div className="p-6 border-b border-[#065F46]/10 flex justify-between items-center">
+                <h2 className="font-bold text-lg text-[#065F46]">Today's Classes</h2>
                 <NavLink to="/teacher/classes" className="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1">
                   View All <ChevronRight size={16} />
                 </NavLink>
@@ -499,9 +499,9 @@ const TeacherDashboard = () => {
 
           {/* Right Sidebar: At Risk & Upcoming */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-              <div className="p-5 border-b border-red-50 bg-red-50/30">
-                <h2 className="font-bold text-lg text-red-800 flex items-center gap-2">
+            <div className="bg-[#FFF1F2] rounded-2xl shadow-sm border border-[#FECDD3] overflow-hidden">
+              <div className="p-5 border-b border-[#FECDD3] bg-[#FFE4E6]/50">
+                <h2 className="font-bold text-lg text-[#9F1239] flex items-center gap-2">
                   <AlertTriangle size={20} /> Attention Needed
                 </h2>
               </div>
@@ -510,7 +510,7 @@ const TeacherDashboard = () => {
                   <div
                     key={alert.alert_id} // Unique key
                     onClick={() => setInterventionStudent({ student_id: alert.student_id, name: alert.student_name })}
-                    className="p-3 transition-colors hover:bg-red-50/50 rounded-xl cursor-pointer group relative"
+                    className="p-3 transition-colors hover:bg-[#FECDD3]/30 rounded-xl cursor-pointer group relative"
                   >
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       <button
@@ -518,7 +518,7 @@ const TeacherDashboard = () => {
                           e.stopPropagation();
                           handleResolveAlert(alert.student_id);
                         }}
-                        className="text-gray-300 hover:text-green-500 p-1 hover:bg-green-50 rounded"
+                        className="text-[#FDA4AF] hover:text-[#10B981] p-1 hover:bg-[#D1FAE5] rounded"
                         title="Mark as Done"
                       >
                         <CheckCircle size={14} />
@@ -528,7 +528,7 @@ const TeacherDashboard = () => {
                           e.stopPropagation();
                           handleDismissAlert(alert.student_id);
                         }}
-                        className="text-gray-300 hover:text-red-500 p-1 hover:bg-red-50 rounded"
+                        className="text-[#FDA4AF] hover:text-[#E11D48] p-1 hover:bg-[#FFE4E6] rounded"
                         title="Dismiss/Delete Alert"
                       >
                         <Trash2 size={14} />
@@ -536,37 +536,37 @@ const TeacherDashboard = () => {
                     </div>
 
                     <div className="flex justify-between items-start mb-1 pr-6">
-                      <span className="font-bold text-gray-800 text-sm">{alert.student_name}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full uppercase">
+                      <span className="font-bold text-[#881337] text-sm">{alert.student_name}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 bg-[#FFE4E6] text-[#BE123C] rounded-full uppercase">
                         {alert.severity} Risk
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {alert.behaviors?.map((b, i) => (
-                        <span key={i} className={`text-[10px] bg-white border px-1 rounded
+                        <span key={i} className={`text-[10px] bg-white/50 border px-1 rounded
                               ${(typeof b === 'string' ? b : b.type) === 'productive_struggle' || (typeof b === 'string' ? b : b.type) === 'concept_struggle'
                             ? 'text-orange-600 border-orange-200'
-                            : 'text-red-500 border-red-100'}`}
+                            : 'text-[#E11D48] border-[#FECDD3]'}`}
                         >
                           {typeof b === 'string' ? b : b.description || b.type}
                         </span>
                       ))}
                     </div>
-                    <p className="text-xs text-red-600 font-medium mt-1">Rec: {alert.recommendations?.[0] || 'Monitor'}</p>
+                    <p className="text-xs text-[#E11D48] font-medium mt-1">Rec: {alert.recommendations?.[0] || 'Monitor'}</p>
                   </div>
                 ))) : (
-                  <div className="p-4 text-center text-sm text-gray-500">
+                  <div className="p-4 text-center text-sm text-[#9F1239]/70">
                     No critical alerts at this time.
                   </div>
                 )}
-                <NavLink to="/teacher/interventions" className="block w-full text-center py-3 text-xs font-bold text-gray-400 hover:text-gray-600 border-t border-gray-50 mt-1">
+                <NavLink to="/teacher/interventions" className="block w-full text-center py-3 text-xs font-bold text-[#FDA4AF] hover:text-[#E11D48] border-t border-[#FECDD3] mt-1">
                   View All Alerts
                 </NavLink>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Quick Links</h3>
+            <div className="bg-[#F4FFFD] rounded-2xl shadow-sm border-2 border-[#065F46]/20 p-6">
+              <h3 className="font-bold text-[#065F46] mb-4">Quick Links</h3>
               <div className="space-y-2">
                 <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-teal-50 hover:text-teal-700 rounded-xl text-sm font-medium transition-colors">
                   📝 Grade Pending Submissions (5)
