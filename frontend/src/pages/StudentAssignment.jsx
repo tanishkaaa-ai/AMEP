@@ -16,7 +16,6 @@ const StudentAssignment = () => {
     const [error, setError] = useState(null);
     const [submissionText, setSubmissionText] = useState('');
     const [attachment, setAttachment] = useState(null);
-    const [uploading, setUploading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
@@ -85,7 +84,7 @@ const StudentAssignment = () => {
             }] : [];
 
             await classroomAPI.submitAssignment(assignmentId, {
-                student_id: user?.user_id || user?.id /* Ensure valid ID */,
+                student_id: user?.user_id || user?.id,
                 submission_text: submissionText,
                 attachments: attachments
             });
@@ -113,7 +112,7 @@ const StudentAssignment = () => {
         return (
             <DashboardLayout>
                 <div className="flex justify-center items-center h-96">
-                    <Loader2 className="animate-spin text-orange-500" size={48} />
+                    <Loader2 className="animate-spin text-[#EAE0CF]" size={48} />
                 </div>
             </DashboardLayout>
         );
@@ -123,9 +122,9 @@ const StudentAssignment = () => {
         return (
             <DashboardLayout>
                 <div className="flex flex-col items-center justify-center h-96">
-                    <AlertCircle className="text-red-500 mb-4" size={48} />
-                    <p className="text-gray-600">{error || "Assignment not found"}</p>
-                    <button onClick={() => navigate(-1)} className="mt-4 text-blue-500 hover:underline">
+                    <AlertCircle className="text-red-400 mb-4" size={48} />
+                    <p className="text-[#EAE0CF]/70">{error || "Assignment not found"}</p>
+                    <button onClick={() => navigate(-1)} className="mt-4 text-[#EAE0CF] hover:underline font-bold">
                         Go Back
                     </button>
                 </div>
@@ -138,20 +137,20 @@ const StudentAssignment = () => {
             <div className="max-w-4xl mx-auto">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition-colors"
+                    className="flex items-center text-[#EAE0CF]/60 hover:text-[#EAE0CF] mb-6 transition-colors font-medium"
                 >
                     <ArrowLeft size={20} className="mr-2" /> Back to Class
                 </button>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8 border-b border-gray-100">
+                <div className="bg-[#547792] rounded-2xl shadow-sm border border-[#EAE0CF]/10 overflow-hidden">
+                    <div className="p-8 border-b border-[#EAE0CF]/10">
                         <div className="flex justify-between items-start mb-4">
-                            <h1 className="text-3xl font-bold text-gray-800">{assignment.title}</h1>
-                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                            <h1 className="text-3xl font-bold text-white">{assignment.title}</h1>
+                            <span className="bg-[#213448] text-[#EAE0CF] px-3 py-1 rounded-full text-sm font-medium border border-[#EAE0CF]/20">
                                 {assignment.points ? `${assignment.points} Points` : 'Ungraded'}
                             </span>
                         </div>
-                        <div className="flex items-center text-gray-500 gap-6 text-sm">
+                        <div className="flex items-center text-[#EAE0CF]/70 gap-6 text-sm">
                             <div className="flex items-center">
                                 <Clock size={16} className="mr-2" />
                                 Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No Due Date'}
@@ -166,39 +165,39 @@ const StudentAssignment = () => {
                     <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-6">
                             <div>
-                                <h3 className="font-bold text-lg text-gray-800 mb-3">Instructions</h3>
-                                <div className="prose text-gray-600">
+                                <h3 className="font-bold text-lg text-[#EAE0CF] mb-3">Instructions</h3>
+                                <div className="prose text-[#EAE0CF]/80">
                                     {assignment.content || assignment.description || "No instructions provided."}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-gray-50 p-6 rounded-xl h-fit border border-gray-100">
-                            <h3 className="font-bold text-lg text-gray-800 mb-4">Your Work</h3>
+                        <div className="bg-[#213448]/30 p-6 rounded-xl h-fit border border-[#EAE0CF]/10">
+                            <h3 className="font-bold text-lg text-[#EAE0CF] mb-4">Your Work</h3>
 
                             {submitted ? (
                                 <div className="text-left">
                                     {/* Grade & Feedback Section */}
                                     {assignment.current_user_submission && (assignment.current_user_submission.status === 'returned' || assignment.current_user_submission.grade != null) && (
-                                        <div className="mb-6 border-b border-gray-100 pb-6">
+                                        <div className="mb-6 border-b border-[#EAE0CF]/10 pb-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h4 className="font-bold text-gray-800 text-lg">Grade & Feedback</h4>
-                                                <span className="text-2xl font-bold text-green-600 bg-green-50 px-4 py-2 rounded-xl">
-                                                    {assignment.current_user_submission?.grade || 0} <span className="text-sm text-green-400 font-normal">/ {assignment.points || 100}</span>
+                                                <h4 className="font-bold text-[#EAE0CF] text-lg">Grade & Feedback</h4>
+                                                <span className="text-2xl font-bold text-green-400 bg-green-900/30 px-4 py-2 rounded-xl border border-green-500/30">
+                                                    {assignment.current_user_submission?.grade || 0} <span className="text-sm text-green-300/70 font-normal">/ {assignment.points || 100}</span>
                                                 </span>
                                             </div>
 
                                             {/* Corrected File Display */}
                                             {assignment.current_user_submission?.corrected_file && (
-                                                <div className="mb-6 bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-2xl border border-indigo-100 shadow-sm">
+                                                <div className="mb-6 bg-[#213448] p-5 rounded-2xl border border-[#EAE0CF]/10 shadow-sm">
                                                     <div className="flex flex-col gap-4">
                                                         <div className="flex items-start gap-3">
-                                                            <div className="bg-indigo-600 p-2.5 rounded-lg text-white shadow-md mt-1">
+                                                            <div className="bg-[#EAE0CF] p-2.5 rounded-lg text-[#213448] shadow-md mt-1">
                                                                 <PenTool size={20} />
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-bold text-indigo-900 text-base leading-snug mb-1">Teacher Corrections Available</h4>
-                                                                <p className="text-indigo-700 text-sm leading-relaxed">
+                                                                <h4 className="font-bold text-[#EAE0CF] text-base leading-snug mb-1">Teacher Corrections Available</h4>
+                                                                <p className="text-[#EAE0CF]/70 text-sm leading-relaxed">
                                                                     Your teacher has annotated your answer sheet with specific feedback.
                                                                 </p>
                                                             </div>
@@ -208,33 +207,33 @@ const StudentAssignment = () => {
                                                             href={assignment.current_user_submission.corrected_file}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center gap-2 w-full py-3 bg-white text-indigo-600 text-sm font-bold rounded-xl border border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-300 active:scale-[0.98] transition-all group"
+                                                            className="flex items-center justify-center gap-2 w-full py-3 bg-[#EAE0CF] text-[#213448] text-sm font-bold rounded-xl shadow-sm hover:shadow-md hover:bg-white active:scale-[0.98] transition-all group"
                                                         >
-                                                            <FileText size={18} className="text-indigo-500 group-hover:text-indigo-600" />
+                                                            <FileText size={18} className="text-[#547792] group-hover:text-[#213448]" />
                                                             View Marked Answer Sheet
-                                                            <ArrowRight size={16} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                                                            <ArrowRight size={16} className="text-[#547792] group-hover:translate-x-1 transition-transform" />
                                                         </a>
                                                     </div>
                                                 </div>
                                             )}
 
                                             {assignment.current_user_submission?.teacher_feedback ? (
-                                                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                                    <p className="text-sm font-bold text-blue-800 mb-1">Teacher Feedback:</p>
-                                                    <p className="text-blue-700">{assignment.current_user_submission.teacher_feedback}</p>
+                                                <div className="bg-[#213448] p-4 rounded-xl border border-blue-500/30">
+                                                    <p className="text-sm font-bold text-blue-300 mb-1">Teacher Feedback:</p>
+                                                    <p className="text-blue-100">{assignment.current_user_submission.teacher_feedback}</p>
                                                 </div>
                                             ) : (
-                                                <p className="text-gray-400 italic">No written feedback provided.</p>
+                                                <p className="text-[#EAE0CF]/40 italic">No written feedback provided.</p>
                                             )}
                                         </div>
                                     )}
 
                                     {/* Submission Confirmation / Status */}
                                     <div className="flex items-center gap-3 mb-4">
-                                        <CheckCircle className="text-green-500" size={24} />
+                                        <CheckCircle className="text-green-400" size={24} />
                                         <div>
-                                            <h4 className="font-bold text-gray-800">Assignment Submitted</h4>
-                                            <p className="text-sm text-gray-500">
+                                            <h4 className="font-bold text-[#EAE0CF]">Assignment Submitted</h4>
+                                            <p className="text-sm text-[#EAE0CF]/60">
                                                 {assignment.current_user_submission?.submitted_at
                                                     ? new Date(assignment.current_user_submission.submitted_at).toLocaleString()
                                                     : 'Submitted'}
@@ -244,8 +243,8 @@ const StudentAssignment = () => {
 
                                     {/* Your Work */}
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Your Answer</p>
-                                        <div className="p-4 bg-gray-50 rounded-xl text-gray-700 border border-gray-100 whitespace-pre-wrap">
+                                        <p className="text-xs font-bold text-[#EAE0CF]/40 uppercase tracking-wider mb-2">Your Answer</p>
+                                        <div className="p-4 bg-[#213448] rounded-xl text-[#EAE0CF]/90 border border-[#EAE0CF]/10 whitespace-pre-wrap">
                                             {submissionText}
                                         </div>
                                     </div>
@@ -253,19 +252,19 @@ const StudentAssignment = () => {
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-[#EAE0CF]/80 mb-2">
                                             Text Response
                                         </label>
                                         <textarea
                                             value={submissionText}
                                             onChange={(e) => setSubmissionText(e.target.value)}
-                                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent min-h-[150px]"
+                                            className="w-full p-3 bg-[#213448] border border-[#EAE0CF]/20 rounded-lg focus:ring-2 focus:ring-[#EAE0CF] focus:border-transparent min-h-[150px] text-[#EAE0CF] placeholder-[#EAE0CF]/30"
                                             placeholder="Type your answer here..."
                                         />
                                     </div>
 
                                     <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors
-                                        ${attachment ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}>
+                                        ${attachment ? 'border-green-400/50 bg-green-900/20' : 'border-[#EAE0CF]/20 hover:bg-[#213448]'}`}>
                                         <input
                                             type="file"
                                             id="file-upload"
@@ -274,16 +273,16 @@ const StudentAssignment = () => {
                                         />
                                         <label htmlFor="file-upload" className="cursor-pointer block w-full h-full">
                                             {attachment ? (
-                                                <div className="flex items-center justify-center gap-2 text-green-700 font-medium">
+                                                <div className="flex items-center justify-center gap-2 text-green-300 font-medium">
                                                     <CheckCircle size={20} />
                                                     {attachment.name}
-                                                    <span className="text-xs ml-2 text-green-500 hover:text-red-500" onClick={(e) => { e.preventDefault(); setAttachment(null); }}>Remove</span>
+                                                    <span className="text-xs ml-2 text-green-500 hover:text-red-400" onClick={(e) => { e.preventDefault(); setAttachment(null); }}>Remove</span>
                                                 </div>
                                             ) : (
                                                 <>
-                                                    <Upload className="mx-auto mb-2 text-gray-400" size={24} />
-                                                    <p className="text-sm font-medium text-gray-600">Click to upload a file</p>
-                                                    <p className="text-xs text-gray-400 mt-1">PDF, DOCX, Images supported</p>
+                                                    <Upload className="mx-auto mb-2 text-[#EAE0CF]/40" size={24} />
+                                                    <p className="text-sm font-medium text-[#EAE0CF]/80">Click to upload a file</p>
+                                                    <p className="text-xs text-[#EAE0CF]/40 mt-1">PDF, DOCX, Images supported</p>
                                                 </>
                                             )}
                                         </label>
@@ -292,7 +291,7 @@ const StudentAssignment = () => {
                                     <button
                                         type="submit"
                                         disabled={submitting || !submissionText.trim()}
-                                        className="w-full py-3 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+                                        className="w-full py-3 bg-[#EAE0CF] text-[#213448] font-bold rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                                     >
                                         {submitting ? <Loader2 className="animate-spin" /> : 'Turn In'}
                                     </button>
