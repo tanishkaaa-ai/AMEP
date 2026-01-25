@@ -36,6 +36,7 @@ const StudentPeerReview = () => {
     const [teamMembers, setTeamMembers] = useState([]);
     const [selectedReviewee, setSelectedReviewee] = useState(null);
     const [team, setTeam] = useState(null);
+    const [teams, setTeams] = useState([]); // Store all teams
     const [loading, setLoading] = useState(true);
     const [ratings, setRatings] = useState({
         team_dynamics: { communication: 3, support: 3, trust: 3, listening: 3 },
@@ -44,44 +45,82 @@ const StudentPeerReview = () => {
         team_excellence: { growth_mindset: 3, quality: 3, monitoring: 3, reflection: 3 }
     });
 
+    // Toggle team selection
+    const handleTeamChange = (e) => {
+        const teamId = e.target.value;
+        const selected = teams.find(t => (t.team_id || t._id) === teamId);
+        console.log("[StudentPeerReview] Switching to team:", selected);
+        setTeam(selected);
+        setSelectedReviewee(null); // Reset selection
+    };
+
     useEffect(() => {
-        const fetchTeamData = async () => {
+        const fetchTeams = async () => {
             try {
                 const userId = getUserId();
+                console.log("[StudentPeerReview] Fetching teams for user:", userId);
                 const teamsRes = await projectsAPI.getStudentTeams(userId);
+                console.log("[StudentPeerReview] Teams response:", teamsRes.data);
 
                 if (teamsRes.data.teams && teamsRes.data.teams.length > 0) {
-                    const currentTeam = teamsRes.data.teams[0];
-                    setTeam(currentTeam);
-                    const teamId = currentTeam.team_id || currentTeam._id;
-
-                    const [teamDetails, reviewsRes] = await Promise.all([
-                        projectsAPI.getTeam(teamId),
-                        projectsAPI.getTeamPeerReviews(teamId)
-                    ]);
-
-                    // Filter out self
-                    const members = (teamDetails.data.members || []).filter(m => m.student_id !== userId);
-                    setTeamMembers(members);
-
-                    // Track who I have already reviewed
-                    const myReviews = (reviewsRes.data.reviews || [])
-                        .filter(r => r.reviewer_id === userId && r.review_type === 'mid-project'); // Assuming 'mid-project' for now
-
-                    setCompletedReviews(myReviews.map(r => r.reviewee_id));
+                    setTeams(teamsRes.data.teams);
+                    // Default to first team if none selected
+                    if (!team) {
+                        console.log("[StudentPeerReview] Defaulting to first team:", teamsRes.data.teams[0]);
+                        setTeam(teamsRes.data.teams[0]);
+                    }
+                } else {
+                    console.log("[StudentPeerReview] No teams found.");
                 }
             } catch (error) {
-                console.error("Failed to load team data", error);
-                // toast.error("Failed to load team data");
+                console.error("[StudentPeerReview] Failed to load teams", error);
             } finally {
                 setLoading(false);
             }
         };
 
         if (getUserId()) {
-            fetchTeamData();
+            fetchTeams();
         }
     }, [getUserId]);
+
+    // Fetch details when specific team is selected
+    useEffect(() => {
+        const fetchTeamDetails = async () => {
+            if (!team) return;
+
+            const userId = getUserId();
+            const teamId = team.team_id || team._id;
+            console.log("[StudentPeerReview] Fetching details for team:", teamId);
+
+            try {
+                // Fetch team members and existing reviews
+                const [teamDetails, reviewsRes] = await Promise.all([
+                    projectsAPI.getTeam(teamId),
+                    projectsAPI.getTeamPeerReviews(teamId)
+                ]);
+
+                console.log("[StudentPeerReview] Team details:", teamDetails.data);
+                console.log("[StudentPeerReview] Existing reviews:", reviewsRes.data);
+
+                // Filter out self
+                const members = (teamDetails.data.members || []).filter(m => m.student_id !== userId);
+                setTeamMembers(members);
+
+                // Track who I have already reviewed in this team
+                const myReviews = (reviewsRes.data.reviews || [])
+                    .filter(r => r.reviewer_id === userId && r.review_type === 'mid-project');
+
+                setCompletedReviews(myReviews.map(r => r.reviewee_id));
+                console.log("[StudentPeerReview] Completed reviews for this team:", myReviews.map(r => r.reviewee_id));
+
+            } catch (error) {
+                console.error("[StudentPeerReview] Failed to load team details", error);
+            }
+        };
+
+        fetchTeamDetails();
+    }, [team]);
 
     const handleSubmitReview = async () => {
         if (!selectedReviewee) {
@@ -133,6 +172,29 @@ const StudentPeerReview = () => {
                     Peer Review
                 </h1>
                 <p className="text-[#065F46]/70 mt-2">Evaluate your team members' performance and collaboration.</p>
+
+                {/* Team Selector */}
+                {teams.length > 1 && (
+                    <div className="mt-4">
+                        <label className="block text-sm font-bold text-[#065F46]/70 mb-1">Select Project Team:</label>
+                        <div className="relative inline-block w-64">
+                            <select
+                                value={(team?.team_id || team?._id) || ''}
+                                onChange={handleTeamChange}
+                                className="w-full pl-4 pr-10 py-2 bg-white border-2 border-[#065F46]/20 rounded-lg appearance-none focus:outline-none focus:border-[#065F46] text-[#065F46] font-bold"
+                            >
+                                {teams.map(t => (
+                                    <option key={t.team_id || t._id} value={t.team_id || t._id}>
+                                        {t.team_name} ({t.project_title || 'Project'})
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-[#065F46]">
+                                <Users size={16} />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             <div className="bg-[#213448] rounded-2xl shadow-sm border border-[#EAE0CF]/20 p-6 mb-8">
