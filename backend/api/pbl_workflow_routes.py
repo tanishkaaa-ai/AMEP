@@ -290,6 +290,7 @@ def get_project(project_id):
                     'is_rejected': not m.get('pending_approval') and not m.get('is_completed') and m.get('rejected_at') is not None,
                     'teacher_feedback': m.get('teacher_feedback'),
                     'rejection_reason': m.get('rejection_reason'),
+                    'annotations': m.get('annotations', []),
                     'rejected_at': (m.get('rejected_at').isoformat() if hasattr(m.get('rejected_at'), 'isoformat') else m.get('rejected_at')) if m.get('rejected_at') else None
                 }
                 for m in milestones
@@ -1523,7 +1524,8 @@ def approve_milestone(project_id, milestone_id):
                 'completed_at': datetime.utcnow(),
                 'approved_by': teacher_id,
                 'pending_approval': False,
-                'teacher_feedback': data.get('feedback', '')
+                'teacher_feedback': data.get('feedback', ''),
+                'annotations': data.get('annotations', [])
             }}
         )
         logger.info(f"[APPROVE_MILESTONE] Milestone marked as completed | milestone_id: {milestone_id} | approved_by: {teacher_id}")
@@ -1633,7 +1635,8 @@ def reject_milestone(project_id, milestone_id):
                 'rejected_at': datetime.utcnow(),
                 'rejected_by': teacher_id,
                 'rejection_reason': data.get('reason', 'Does not meet requirements'),
-                'teacher_feedback': data.get('feedback', '')
+                'teacher_feedback': data.get('feedback', ''),
+                'annotations': data.get('annotations', [])
             }}
         )
 

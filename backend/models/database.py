@@ -99,7 +99,9 @@ PROJECT_ARTIFACTS = 'project_artifacts'
 CURRICULUM_TEMPLATES = 'curriculum_templates'
 INSTITUTIONAL_METRICS = 'institutional_metrics'
 TEACHER_INTERVENTIONS = 'teacher_interventions'
+TEACHER_INTERVENTIONS = 'teacher_interventions'
 PRACTICE_ITEMS = 'practice_items'
+STUDENT_LEARNING_PATHS = 'student_learning_paths'
 
 # Attendance Collections
 ATTENDANCE_SESSIONS = 'attendance_sessions'
@@ -385,7 +387,13 @@ def init_db(app=None):
     db[QUESTION_BANKS].create_index([('teacher_id', ASCENDING)])
     db[QUESTION_BANKS].create_index([('resource_url', ASCENDING)])
     db[QUESTION_BANKS].create_index([('created_at', DESCENDING)])
+    db[QUESTION_BANKS].create_index([('created_at', DESCENDING)])
     print(f"[OK] {QUESTION_BANKS} collection initialized")
+
+    # Learning Paths collection
+    db[STUDENT_LEARNING_PATHS].create_index([('student_id', ASCENDING)])
+    db[STUDENT_LEARNING_PATHS].create_index([('created_at', DESCENDING)])
+    print(f"[OK] {STUDENT_LEARNING_PATHS} collection initialized")
 
     print("="*60)
     print("[OK] All MongoDB collections and indexes created successfully")

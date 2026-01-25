@@ -211,6 +211,7 @@ export const dashboardAPI = {
   deleteIntervention: (interventionId) => api.delete(`/dashboard/interventions/${interventionId}`),
   getAdminTeacherStats: () => api.get('/dashboard/admin/teachers'),
   getInterestPath: () => api.get('/interest/path'),
+  generateLearningPath: (data) => api.post('/interest/generate-path', data),
   getBulkReports: (teacherId, classroomId) => api.get('/dashboard/reports/teacher/preview-all', {
     params: { teacher_id: teacherId, classroom_id: classroomId }
   }),

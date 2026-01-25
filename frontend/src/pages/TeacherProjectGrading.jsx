@@ -1,15 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { classroomAPI, projectsAPI } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { CheckCircle, Clock, FileText, Award, Folder, Download, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { CheckCircle, Clock, FileText, Award, Folder, Download, ThumbsUp, ThumbsDown, X, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FileAnnotator from '../components/FileAnnotator';
 
 const TeacherProjectGrading = () => {
     const { getUserId } = useAuth();
     const [deliverables, setDeliverables] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedItem, setSelectedItem] = useState(null); // Item being graded
 
     useEffect(() => {
         const fetchGradingItems = async () => {
@@ -54,7 +57,7 @@ const TeacherProjectGrading = () => {
                                         project_title: project.title,
                                         classroom_name: classroom.class_name,
                                         item_id: m.milestone_id,
-                                        title: `Milestone: ${m.title}`,
+                                        title: `Milestone: ${m.title} `,
                                         submitted_at: m.submitted_at || m.completed_at || new Date().toISOString(),
                                         graded: m.is_completed, // Map completed to graded concept for filtering
                                         grade: m.is_completed ? 'Approved' : null,
@@ -96,76 +99,71 @@ const TeacherProjectGrading = () => {
         }
     }, [getUserId]);
 
-    const handleGrade = async (item) => {
-        const grade = window.prompt("Enter grade (0-100):");
-        if (grade === null) return;
-
-        const numGrade = parseInt(grade);
-        if (isNaN(numGrade) || numGrade < 0 || numGrade > 100) {
-            toast.error("Please enter a valid number between 0 and 100");
-            return;
-        }
-
-        const feedback = window.prompt("Enter feedback (optional):", "Good job!");
+    const handleGradeSubmit = async (grade, feedback, annotations) => {
+        if (!selectedItem) return;
 
         try {
-            await projectsAPI.updateDeliverableGrade(item.deliverable_id, {
-                grade: numGrade,
-                feedback: feedback || ''
+            await projectsAPI.updateDeliverableGrade(selectedItem.deliverable_id, {
+                grade: parseInt(grade),
+                feedback: feedback || '',
+                annotations: annotations || []
             });
 
             toast.success("Grade submitted successfully!");
 
             // Update local state
             setDeliverables(prev => prev.map(d =>
-                d.item_id === item.item_id
-                    ? { ...d, graded: true, grade: numGrade, feedback }
+                d.item_id === selectedItem.item_id
+                    ? { ...d, graded: true, grade: parseInt(grade), feedback, annotations }
                     : d
             ));
+            setSelectedItem(null);
         } catch (error) {
             console.error("Grading failed", error);
             toast.error("Failed to submit grade");
         }
     };
 
-    const handleApprove = async (item) => {
-        const feedback = window.prompt("Enter approval feedback (optional):", "Great work!");
-        if (feedback === null) return;
+    const handleApprove = async (feedback, annotations) => {
+        if (!selectedItem) return;
 
         try {
-            await projectsAPI.approveMilestone(item.project_id, item.milestone_id, {
+            await projectsAPI.approveMilestone(selectedItem.project_id, selectedItem.milestone_id, {
                 teacher_id: getUserId(),
-                feedback: feedback || ''
+                feedback: feedback || '',
+                annotations: annotations || []
             });
 
             toast.success("Milestone approved!");
 
             setDeliverables(prev => prev.map(d =>
-                d.item_id === item.item_id
-                    ? { ...d, graded: true, grade: 'Approved', teacher_feedback: feedback }
+                d.item_id === selectedItem.item_id
+                    ? { ...d, graded: true, grade: 'Approved', teacher_feedback: feedback, annotations }
                     : d
             ));
+            setSelectedItem(null);
         } catch (error) {
             console.error("Approval failed", error);
             toast.error("Failed to approve milestone");
         }
     };
 
-    const handleReject = async (item) => {
-        const reason = window.prompt("Reason for rejection:", "Missing requirements");
-        if (!reason) return;
+    const handleReject = async (reason, annotations) => {
+        if (!selectedItem) return;
 
         try {
-            await projectsAPI.rejectMilestone(item.project_id, item.milestone_id, {
+            await projectsAPI.rejectMilestone(selectedItem.project_id, selectedItem.milestone_id, {
                 teacher_id: getUserId(),
                 reason: reason,
-                feedback: reason
+                feedback: reason,
+                annotations: annotations || []
             });
 
-            toast.error("Milestone rejected"); // Info toast really
+            toast.success("Milestone rejected and returned to student"); // Info toast really
 
             // Remove from list or mark as rejected? usually remove from pending
-            setDeliverables(prev => prev.filter(d => d.item_id !== item.item_id));
+            setDeliverables(prev => prev.filter(d => d.item_id !== selectedItem.item_id));
+            setSelectedItem(null);
         } catch (error) {
             console.error("Rejection failed", error);
             toast.error("Failed to reject milestone");
@@ -211,9 +209,7 @@ const TeacherProjectGrading = () => {
                                     <GradingCard
                                         key={item.item_id}
                                         item={item}
-                                        onGrade={handleGrade}
-                                        onApprove={handleApprove}
-                                        onReject={handleReject}
+                                        onReview={() => setSelectedItem(item)}
                                     />
                                 ))}
                             </AnimatePresence>
@@ -233,22 +229,36 @@ const TeacherProjectGrading = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Grading Modal */}
+            <AnimatePresence>
+                {selectedItem && (
+                    <GradingModal
+                        item={selectedItem}
+                        onClose={() => setSelectedItem(null)}
+                        onGrade={handleGradeSubmit}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                    />
+                )}
+            </AnimatePresence>
         </TeacherLayout>
     );
 };
 
-const GradingCard = ({ item, onGrade, onApprove, onReject, readOnly = false }) => (
+// Simplified Card for list view
+const GradingCard = ({ item, onReview, readOnly = false }) => (
     <motion.div
         layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6"
+        className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6 hover:shadow-md transition-all"
     >
         <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${item.type === 'milestone' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-50 text-indigo-700'
-                    }`}>
+                <span className={`text - xs font - bold px - 2 py - 1 rounded - md uppercase tracking - wider ${item.type === 'milestone' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-50 text-indigo-700'
+                    } `}>
                     {item.type === 'milestone' ? 'Milestone' : item.deliverable_type?.replace('_', ' ') || 'Deliverable'}
                 </span>
                 <span className="text-sm text-gray-400">
@@ -272,7 +282,7 @@ const GradingCard = ({ item, onGrade, onApprove, onReject, readOnly = false }) =
 
             {item.submission_notes && (
                 <div className="text-gray-600 bg-yellow-50 border border-yellow-100 p-3 rounded-lg text-sm mb-4">
-                    <span className="font-bold text-yellow-700 block text-xs mb-1">Student Notes:</span>
+                    <span className="font-bold text-yellow-800 block text-xs mb-1">Student Notes:</span>
                     {item.submission_notes}
                 </div>
             )}
@@ -318,34 +328,195 @@ const GradingCard = ({ item, onGrade, onApprove, onReject, readOnly = false }) =
                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Status</div>
                 </div>
             ) : (
-                <div className="flex flex-col gap-2 w-full md:w-auto">
-                    {item.type === 'milestone' ? (
-                        <>
-                            <button
-                                onClick={() => onApprove(item)}
-                                className="px-6 py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                            >
-                                <ThumbsUp size={18} /> Approve
-                            </button>
-                            <button
-                                onClick={() => onReject(item)}
-                                className="px-6 py-2 bg-white border border-red-200 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <ThumbsDown size={18} /> Reject
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            onClick={() => onGrade(item)}
-                            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                        >
-                            <Award size={18} /> Grade
-                        </button>
-                    )}
-                </div>
+                <button
+                    onClick={onReview}
+                    className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                >
+                    <Award size={18} /> Review & Grade
+                </button>
             )}
         </div>
     </motion.div>
 );
 
+// New Split-Screen Grading Modal with Annotator
+const GradingModal = ({ item, onClose, onGrade, onApprove, onReject }) => {
+    const [score, setScore] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [previewError, setPreviewError] = useState(false);
+    const [annotations, setAnnotations] = useState(item.annotations || []);
+
+    const fileUrl = item.report_url || item.file_url || item.zip_url;
+    const isImage = fileUrl?.match(/\.(jpeg|jpg|gif|png)$/i);
+    const isPdf = fileUrl?.match(/\.pdf$/i);
+    const isZip = fileUrl?.match(/\.zip$/i);
+
+    const handleSubmitGrade = () => {
+        if (score === '' || score < 0 || score > 100) {
+            toast.error("Please enter a valid grade (0-100)");
+            return;
+        }
+        onGrade(score, feedback, annotations);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white w-full max-w-7xl h-[90vh] rounded-2xl shadow-2xl flex overflow-hidden"
+            >
+                {/* Left Panel: Preview/Annotator */}
+                <div className="flex-1 bg-gray-100 border-r border-gray-200 relative flex flex-col">
+                    <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
+                        <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                            <FileText size={18} /> Submission Preview
+                        </h3>
+                        {fileUrl && (
+                            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                                <ExternalLink size={14} /> Open in New Tab
+                            </a>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+                        {fileUrl && !previewError ? (
+                            isImage ? (
+                                <FileAnnotator
+                                    fileUrl={fileUrl}
+                                    initialAnnotations={annotations}
+                                    onSave={(newAnnotations) => setAnnotations(newAnnotations)}
+                                />
+                            ) : isPdf ? (
+                                <iframe src={`${fileUrl} #toolbar = 0`} className="w-full h-full rounded shadow-lg bg-white" title="PDF Preview" onError={() => setPreviewError(true)} />
+                            ) : (
+                                <div className="text-center">
+                                    <div className="bg-white p-8 rounded-2xl shadow-sm inline-block mb-4">
+                                        <Folder size={64} className="text-indigo-200 mx-auto mb-4" />
+                                        <p className="text-gray-500 font-medium mb-2">Preview not available for this file type</p>
+                                        <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">Please download the file to view its contents.</p>
+                                        <a href={fileUrl} download className="px-6 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-bold transition-colors inline-flex items-center gap-2">
+                                            <Download size={18} /> Download File
+                                        </a>
+                                    </div>
+                                </div>
+                            )
+                        ) : (
+                            <div className="text-center text-gray-400">
+                                <FileText size={48} className="text-gray-300 mx-auto mb-2 opacity-50" />
+                                <p>No file attached or preview failed</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Panel: Grading Controls */}
+                <div className="w-[400px] bg-white flex flex-col h-full overflow-y-auto">
+                    {/* Header */}
+                    <div className="p-6 border-b border-gray-100">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">{item.title}</h2>
+                                <p className="text-sm text-gray-500 mt-1">Submitted by</p>
+                                <p className="font-medium text-indigo-600">{item.submission_notes ? "Student (See Notes)" : "Student"}</p>
+                            </div>
+                            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {item.submission_notes && (
+                            <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg text-sm text-gray-700">
+                                <span className="block font-bold text-yellow-800 text-xs mb-1">Student Notes:</span>
+                                {item.submission_notes}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Grading Form */}
+                    <div className="p-6 flex-1">
+                        {item.type === 'milestone' ? (
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Feedback / Rejection Reason</label>
+                                    <textarea
+                                        value={feedback}
+                                        onChange={(e) => setFeedback(e.target.value)}
+                                        placeholder="Enter feedback for approval or reason for rejection..."
+                                        className="w-full h-32 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => onApprove(feedback, annotations)}
+                                        className="py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors flex flex-col items-center justify-center gap-1"
+                                    >
+                                        <ThumbsUp size={20} />
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (!feedback) {
+                                                toast.error("Please provide a reason for rejection");
+                                                return;
+                                            }
+                                            onReject(feedback, annotations);
+                                        }}
+                                        className="py-3 bg-white border-2 border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors flex flex-col items-center justify-center gap-1"
+                                    >
+                                        <ThumbsDown size={20} />
+                                        Reject
+                                    </button>
+                                </div>
+                                <p className="text-xs text-center text-gray-400 mt-2">
+                                    Feedback is required for rejection.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Grade (0-100)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={score}
+                                            onChange={(e) => setScore(e.target.value)}
+                                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg font-bold"
+                                            placeholder="Enter score..."
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">/ 100</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Feedback (Optional)</label>
+                                    <textarea
+                                        value={feedback}
+                                        onChange={(e) => setFeedback(e.target.value)}
+                                        placeholder="Great job! Consider improving..."
+                                        className="w-full h-32 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleSubmitGrade}
+                                    className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                                >
+                                    <Award size={20} /> Submit Grade
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 export default TeacherProjectGrading;
+

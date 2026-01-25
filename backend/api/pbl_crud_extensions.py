@@ -130,7 +130,8 @@ def get_project_deliverables(project_id):
                 'title': deliverable.get('title'),
                 'submitted_at': deliverable.get('submitted_at').isoformat() if deliverable.get('submitted_at') else None,
                 'graded': deliverable.get('graded', False),
-                'grade': deliverable.get('grade')
+                'grade': deliverable.get('grade'),
+                'annotations': deliverable.get('annotations', [])
             })
         return jsonify(result), 200
     except Exception as e:
@@ -205,6 +206,7 @@ def get_deliverable_grade(deliverable_id):
             'deliverable_id': deliverable_id,
             'grade': deliverable.get('grade'),
             'feedback': deliverable.get('feedback'),
+            'annotations': deliverable.get('annotations', []),
             'graded_by': deliverable.get('graded_by'),
             'graded_at': deliverable.get('graded_at').isoformat() if deliverable.get('graded_at') else None
         }), 200
@@ -222,6 +224,7 @@ def update_deliverable_grade(deliverable_id):
         update_data = {
             'grade': data.get('grade'),
             'feedback': data.get('feedback', ''),
+            'annotations': data.get('annotations', []),
             'graded': True,
             'graded_at': datetime.utcnow()
         }
